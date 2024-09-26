@@ -33,6 +33,8 @@ v28.0.00
         System: added Putonghua as a language option in dropdown menus
         System: added IDD codes for Republic of Korea and Democratic People's Republic of Korea
         System: added Nicaraguan Córdoba C$ as a currency option
+        System: refactored the Fast Finder using HTMX and Alpine
+        System: updated Core modules to have Gibbon Foundation as author
         Attendance: added an index to the attendance log to help speed up attendance pages
         Activities: updated Activity Attendance to always count participants for dates in the past
         Markbook: updated markbook columns to grey out students who joined after the Go Live date
@@ -41,6 +43,7 @@ v28.0.00
         Planner: improved default selected course in Unit Planner sidebar menu
         Planner: added an Add Block to All option in Deploy Working Copy
         Reports: added a Progress by Department report for viewing class criteria progress
+        Rubrics: allowed HTML in Rubrics cells
         Staff: updated Manage Staff to override required custom fields when manually editing a staff member
         Staff: updated family page on Staff Profile to exclude personal details and addresses
         Students: added a notification event when student notes are edited
@@ -50,9 +53,11 @@ v28.0.00
 
     Bug Fixes
         Admissions: fixed the search results on the Manage Application page to include json data
+        Behaviour: fixed users notified of behaviour records unable to add follow up
         Finance: fixed bulk exporting invoice fees for Pending invoices
         Form Groups: fixed Year Group Summary list when looking at non-current school years
         Planner: fixed next lesson plan date not auto populating in Add Lesson Plan
+        Reports: fixed Send Report option to enable sending to students without needing parent details
         Timetable: fixed permission checking before displaying user status info in View Timetables list
         System Admin: fixed the sanitization rules for application form fields to allow HTML
     
