@@ -35,7 +35,9 @@ v28.0.00
         System: added Nicaraguan Córdoba C$ as a currency option
         System: refactored the Fast Finder using HTMX and Alpine
         System: updated Core modules to have Gibbon Foundation as author
+        System: updates the timetable navigation to use AJAX reloading rather than page refresh
         Attendance: added an index to the attendance log to help speed up attendance pages
+        Attendance: added an indicator to Student Not Present/Onsite when attendance logs conflict
         Activities: updated Activity Attendance to always count participants for dates in the past
         Markbook: updated markbook columns to grey out students who joined after the Go Live date
         Messenger: limited the individual message target to a maximum of 50 people
@@ -50,6 +52,7 @@ v28.0.00
         Students: removed birthday icon from student view of class lists
         User Admin: added the names of users who made changes to the User Status Log
         User Admin: updated Manage Users to override required custom fields when manually editing a user
+        User Admin: updated Personal Documents to enable required Residency/Visa dropdown
 
     Bug Fixes
         Admissions: fixed the search results on the Manage Application page to include json data
@@ -58,8 +61,13 @@ v28.0.00
         Form Groups: fixed Year Group Summary list when looking at non-current school years
         Planner: fixed next lesson plan date not auto populating in Add Lesson Plan
         Reports: fixed Send Report option to enable sending to students without needing parent details
+        Reports: fixed Scan Asset Directories not working on Windows servers 
+        Reports: fixed Scan Asset Directories failing to create template folder if it does not exist
         Timetable: fixed permission checking before displaying user status info in View Timetables list
         System Admin: fixed the sanitization rules for application form fields to allow HTML
+
+    Deprecations
+        System: replaced the legacy Thickbox library with an AJAX-based modal window
     
 v27.0.01
 --------
