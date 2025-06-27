@@ -71,7 +71,7 @@ class GradeScaleGateway extends QueryableGateway
 
         return $this->runQuery($query, $criteria);
     }
-
+  
     public function getScaleGradeByScaleAttainmentAndValue($attainmentValue, $scaleAttainment)
     {
         $data = ['attainmentValue' => $attainmentValue, 'scaleAttainment' => $scaleAttainment];
@@ -86,5 +86,18 @@ class GradeScaleGateway extends QueryableGateway
         $sql = 'SELECT * FROM gibbonScaleGrade JOIN gibbonScale ON (gibbonScaleGrade.gibbonScaleID=gibbonScale.gibbonScaleID) WHERE value=:effortValue AND gibbonScaleGrade.gibbonScaleID=:scaleEffort';
 
         return $this->db()->selectOne($sql, $data);
+    }
+  
+    public function getDefaultGrade($gibbonScaleID)
+    {
+        $select = $this
+            ->newSelect()
+            ->cols(['gibbonScaleGrade.value'])
+            ->from($this->getTableName())
+            ->innerJoin('gibbonScaleGrade', "gibbonScaleGrade.gibbonScaleID=gibbonScale.gibbonScaleID AND gibbonScaleGrade.isDefault='Y'")
+            ->where('gibbonScale.gibbonScaleID = :gibbonScaleID')
+            ->bindValue('gibbonScaleID', $gibbonScaleID);
+
+        return $this->runSelect($select)->fetchColumn(0);
     }
 }
