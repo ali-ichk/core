@@ -26,6 +26,7 @@ use Gibbon\Domain\School\DaysOfWeekGateway;
 use Gibbon\Domain\School\SchoolYearTermGateway;
 use Gibbon\Domain\System\SettingGateway;
 use PhpOffice\PhpSpreadsheet\Calculation\DateTimeExcel\Days360;
+use Gibbon\Domain\Activities\ActivityCategoryGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -79,8 +80,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                 'External'  => __('External')
             ]);
 
+    $categories = $container->get(ActivityCategoryGateway::class)->selectCategoriesBySchoolYear($session->get('gibbonSchoolYearID'))->fetchKeyPair();
+    $row = $form->addRow();
+        $row->addLabel('gibbonActivityCategoryID', __('Category'));
+        $row->addSelect('gibbonActivityCategoryID')->fromArray($categories)->placeholder();
+        
     $activityTypes = $activityGateway->selectActivityTypeOptions()->fetchKeyPair();
-
     if (!empty($activityTypes)) {
         $row = $form->addRow();
             $row->addLabel('type', __('Type'));

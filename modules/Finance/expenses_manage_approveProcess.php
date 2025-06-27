@@ -19,10 +19,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
+use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Data\Validator;
 use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Domain\Finance\FinanceExpenseApproverGateway;
 
 require_once '../../gibbon.php';
 
@@ -85,14 +87,8 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
                         header("Location: {$URL}");
                     } else {
                         //Check if there are approvers
-                        try {
-                            $data = array();
-                            $sql = "SELECT * FROM gibbonFinanceExpenseApprover JOIN gibbonPerson ON (gibbonFinanceExpenseApprover.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE status='Full'";
-                            $result = $connection2->prepare($sql);
-                            $result->execute($data);
-                        } catch (PDOException $e) {
-                        }
-
+                        $result = $container->get(FinanceExpenseApproverGateway::class)->selectExpenseApprovers();
+                        
                         if ($result->rowCount() < 1) {
                             $URL .= '&return=error0';
                             header("Location: {$URL}");
@@ -137,7 +133,7 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
                                         $approval = 'Approval - Partial - Budget';
                                     } else {
                                         //Check if school approver, if not, abort
-                                        $data = array('gibbonPersonID' => $session->get('gibbonPersonID'));
+                                        $data = ['gibbonPersonID' => $session->get('gibbonPersonID')];
                                         $sql = "SELECT * FROM gibbonFinanceExpenseApprover JOIN gibbonPerson ON (gibbonFinanceExpenseApprover.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE status='Full' AND gibbonFinanceExpenseApprover.gibbonPersonID=:gibbonPersonID";
                                         $result = $connection2->prepare($sql);
                                         $result->execute($data);
@@ -230,7 +226,9 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
                                         }
 
                                         //Notify original creator that it is commented upon
-                                        $notificationText = sprintf(__('Someone has commented on your expense request for "%1$s" in budget "%2$s".'), $row['title'], $row['budget']);
+                                        $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
+
+                                        $notificationText = __('{person} has commented on your expense request for {title} in budget {budgetName}.', ['person' => $personName, 'title' => $row['title'], 'budgetName' => $row['budget']]);
                                         $notificationSender->addNotification($row['gibbonPersonIDCreator'], $notificationText, 'Finance', "/index.php?q=/modules/Finance/expenses_manage_view.php&gibbonFinanceExpenseID=$gibbonFinanceExpenseID&gibbonFinanceBudgetCycleID=$gibbonFinanceBudgetCycleID&status2=&gibbonFinanceBudgetID2=".$row['gibbonFinanceBudgetID']);
                                         $notificationSender->sendNotifications();
 

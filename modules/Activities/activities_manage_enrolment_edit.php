@@ -24,8 +24,9 @@ use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Activities\ActivityGateway;
 use Gibbon\Domain\School\SchoolYearTermGateway;
+use Gibbon\Http\Url;
 
-//Module includes
+// Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_manage_enrolment_edit.php') == false) {
@@ -60,7 +61,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
     if ($gibbonPersonID == '' or $gibbonActivityID == '') {
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
-            
          $result = $container->get(ActivityGateway::class)->getActivityAndStudentDetails($gibbonActivityID, $gibbonPersonID);
          
         if ($result->rowCount() != 1) {
@@ -72,17 +72,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
             $settingGateway = $container->get(SettingGateway::class);
             $dateType = $settingGateway->getSettingByScope('Activities', 'dateType');
 
-            $form = Form::create('activityEnrolment', $session->get('absoluteURL').'/modules/'.$session->get('module')."/activities_manage_enrolment_editProcess.php?gibbonActivityID=$gibbonActivityID&gibbonPersonID=$gibbonPersonID&search=".$_GET['search']."&gibbonSchoolYearTermID=".$_GET['gibbonSchoolYearTermID']);
+            $form = Form::create('activityEnrolment', Url::fromModuleRoute('Activities', 'activities_manage_enrolment_editProcess')->withQueryParams($urlParams + ['gibbonPersonID' => $gibbonPersonID])->directLink());
 
-            if ($_GET['search'] != '' || $_GET['gibbonSchoolYearTermID'] != '') {
-                $params = [
-                    "search" => $_GET['search'] ?? '',
-                    "gibbonSchoolYearTermID" => $_GET['gibbonSchoolYearTermID'] ?? null,
-                    "gibbonActivityID" => $gibbonActivityID
-                ];
+            if (!empty($_GET['search']) != '' || !empty( $_GET['gibbonSchoolYearTermID'])) {
                 $form->addHeaderAction('back', __('Back'))
                     ->setURL('/modules/Activities/activities_manage_enrolment.php')
-                    ->addParams($params);
+                    ->addParams($urlParams);
 			}
 
             $form->addHiddenValue('address', $session->get('address'));
@@ -122,7 +117,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
 
             $statuses = ['Accepted' => __('Accepted')];
             if ($enrolment == 'Competitive') {
-                $statuses['Waiting List'] = __('Waiting List');
+                if (!empty($values['waitingList']) && $values['waitingList'] == 'Y') {
+                    $statuses['Waiting List'] = __('Waiting List');
+                }
             } else {
                 $statuses['Pending'] = __('Pending');
             }

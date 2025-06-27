@@ -43,6 +43,8 @@ class PrintableRenderer extends SimpleRenderer implements RendererInterface
      */
     protected function renderHeader(DataTable $table, DataSet $dataSet) 
     {
+        if ($table->getMetaData('hideHeaderActions') == true) return;
+        
         $table->setHeader([]);
         $table->addHeaderAction('print', __('Print'))
             ->setURL('#')
@@ -56,8 +58,7 @@ class PrintableRenderer extends SimpleRenderer implements RendererInterface
             ->addParam('orientation', $orientation == 'P' ? 'L' : 'P')
             ->setIcon('refresh')
             ->displayLabel()
-            ->directLink()
-            ->prepend(' | ');
+            ->directLink();
 
         return parent::renderHeader($table, $dataSet);
     }
