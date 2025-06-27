@@ -24,7 +24,7 @@ use Gibbon\Data\Validator;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST);
+$_POST = $container->get(Validator::class)->sanitize($_POST, ['authorizeEndpoint' => 'URL', 'tokenEndpoint' => 'URL', 'userEndpoint' => 'URL']);
 
 $sso = $_POST['sso'] ?? '';
 
@@ -56,7 +56,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/thirdPartySet
         'tokenEndpoint'      => $_POST['tokenEndpoint'] ?? '',
         'userEndpoint'       => $_POST['userEndpoint'] ?? '',
         'scopes'             => $_POST['scopes'] ?? '',
-        'usernameAttribute'      => $_POST['usernameAttribute'] ?? '',
+        'usernameAttribute'  => $_POST['usernameAttribute'] ?? '',
     ];
 
     $calendarFeed = $_POST['calendarFeed'] ?? '';

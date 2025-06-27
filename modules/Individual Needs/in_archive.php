@@ -34,6 +34,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_archiv
     $page->breadcrumbs->add(__('Archive Records'));
 
     $result = $container->get(INGateway::class)->selectINStudentsBySchoolYear($session->get('gibbonSchoolYearID'));
+  
+    $data = array('gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'));
+    $sql = "SELECT gibbonPerson.gibbonPersonID, surname, preferredName, gibbonFormGroup.nameShort as formGroup
+            FROM gibbonPerson
+            JOIN gibbonIN ON (gibbonIN.gibbonPersonID=gibbonPerson.gibbonPersonID)
+            JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID)
+            JOIN gibbonFormGroup ON (gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID)
+            WHERE status='Full' 
+            AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID
+            ORDER BY surname, preferredName";
+    $result = $pdo->select($sql, $data);
 
     $students = ($result->rowCount() > 0)? $result->fetchAll(\PDO::FETCH_GROUP|\PDO::FETCH_UNIQUE) : array();
     $students = array_map(function($item) {
