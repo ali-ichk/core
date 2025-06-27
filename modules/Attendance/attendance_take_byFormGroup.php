@@ -68,7 +68,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_take
 
         $form = Form::create('filter', $session->get('absoluteURL') . '/index.php', 'get');
         $form->setFactory(DatabaseFormFactory::create($pdo));
-        $form->setClass('noIntBorder fullWidth');
+        $form->setClass('noIntBorder w-full');
 
         $form->addHiddenValue('q', '/modules/Attendance/attendance_take_byFormGroup.php');
 
@@ -154,13 +154,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_take
                             $countPresent = 0;
                             $columns = 4;
 
-                            $defaults = array('type' => $defaultAttendanceType, 'reason' => '', 'comment' => '', 'context' => '', 'prefill' => 'Y', 'gibbonFormGroupID' => 0);
+                            $defaults = array('type' => $defaultAttendanceType, 'reason' => '', 'comment' => '', 'context' => '', 'direction' => '', 'prefill' => 'Y', 'gibbonFormGroupID' => 0);
                             $students = $resultFormGroup->fetchAll();
 
                             // Build the attendance log data per student
                             foreach ($students as $key => $student) {
                                 $data = array('gibbonPersonID' => $student['gibbonPersonID'], 'date' => $currentDate);
-                                $sql = "SELECT gibbonAttendanceLogPerson.type, reason, comment, context, timestampTaken, gibbonAttendanceCode.prefill, gibbonAttendanceLogPerson.gibbonFormGroupID
+                                $sql = "SELECT gibbonAttendanceLogPerson.type, reason, comment, gibbonAttendanceLogPerson.direction, context, timestampTaken, gibbonAttendanceCode.prefill, gibbonAttendanceLogPerson.gibbonFormGroupID
                                         FROM gibbonAttendanceLogPerson
                                         JOIN gibbonPerson ON (gibbonAttendanceLogPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
                                         JOIN gibbonAttendanceCode ON (gibbonAttendanceCode.gibbonAttendanceCodeID=gibbonAttendanceLogPerson.gibbonAttendanceCodeID)
@@ -182,7 +182,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_take
                                 $students[$key]['cellHighlight'] = '';
                                 if ($attendance->isTypeAbsent($log['type'])) {
                                     $students[$key]['cellHighlight'] = 'dayAbsent';
-                                } elseif ($attendance->isTypeOffsite($log['type'])) {
+                                } elseif ($attendance->isTypeOffsite($log['type']) || $log['direction'] == 'Out') {
                                     $students[$key]['cellHighlight'] = 'dayMessage';
                                 } elseif ($attendance->isTypeLate($log['type'])) {
                                     $students[$key]['cellHighlight'] = 'dayPartial';
@@ -260,15 +260,22 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_take
                             $row = $form->addRow();
 
                             // Drop-downs to change the whole group at once
-                            $row->addButton(__('Change All').'?')->addData('toggle', '.change-all')->addClass('w-32 m-px sm:self-center');
+                            $row = $form->addRow()->setAttribute('x-data', "{'changeAll': false}");
+                            $row->addButton(__('Change All').'?')
+                                ->setAttribute('@click', 'changeAll = !changeAll')
+                                ->addClass('flex-shrink m-px sm:self-center');
 
-                            $col = $row->addColumn()->setClass('change-all hidden flex flex-col sm:flex-row items-stretch sm:items-center');
-                                $col->addSelect('set-all-type')->fromArray($attendance->getAttendanceTypes())->addClass('m-px');
-                                $col->addSelect('set-all-reason')->fromArray($attendance->getAttendanceReasons())->addClass('m-px');
-                                $col->addTextField('set-all-comment')->maxLength(255)->addClass('m-px');
-                            $col->addButton(__('Apply'))->setID('set-all');
+                            $col = $row->addColumn()
+                                ->setClass('flex-grow flex flex-col sm:flex-row items-stretch sm:items-center')
+                                ->setAttribute('x-show', 'changeAll')
+                                ->setAttribute('x-cloak');
+                                
+                            $col->addSelect('set-all-type')->fromArray($attendance->getAttendanceTypes())->groupAlign('left')->setClass('flex-1');
+                            $col->addSelect('set-all-reason')->fromArray($attendance->getAttendanceReasons())->groupAlign('middle')->setClass('flex-1 -ml-px');
+                            $col->addTextField('set-all-comment')->maxLength(255)->groupAlign('middle')->setClass('flex-1 -ml-px');
+                            $col->addButton(__('Apply'))->setID('set-all')->groupAlign('right')->setAttribute('@click', 'changeAll = false');
 
-                            $row->addSubmit();
+                            $row->addSubmit()->addClass('flex-shrink');
 
                             echo $form->getOutput();
                         }

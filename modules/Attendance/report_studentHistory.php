@@ -55,7 +55,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
                 $form = Form::create('action', $session->get('absoluteURL').'/index.php','get');
                 $form->setTitle(__('Choose Student'));
                 $form->setFactory(DatabaseFormFactory::create($pdo));
-                $form->setClass('noIntBorder fullWidth');
+                $form->setClass('noIntBorder w-full');
 
                 $form->addHiddenValue('q', "/modules/".$session->get('module')."/report_studentHistory.php");
 
@@ -152,7 +152,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
                     $form = Form::create('action', $session->get('absoluteURL').'/index.php','get');
                     $form->setTitle(__('Choose'));
                     $form->setFactory(DatabaseFormFactory::create($pdo));
-                    $form->setClass('noIntBorder fullWidth');
+                    $form->setClass('noIntBorder w-full');
 
                     $form->addHiddenValue('q', "/modules/".$session->get('module')."/report_studentHistory.php");
 

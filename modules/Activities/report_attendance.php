@@ -53,7 +53,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
     $form = Form::create('action', $session->get('absoluteURL').'/index.php','get');
 
     $form->setFactory(DatabaseFormFactory::create($pdo));
-    $form->setClass('noIntBorder fullWidth');
+    $form->setClass('noIntBorder w-full');
 
     $form->addHiddenValue('q', "/modules/".$session->get('module')."/report_attendance.php");
 
@@ -78,7 +78,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
         return;
     }   
         $studentResult = $container->get(UserGateway::class)->selectStudentsByActivity($session->get('gibbonSchoolYearID'),  $gibbonActivityID);
-
         $activityResult = $container->get(ActivityStudentGateway::class)->selectActivityByStudents($gibbonActivityID);
 
     if ($studentResult->rowCount() < 1 || $activityResult->rowCount() < 1) {
@@ -98,6 +97,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
         );
     }
 
+    $today = date('Y-m-d');
     $activity = $activityResult->fetch();
     $activity['participants'] = $studentResult->rowCount();
 
@@ -186,7 +186,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
         echo '<th>';
         echo __('Attendance');
         echo '</th>';
-        echo "<th class='emphasis subdued' style='text-align:right'>";
+        echo "<th class='italic subdued' style='text-align:right'>";
         printf(__('Sessions Recorded: %s of %s'), count($sessionAttendanceData), count($activitySessions));
         echo '</th>';
         echo '</tr>';
@@ -210,10 +210,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
                             echo "<td style='vertical-align:top; width: 50px;  white-space: nowrap;'>";
                         }
 
-                printf("<span title='%s'>%s</span><br/>&nbsp;<br/>", $sessionAttendanceData[$sessionDate]['info'], Format::dateReadable($sessionDate, '%a <br /> %b %e'));
+                printf("<span title='%s'>%s <br/> %s</span><br/>&nbsp;<br/>",
+                    $sessionAttendanceData[$sessionDate]['info'],
+                    Format::dayOfWeekName($sessionDate, true),
+                    Format::dateReadable($sessionDate, Format::MEDIUM_NO_YEAR)
+                );
             } else {
                 echo "<td style='color: #bbb; vertical-align:top; width: 50px; white-space: nowrap;'>";
-                echo Format::dateReadable($sessionDate, '%a <br /> %b %e').'<br/>&nbsp;<br/>';
+                echo Format::dayOfWeekName($sessionDate).' <br/> '.
+                    Format::dateReadable($sessionDate, Format::MEDIUM_NO_YEAR).'<br/>&nbsp;<br/>';
             }
             echo '</td>';
         }
@@ -231,6 +236,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
             echo "<tr data-student='$student'>";
             echo '<td>';
             echo $count.'. '.Format::name('', $row['preferredName'], $row['surname'], 'Student', true);
+            echo ' &nbsp;&nbsp;'.Format::small($row['formGroup'] ?? '');
             echo '</td>';
 
             foreach ($activitySessions as $sessionDate => $sessionTimestamp) {
@@ -257,7 +263,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_attendan
 
         foreach ($activitySessions as $sessionDate => $sessionTimestamp) {
             echo '<td>';
-            if (!empty($attendanceCount[$sessionDate])) {
+            if (!empty($attendanceCount[$sessionDate]) || $sessionDate <= $today) {
                 echo $attendanceCount[$sessionDate].' / '.$activity['participants'];
             }
             echo '</td>';

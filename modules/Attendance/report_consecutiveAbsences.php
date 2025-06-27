@@ -44,7 +44,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/consecutiveAbse
 
     $form = Form::create('action', $session->get('absoluteURL').'/index.php', 'get');
 
-    $form->setClass('noIntBorder fullWidth');
+    $form->setClass('noIntBorder w-full');
 
     $form->setTitle(__('Filter'));
 
@@ -95,7 +95,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/consecutiveAbse
             $result = $connection2->prepare($sql);
             $result->execute($data);
 
-            $absences = array_map(function ($row) use ($gibbon, $connection2, $dates) {
+            $absences = array_map(function ($row) use ($session, $connection2, $dates) {
               // Get number of absences within date range
                 $row['count'] = getAbsenceCount(
                     $session->get('guid'),

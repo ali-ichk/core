@@ -51,17 +51,28 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
         //Get current role category
         $roleCategory = $session->get('gibbonRoleIDCurrentCategory');
 
+        $gibbonPersonID = null;
+
+        //If student, set gibbonPersonID to self
+        if ($roleCategory == 'Student' and $highestAction == 'View Activities_studentRegister') {
+            $gibbonPersonID = $session->get('gibbonPersonID');
+        }else if ($roleCategory == 'Parent' and $highestAction == 'View Activities_studentRegisterByParent') {
+            $gibbonPersonID = $_GET['gibbonPersonID'] ?? '';
+
+        }
+        
         //Check access controls
         $settingGateway = $container->get(SettingGateway::class);
+
+        $canAccessRegistration = !empty($gibbonPersonID) && (($roleCategory == 'Student' && $highestAction == 'View Activities_studentRegister') || ($roleCategory == 'Parent' && $highestAction == 'View Activities_studentRegisterByParent'));
+
         $allActivityAccess = $settingGateway->getSettingByScope('Activities', 'access');
         $hideExternalProviderCost = $settingGateway->getSettingByScope('Activities', 'hideExternalProviderCost');
 
         if (!($allActivityAccess == 'View' or $allActivityAccess == 'Register')) {
-            echo "<div class='error'>";
-            echo __('Activity listing is currently closed.');
-            echo '</div>';
+            echo Format::alert(__('Activity listing is currently closed.'), 'error');
         } else {
-            if ($allActivityAccess == 'View') {
+            if ($allActivityAccess == 'View' && $canAccessRegistration) {
                 echo "<div class='warning'>";
                 echo __('Registration is currently closed, but you can still view activities.');
                 echo '</div>';
@@ -74,12 +85,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                 echo '</div>';
             }
 
-            $gibbonPersonID = null;
-
-            //If student, set gibbonPersonID to self
-            if ($roleCategory == 'Student' and $highestAction == 'View Activities_studentRegister') {
-                $gibbonPersonID = $session->get('gibbonPersonID');
-            }
+           
             //IF PARENT, SET UP LIST OF CHILDREN
             $countChild = 0;
             if ($roleCategory == 'Parent' and $highestAction == 'View Activities_studentRegisterByParent') {
@@ -109,6 +115,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
 
                     if ($countChild == 0) {
                         echo $page->getBlankSlate();
+                        $canAccessRegistration = false;
                     }
                 }
             }
@@ -117,7 +124,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
 
             $form = Form::create('searchForm', $session->get('absoluteURL').'/index.php','get');
             $form->setTitle(__('Filter & Search'));
-            $form->setClass('noIntBorder fullWidth');
+            $form->setClass('noIntBorder w-full');
 
             $form->addHiddenValue('q', "/modules/".$session->get('module')."/activities_view.php");
 
@@ -129,7 +136,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
 
             $row = $form->addRow();
                 $row->addLabel('search', __('Search'))->description(__('Activity name.'));
-                $row->addTextField('search')->setValue($search)->maxLength(20);
+                $row->addTextField('search')->setValue($search);
 
             $row = $form->addRow();
                 $row->addSearchSubmit($session, __('Clear Search'));
@@ -203,8 +210,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                 $schoolTerms = $schoolYearTermGateway->selectTermsBySchoolYear((int) $session->get('gibbonSchoolYearID'))->fetchKeyPair();
                 $yearGroups = getYearGroups($connection2);
 
-                // Toggle Features
-                $canAccessRegistration = !empty($gibbonPersonID) && (($roleCategory == 'Student' && $highestAction == 'View Activities_studentRegister') || ($roleCategory == 'Parent' && $highestAction == 'View Activities_studentRegisterByParent' && $countChild > 0));
+                // Toggle Features 
                 $paymentOn = $settingGateway->getSettingByScope('Activities', 'payment') != 'None' && $settingGateway->getSettingByScope('Activities', 'payment') != 'Single';
 
                 $activityGateway = $container->get(ActivityGateway::class);
@@ -226,12 +232,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                     if ($dateType == 'Term' and $maxPerTerm > 0) {
                         echo "<div class='warning'>";
                         echo __("Remember, each student can register for no more than $maxPerTerm activities per term. Your current registration count by term is:");
-                        $terms = getTerms($connection2, $session->get('gibbonSchoolYearID'));
-                        echo '<ul>';
-                        for ($i = 0; $i < count($terms); $i = $i + 2) {
-                            echo '<li>';
-                            echo '<b>'.$terms[($i + 1)].':</b> ';
 
+                        $terms = $container->get(SchoolYearTermGateway::class)->selectTermsBySchoolYear($session->get('gibbonSchoolYearID'))->fetchAll();
+
+                        echo '<ul>';
+                        foreach ($terms as $termCount => $term) {
+                            echo '<li>';
+                            echo '<b>'.$term['name'].':</b> ';
+                          
                                 $resultActivityCount = $container->get(ActivityStudentGateway::class)->selectCurrentActivityRegistrationsOfStudent($session->get('gibbonSchoolYearID'), $gibbonPersonID, $terms[$i]);
                                 
                             if ($resultActivityCount->rowCount() >= 0) {
@@ -295,7 +303,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                 $table->addColumn('name', __('Activity'))
                     ->context('primary')
                     ->format(function ($activity) {
-                        return $activity['name'].'<br/><span class="small emphasis">'.$activity['type'].'</span>';
+                        return $activity['name'].'<br/><span class="text-xs italic">'.$activity['type'].'</span>';
                     });
 
                 $table->addColumn('provider', __('Provider'))
@@ -322,9 +330,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                         } else {
                             $output .= Format::dateRangeReadable($activity['programStart'], $activity['programEnd']);
                         }
-
+                      
                         $output .= '<br/><span class="small emphasis">';
                         $output .= implode(', ', $activitySlotGateway->selectWeekdayNamesByActivity($activity['gibbonActivityID'])->fetchAll(\PDO::FETCH_COLUMN));
+
                         $output .= '</span>';
 
                         return $output;
