@@ -245,6 +245,13 @@ class CourseGateway extends QueryableGateway
                 JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
                 WHERE gibbonSchoolYearID=:gibbonSchoolYearID
                 ORDER BY gibbonCourse.nameShort, gibbonCourseClass.nameShort";
+        
+        return $this->db()->select($sql, $data);
+    }
+    public function selectCourseListBySchoolYear($gibbonSchoolYearID)
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+        $sql = "SELECT gibbonCourseID as value, nameShort as name FROM gibbonCourse WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name";
 
         return $this->db()->select($sql, $data);
     }
@@ -253,6 +260,14 @@ class CourseGateway extends QueryableGateway
     {
         $data = ['gibbonCourseClassID' => $gibbonCourseClassID];
         $sql = 'SELECT gibbonCourseClassID, gibbonCourse.nameShort AS courseName, gibbonCourseClass.nameShort AS className FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) WHERE gibbonCourseClassID=:gibbonCourseClassID ORDER BY gibbonCourse.name, gibbonCourseClass.name';
+
+        return $this->db()->select($sql, $data);
+    }
+    
+    public function selectCourseListBySchoolYearAndPerson($gibbonSchoolYearID, $gibbonPersonID )
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID];
+        $sql = "SELECT gibbonCourse.gibbonCourseID as value, gibbonCourse.nameShort as name FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseID=gibbonCourse.gibbonCourseID) JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) WHERE gibbonPersonID=:gibbonPersonID AND gibbonSchoolYearID=:gibbonSchoolYearID AND NOT role LIKE '%- Left' GROUP BY gibbonCourse.gibbonCourseID ORDER BY name";
 
         return $this->db()->select($sql, $data);
     }
@@ -296,6 +311,13 @@ class CourseGateway extends QueryableGateway
                         WHERE gibbonDepartmentID=:gibbonDepartmentID
                         AND NOT gibbonCourse.gibbonSchoolYearID=:gibbonSchoolYearID
                         ORDER BY sequenceNumber, gibbonCourse.nameShort, name";
+        return $this->db()->select($sql, $data);
+    }
+    
+    public function selectClassListBySchoolYear($gibbonSchoolYearID)
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+        $sql = "SELECT gibbonCourseClassID as value, CONCAT(gibbonCourse.nameShort, '.', gibbonCourseClass.nameShort) as name FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseID=gibbonCourse.gibbonCourseID) WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name";
         
         return $this->db()->select($sql, $data);
     }
@@ -304,6 +326,14 @@ class CourseGateway extends QueryableGateway
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID];
         $sql = 'SELECT gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class, gibbonCourseClass.gibbonCourseClassID FROM gibbonCourse, gibbonCourseClass, gibbonCourseClassPerson WHERE gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID AND gibbonCourseClass.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID AND gibbonCourseClassPerson.gibbonPersonID=:gibbonPersonID AND NOT role LIKE \'% - Left%\' ORDER BY course, class';
+        
+        return $this->db()->select($sql, $data);
+    }
+        
+    public function selectClassListBySchoolYearAndPerson($gibbonSchoolYearID, $gibbonPersonID)
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID];
+        $sql = "SELECT gibbonCourseClass.gibbonCourseClassID as value, CONCAT(gibbonCourse.nameShort, '.', gibbonCourseClass.nameShort) as name FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseID=gibbonCourse.gibbonCourseID) JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) WHERE gibbonPersonID=:gibbonPersonID AND gibbonSchoolYearID=:gibbonSchoolYearID AND NOT role LIKE '%- Left' ORDER BY gibbonCourseClass.name";
 
         return $this->db()->select($sql, $data);
     }
