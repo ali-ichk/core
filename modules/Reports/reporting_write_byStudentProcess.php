@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Services\Format;
 use Gibbon\Module\Reports\Domain\ReportingCycleGateway;
 use Gibbon\Module\Reports\Domain\ReportingValueGateway;
 use Gibbon\Module\Reports\Domain\ReportingProgressGateway;
@@ -27,6 +26,8 @@ use Gibbon\Module\Reports\Domain\ReportingScopeGateway;
 use Gibbon\Module\Reports\Domain\ReportingCriteriaGateway;
 use Gibbon\Module\Reports\Domain\ReportingAccessGateway;
 use Gibbon\Data\Validator;
+use Gibbon\Services\Format;
+use Gibbon\FileUploader;
 
 require_once '../../gibbon.php';
 
@@ -56,6 +57,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
     $reportingProgressGateway = $container->get(ReportingProgressGateway::class);
     $reportingCriteriaGateway = $container->get(ReportingCriteriaGateway::class);
     $reportingAccessGateway = $container->get(ReportingAccessGateway::class);
+    $fileUploader = $container->get(FileUploader::class);
     
     $values = $_POST['value'] ?? [];
 
@@ -109,17 +111,24 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
         $data['gibbonReportingCriteriaID'] = $gibbonReportingCriteriaID;
         $data['value'] = $data['comment'] = $data['gibbonScaleGradeID'] = null;
 
+        $existing = $reportingValueGateway->selectBy(['gibbonReportingCriteriaID' => $data['gibbonReportingCriteriaID'], 'gibbonPersonIDStudent' => $data['gibbonPersonIDStudent']])->fetch();
+        
         $criteriaType = $reportingCriteriaGateway->getCriteriaTypeByID($gibbonReportingCriteriaID);
+        $criteriaOptions = !empty($criteriaType['options']) ? json_decode($criteriaType['options'], true) : [];
         if ($criteriaType['valueType'] == 'Comment' || $criteriaType['valueType'] == 'Remark') {
             $data['comment'] = $value;
         } elseif ($criteriaType['valueType'] == 'Grade Scale') {
             $data['gibbonScaleGradeID'] = $reportingValueGateway->getGradeScaleIDByValue($criteriaType['gibbonScaleID'], $value);
             $data['value'] = $value;
+        } elseif ($criteriaType['valueType'] == 'Image') {
+            if (!empty($_FILES['file'.$gibbonReportingCriteriaID]['tmp_name'])) {
+                $data['value'] = $fileUploader->uploadAndResizeImage($_FILES['file'.$gibbonReportingCriteriaID], 'reportFile', $criteriaOptions['imageSize'] ?? 1024, $criteriaOptions['imageQuality'] ?? 80);
+            } else {
+                $data['value'] = empty($value) ? '' : $existing['value'];
+            }
         } else {
             $data['value'] = $value;
         }
-
-        $existing = $reportingValueGateway->selectBy(['gibbonReportingCriteriaID' => $data['gibbonReportingCriteriaID'], 'gibbonPersonIDStudent' => $data['gibbonPersonIDStudent']])->fetch();
 
         if (!empty($existing)) {
             $updated = $reportingValueGateway->update($existing['gibbonReportingValueID'], $data + [

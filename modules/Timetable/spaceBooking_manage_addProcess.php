@@ -22,6 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
 use Gibbon\Domain\Timetable\FacilityBookingGateway;
+use Gibbon\Domain\School\SchoolYearSpecialDayGateway;
 
 include '../../gibbon.php';
 
@@ -44,6 +45,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable/spaceBooking_man
     } else {
         //Proceed!
         $bookingGateway = $container->get(FacilityBookingGateway::class);
+        $specialDayGateway = $container->get(SchoolYearSpecialDayGateway::class);
 
         $data = [
             'foreignKey'     => $_POST['foreignKey'] ?? null,
@@ -56,6 +58,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable/spaceBooking_man
         
         $dates = $_POST['dates'] ?? '';
         $repeat = $_POST['repeat'] ?? '';
+        $override = $_POST['override'] ?? 'N';
         $repeatDaily = $repeat == 'Daily' ? $_POST['repeatDaily'] : null;
         $repeatWeekly = $repeat == 'Weekly' ? $_POST['repeatWeekly'] : null;
 
@@ -69,7 +72,21 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable/spaceBooking_man
             $available = '';
             //Scroll through all dates
             foreach ($dates as $date) {
-                $available = isSpaceFree($guid, $connection2, $data['foreignKey'], $data['foreignKeyID'], $date, $data['timeStart'], $data['timeEnd']);
+                $gibbonCourseClassID = null;
+                if ($override) {
+                    $available = true;
+                } else {
+                    $available = isSpaceFree($guid, $connection2, $data['foreignKey'], $data['foreignKeyID'], $date, $data['timeStart'], $data['timeEnd'], $gibbonCourseClassID);
+
+                    if (!$available && !empty($gibbonCourseClassID)) {
+                        $offTimetable = $specialDayGateway->getIsClassOffTimetableByDate($session->get('gibbonSchoolYearID'), $gibbonCourseClassID, $date);
+
+                        if ($offTimetable) {
+                            $available = true;
+                        }
+                    }
+                }
+
                 if ($available == false) {
                     ++$failCount;
                 } else {
@@ -91,7 +108,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable/spaceBooking_man
             } else {
                 // Redirect back to View Timetable by Facility if we started there
                 if (isset($_POST['source']) && $_POST['source'] == 'tt') {
-                    $ttDate = Format::date($dates[0]);
+                    $ttDate = $dates[0] ?? '';
                     $URL = $session->get('absoluteURL').'/index.php?q=/modules/Timetable/tt_space_view.php&gibbonSpaceID='.$data['foreignKeyID'].'&ttDate='.$ttDate;
                 }
 

@@ -19,10 +19,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Data\Validator;
+use Gibbon\Domain\Finance\FinanceExpenseApproverGateway;
 
 require_once '../../gibbon.php';
 
@@ -65,10 +66,7 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
             } else {
                 //Check if there are approvers
                 try {
-                    $data = array();
-                    $sql = "SELECT * FROM gibbonFinanceExpenseApprover JOIN gibbonPerson ON (gibbonFinanceExpenseApprover.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE status='Full'";
-                    $result = $connection2->prepare($sql);
-                    $result->execute($data);
+                    $result = $container->get(FinanceExpenseApproverGateway::class)->selectExpenseApprovers();
                 } catch (PDOException $e) {
                     $URL .= '&return=error2';
                     header("Location: {$URL}");
@@ -137,8 +135,10 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
 
                         //Notify reimbursement officer that action is required
                         $reimbursementOfficer = $settingGateway->getSettingByScope('Finance', 'reimbursementOfficer');
+                        $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
+
                         if ($reimbursementOfficer != false and $reimbursementOfficer != '') {
-                            $notificationText = sprintf(__('Someone has requested reimbursement for "%1$s" in budget "%2$s".'), $row['title'], $row['budget']);
+                            $notificationText = __('{person} has requested reimbursement for {title} in budget {budgetName}.', ['person' => $personName, 'title' => $row['title'], 'budgetName' => $row['budget']]);
                             $notificationSender = $container->get(NotificationSender::class);
                             $notificationSender->addNotification($reimbursementOfficer, $notificationText, 'Finance', "/index.php?q=/modules/Finance/expenses_manage_edit.php&gibbonFinanceExpenseID=$gibbonFinanceExpenseID&gibbonFinanceBudgetCycleID=$gibbonFinanceBudgetCycleID&status=&gibbonFinanceBudgetID2=".$row['gibbonFinanceBudgetID']);
                             $notificationSender->sendNotifications();

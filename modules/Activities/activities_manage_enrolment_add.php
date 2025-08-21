@@ -59,7 +59,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
     if ($gibbonActivityID == '') {
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
-
         $values = $container->get(ActivityGateway::class)->getActivityDetailsByID($gibbonActivityID);
 
         if (empty($values)) {

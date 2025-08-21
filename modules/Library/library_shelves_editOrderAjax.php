@@ -19,32 +19,25 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace Gibbon\Forms\View;
+use Gibbon\Domain\Library\LibraryShelfGateway;
 
-use Gibbon\Forms\Form;
-use Gibbon\Forms\ValidatableInterface;
-use Gibbon\Forms\View\FormRendererInterface;
-use Gibbon\Forms\View\FormView;
+require_once '../../gibbon.php';
 
-/**
- * FormTableView
- *
- * @version v21
- * @since   v21
- */
-class FormTableView extends FormView implements FormRendererInterface
-{
-    /**
-     * Transform a Form object into HTML and javascript output using a Twig template.
-     * @param   Form    $form
-     * @return  string
-     */
-    public function renderForm(Form $form)
-    {
-        $this->addData('form', $form);
-        $this->addData('javascript', $this->getInlineJavascript($form));
-        $this->addData('totalColumns', $this->getColumnCount($form));
+if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_shelves.php') == false) {
+    exit;
+} else {
+    // Proceed!
+    $order = $_POST['order'] ?? [];
 
-        return $this->render('components/formTable.twig.html');
+    if (empty($order)) {
+        exit;
+    } else {
+        $shelfGateway = $container->get(LibraryShelfGateway::class);
+
+        $count = 1;
+        foreach ($order as $gibbonLibraryShelfID) {
+            $updated = $shelfGateway->update($gibbonLibraryShelfID, ['sequenceNumber' => $count]);
+            $count++;
+        }
     }
 }

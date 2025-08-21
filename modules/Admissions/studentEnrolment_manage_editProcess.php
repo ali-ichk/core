@@ -19,11 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
+use Gibbon\Comms\NotificationEvent;
+use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\FormGroups\FormGroupGateway;
 use Gibbon\Domain\Timetable\CourseEnrolmentGateway;
-use Gibbon\Data\Validator;
-use Gibbon\Forms\CustomFieldHandler;
+use Gibbon\Domain\School\YearGroupGateway;
 
 require_once '../../gibbon.php';
 
@@ -143,8 +145,9 @@ if ($gibbonStudentEnrolmentID == '' or $gibbonSchoolYearID == '') { echo 'Fatal 
                         $partialFail &= !$pdo->getQuerySuccess();
                     }
 
-                    // Add student note
+                    // If form group is changed
                     if ($gibbonFormGroupID != $gibbonFormGroupIDOriginal) {
+                        // Add student note
                         $data = array('title' => __('Change of Form Group'), 'note' => __('Student\'s form group was changed from {formGroupFrom} to {formGroupTo} on {date}', ['formGroupFrom' => $formGroupOriginalNameShort, 'formGroupTo' => $formGroupToName, 'date' => Format::date(date('Y-m-d'))]), 'gibbonPersonID' => $gibbonPersonID, 'gibbonPersonIDCreator' => $session->get('gibbonPersonID'), 'timestamp' => date('Y-m-d H:i:s', time()));
                         $sql = 'INSERT INTO gibbonStudentNote SET title=:title, note=:note, gibbonPersonID=:gibbonPersonID, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestamp=:timestamp';
                         $result = $connection2->prepare($sql);
@@ -153,6 +156,40 @@ if ($gibbonStudentEnrolmentID == '' or $gibbonSchoolYearID == '') { echo 'Fatal 
                         if ($pdo->getQuerySuccess() == false) {
                             $partialFail = true;
                         }
+
+                        // Create the notification body
+                        $studentName = Format::name('', $row['preferredName'], $row['surname'], 'Student', false, true);
+                        $notificationString = __('{student}\'s form group was changed from {formGroupFrom} to {formGroupTo} on {date}', [
+                            'student'   => $studentName,
+                            'formGroupFrom' => $formGroupOriginalNameShort,
+                            'formGroupTo' => $formGroupToName,
+                            'date' => Format::date(date('Y-m-d')),
+                        ]);
+
+                        // Raise a new notification event
+                        $event = new NotificationEvent('Admissions', 'Student Form Group Changed');
+                        $event->addScope('gibbonYearGroupID', $gibbonYearGroupID);
+                        $event->setNotificationText($notificationString);
+                        $event->setActionLink('/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID='.$gibbonPersonID.'&search=&sort=&allStudents=on');
+
+                        // Head of Year
+                        $yearGroup = $container->get(YearGroupGateway::class)->getByID($gibbonYearGroupID);
+                        $event->addRecipient($yearGroup['gibbonPersonIDHOY']);
+
+                        // Form Tutor: original
+                        $formGroup = $container->get(FormGroupGateway::class)->getByID($gibbonFormGroupIDOriginal);
+                        $event->addRecipient($formGroup['gibbonPersonIDTutor']);
+                        $event->addRecipient($formGroup['gibbonPersonIDTutor2']);
+                        $event->addRecipient($formGroup['gibbonPersonIDTutor3']);
+
+                        // Form Tutor: new
+                        $formGroup = $container->get(FormGroupGateway::class)->getByID($gibbonFormGroupID);
+                        $event->addRecipient($formGroup['gibbonPersonIDTutor']);
+                        $event->addRecipient($formGroup['gibbonPersonIDTutor2']);
+                        $event->addRecipient($formGroup['gibbonPersonIDTutor3']);
+
+                        // Add event listeners to the notification sender
+                        $event->sendNotifications($pdo, $session);
                     }
 
                     $URL .= $partialFail
