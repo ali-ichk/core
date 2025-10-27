@@ -26,6 +26,8 @@ use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\IndividualNeeds\INGateway;
 use Gibbon\Domain\IndividualNeeds\INAssistantGateway;
+use Gibbon\Data\Validator;
+use Gibbon\UI\Components\Alert;
 
 require_once '../../gibbon.php';
 
@@ -177,6 +179,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_edit.p
                     }
                 }
             }
+
+            // ALERTS: possible change to IN alert status, recalculate alerts
+            $container->get(Alert::class)->recalculateAlerts($gibbonPersonID);
 
             if (!$partialFail) {
                 // Raise a new notification event
