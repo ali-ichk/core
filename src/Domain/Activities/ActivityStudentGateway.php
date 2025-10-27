@@ -140,6 +140,7 @@ class ActivityStudentGateway extends QueryableGateway
                 'gibbonPerson.preferredName',
                 'gibbonPerson.email',
                 'gibbonPerson.image_240',
+                'gibbonPerson.dob',
                 'gibbonFormGroup.name as formGroup',
                 'gibbonYearGroup.name as yearGroup',
                 'gibbonYearGroup.sequenceNumber as yearGroupSequence',
@@ -177,13 +178,15 @@ class ActivityStudentGateway extends QueryableGateway
     public function selectEnrolmentsByCategory($gibbonActivityCategoryID)
     {
         $data = ['gibbonActivityCategoryID' => $gibbonActivityCategoryID, 'today' => date('Y-m-d')];
-        $sql = "SELECT gibbonActivityStudent.gibbonPersonID as groupBy,
+        $sql = "SELECT gibbonActivityStudent.gibbonActivityStudentID as groupBy,
+                    gibbonActivityStudent.gibbonActivityStudentID as enrolmentID,
                     gibbonActivityStudent.gibbonActivityID,
                     gibbonActivityStudent.gibbonPersonID,
                     gibbonActivityStudent.status,
                     gibbonActivityChoice.timestampCreated,
                     gibbonPerson.surname,
                     gibbonPerson.preferredName,
+                    gibbonPerson.dob,
                     gibbonFormGroup.name as formGroup,
                     gibbonYearGroup.name as yearGroup,
                     gibbonYearGroup.sequenceNumber as yearGroupSequence,
