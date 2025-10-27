@@ -367,6 +367,11 @@ class BehaviourGateway extends QueryableGateway implements ScrubbableGateway
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonBehaviourID' => $gibbonBehaviourID];
         $sql = "SELECT * FROM gibbonBehaviour JOIN gibbonPerson ON (gibbonBehaviour.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonFormGroup.gibbonSchoolYearID=:gibbonSchoolYearID AND status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonBehaviourID=:gibbonBehaviourID";
 
+    public function selectNegativeBehaviourByStudentAndDate($gibbonPersonID, $days = 60)
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID, 'date' => date('Y-m-d', (time() - (24 * 60 * 60 * $days)))];
+        $sql = "SELECT * FROM gibbonBehaviour WHERE gibbonPersonID=:gibbonPersonID AND type = 'Negative' AND date>:date";
+        
         return $this->db()->select($sql, $data);
     }
 }
