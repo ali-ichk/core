@@ -244,10 +244,7 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
         $sql = "SELECT gibbonPerson.gibbonPersonID, surname, preferredName, gibbonFormGroupID, gibbonActivityStudent.status 
         FROM gibbonPerson JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonActivityStudent ON (gibbonActivityStudent.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart <= :today) AND (dateEnd IS NULL  OR dateEnd >= :today) AND gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonActivityStudent.status='Accepted' AND gibbonActivityID=:gibbonActivityID ORDER BY gibbonActivityStudent.status, surname, preferredName";
 
-        return $this->db()->select($sql, $data);
-    }
-  
-    public function getTransportList() 
+    public function selectTransportList() 
     {
         $sql = "SELECT DISTINCT transport FROM gibbonPerson WHERE status = 'Full' AND NOT transport='' ORDER BY transport";
 
