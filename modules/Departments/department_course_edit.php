@@ -37,7 +37,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_cou
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
 
-            $result = $container->get(CourseGateway::class)->getCourseInfoByCourseID($gibbonCourseID);
+            $result = $container->get(CourseGateway::class)->getCourseDetails($gibbonCourseID);
 
         if (empty($result)) {
             $page->addError(__('The selected record does not exist, or you do not have access to it.'));
