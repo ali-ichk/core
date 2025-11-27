@@ -185,8 +185,8 @@ class FormGroupGateway extends QueryableGateway
   
     public function getFormGroupDetailsByID($gibbonFormGroupID)
     {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonFormGroupID' => $gibbonFormGroupID];
-        $sql = 'SELECT gibbonSchoolYear.gibbonSchoolYearID, gibbonFormGroupID, gibbonSchoolYear.name as yearName, gibbonFormGroup.name, gibbonFormGroup.nameShort, gibbonPersonIDTutor, gibbonPersonIDTutor2, gibbonPersonIDTutor3, gibbonPersonIDEA, gibbonPersonIDEA2, gibbonPersonIDEA3, gibbonSpace.name AS space, website FROM gibbonFormGroup JOIN gibbonSchoolYear ON (gibbonFormGroup.gibbonSchoolYearID=gibbonSchoolYear.gibbonSchoolYearID) LEFT JOIN gibbonSpace ON (gibbonFormGroup.gibbonSpaceID=gibbonSpace.gibbonSpaceID) WHERE gibbonSchoolYear.gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonFormGroupID=:gibbonFormGroupID';
+        $data = ['gibbonFormGroupID' => $gibbonFormGroupID];
+        $sql = 'SELECT gibbonSchoolYear.gibbonSchoolYearID, gibbonFormGroupID, gibbonSchoolYear.name as yearName, gibbonFormGroup.name, gibbonFormGroup.nameShort, gibbonPersonIDTutor, gibbonPersonIDTutor2, gibbonPersonIDTutor3, gibbonPersonIDEA, gibbonPersonIDEA2, gibbonPersonIDEA3, gibbonSpace.name AS space, website FROM gibbonFormGroup JOIN gibbonSchoolYear ON (gibbonFormGroup.gibbonSchoolYearID=gibbonSchoolYear.gibbonSchoolYearID) LEFT JOIN gibbonSpace ON (gibbonFormGroup.gibbonSpaceID=gibbonSpace.gibbonSpaceID) WHERE gibbonFormGroupID=:gibbonFormGroupID';
         
         return $this->db()->select($sql, $data);
     }
@@ -209,7 +209,7 @@ class FormGroupGateway extends QueryableGateway
   
     public function getFormGroupDetailsByFamilyAdult($gibbonFormGroupID, $gibbonPersonID)
     {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonFormGroupID' => $gibbonFormGroupID, 'gibbonPersonID' => $gibbonPersonID,'today' => date('Y-m-d')];
+        $data = ['gibbonFormGroupID' => $gibbonFormGroupID, 'gibbonPersonID' => $gibbonPersonID,'today' => date('Y-m-d')];
         $sql = "SELECT gibbonSchoolYear.gibbonSchoolYearID, gibbonFormGroup.gibbonFormGroupID, gibbonSchoolYear.name as yearName, gibbonFormGroup.name, gibbonFormGroup.nameShort, gibbonPersonIDTutor, gibbonPersonIDTutor2, gibbonPersonIDTutor3, gibbonPersonIDEA, gibbonPersonIDEA2, gibbonPersonIDEA3, gibbonSpace.name AS space, website
                         FROM gibbonFormGroup
                             JOIN gibbonSchoolYear ON (gibbonFormGroup.gibbonSchoolYearID=gibbonSchoolYear.gibbonSchoolYearID)
@@ -223,8 +223,7 @@ class FormGroupGateway extends QueryableGateway
                             JOIN gibbonFamily ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamily.gibbonFamilyID)
                             JOIN gibbonFamilyAdult ON (gibbonFamilyAdult.gibbonFamilyID=gibbonFamily.gibbonFamilyID)
                             LEFT JOIN gibbonSpace ON (gibbonFormGroup.gibbonSpaceID=gibbonSpace.gibbonSpaceID)
-                        WHERE gibbonSchoolYear.gibbonSchoolYearID=:gibbonSchoolYearID
-                            AND gibbonFormGroup.gibbonFormGroupID=:gibbonFormGroupID
+                        WHERE gibbonFormGroup.gibbonFormGroupID=:gibbonFormGroupID
                             AND gibbonFamilyAdult.gibbonPersonID=:gibbonPersonID";
 
     return $this->db()->select($sql, $data);
