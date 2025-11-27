@@ -102,7 +102,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_take
         $direction = $attendanceCode['direction'];
 
         // Check for last record on same day
-        $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceRecordsByPersonAndDate($gibbonPersonID, $currentDate.'%');
+        $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceLogsByPersonAndDate($gibbonPersonID, $currentDate.'%', 'N');
         $recentLog = $result->fetch();
         
         // Check context and type, updating only if not a match

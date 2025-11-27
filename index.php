@@ -163,7 +163,7 @@ if ($session->get('pageLoads') == 0 && !$session->has('address')) { // First pag
                         $currentDate = date('Y-m-d');
                         if (isSchoolOpen($guid, $currentDate, $connection2, true)) { // Is school open today
                             // Check for existence of records today
-                            $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceTypeByStudentAndDate($session->get('gibbonPersonID'), $currentDate);
+                            $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceLogsByPersonAndDate($session->get('gibbonPersonID'), $currentDate, 'N');
                             
                             if ($result->rowCount() == 0) {
                                 // No registration yet

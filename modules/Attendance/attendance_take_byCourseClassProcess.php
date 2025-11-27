@@ -142,7 +142,7 @@ else {
                         $direction = $attendanceCode['direction'];
 
                         // Check for last record on same day
-                        $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceRecordsByPersonAndDate($gibbonPersonID, $currentDate.'%');
+                        $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceLogsByPersonAndDate($gibbonPersonID, $currentDate.'%', 'N');
                         
                         // Check context, gibbonCourseClassID and type, updating only if not a match
                         $existing = false ;

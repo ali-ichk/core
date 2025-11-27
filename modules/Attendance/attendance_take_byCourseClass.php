@@ -54,7 +54,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
     $gibbonTTDayRowClassID = $_GET['gibbonTTDayRowClassID'] ?? '';
 
     if (empty($gibbonCourseClassID)) {
-        $result = $container->get(CourseClassGateway::class)->selectClassByStudent($session->get('gibbonPersonID'), $session->get('gibbonSchoolYearID'));
+        $result = $container->get(CourseClassGateway::class)->selectAttendanceClassesByStudent($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'), );
 
         if ($result->rowCount() > 0) {
             $gibbonCourseClassID = $result->fetchColumn(0);
@@ -136,7 +136,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
                     }
 
                     // Show attendance log for the current day
-                    $resultLog = $container->get(AttendanceLogCourseClassGateway::class)->selectAttendanceLogByCourseAndDate($gibbonCourseClassID, $currentDate . "%", $gibbonTTDayRowClassID);
+                    $resultLog = $container->get(AttendanceLogCourseClassGateway::class)->selectAttendanceLogByClassAndDate($gibbonCourseClassID, $currentDate . "%", $gibbonTTDayRowClassID);
 
                     if ($resultLog->rowCount() < 1) {
                         echo "<div class='error'>";
@@ -154,7 +154,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
                     }
 
                     if (!empty($gibbonTTDayRowClassID)) {
-                        $resultCourseClass = $container->get(CourseClassGateway::class)->selectStudentsByClassIDAndTTDayRowClassID($gibbonCourseClassID, $currentDate, $gibbonTTDayRowClassID);
+                        $resultCourseClass = $container->get(CourseClassGateway::class)->selectStudentsByClassAndPeriod($gibbonCourseClassID, $currentDate, $gibbonTTDayRowClassID);
                     } else {
                         $resultCourseClass = $container->get(CourseClassGateway::class)->selectStudentsByClassID($gibbonCourseClassID, $currentDate);
                     }
@@ -178,7 +178,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
 
                             // Check for school prefill if attendance not taken in this class
                             if ($result->rowCount() == 0) {                                
-                                $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceLogByStudentIDAndDate($student['gibbonPersonID'], $currentDate, $crossFillClasses);
+                                $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceLogsByPersonAndDate($session->get('gibbonPersonID'), $currentDate, $crossFillClasses);
 
                                 $log = ($result->rowCount() > 0) ? $result->fetch() : $log;
                                 $log['prefilled'] = $result->rowCount() > 0 ? $log['context'] : '';

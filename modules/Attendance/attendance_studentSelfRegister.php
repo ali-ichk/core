@@ -55,7 +55,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_stud
         }
         else {
             // Check for existence of records today
-            $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceTypeByStudentAndDate($session->get('gibbonPersonID'), $currentDate);
+            $result = $container->get(AttendanceLogPersonGateway::class)->selectAttendanceLogsByPersonAndDate($session->get('gibbonPersonID'), $currentDate, 'N');
 
             if ($result->rowCount() > 0) { //Records! Output current status
                 $row = $result->fetch();
