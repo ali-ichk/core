@@ -30,6 +30,8 @@ use Gibbon\Forms\Input\Button;
  *
  * @version v14
  * @since   v14
+ * 
+ * @inheritDoc
  */
 class Column extends Row implements OutputableInterface
 {
@@ -91,8 +93,11 @@ class Column extends Row implements OutputableInterface
      */
     protected function getContainerClass($element)
     {
-        if (!method_exists($element, 'getClass')) return '';
+        $class = '';
+        
+        if (method_exists($element, 'getClass')) $class .= $element->getClass();
+        if (method_exists($element, 'getOuterClass')) $class .= ' '.$element->getOuterClass();
 
-        return str_replace('standardWidth', '', (string) $element->getClass());
+        return str_replace('standardWidth', '', (string)$class);
     }
 }

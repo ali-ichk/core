@@ -81,7 +81,7 @@ class SessionFactory
                 'name'             => 'G'.substr(hash('sha256', $_guid), 0, 16),
                 'cookie_samesite'  => 'Lax',
                 'cookie_httponly'  => true,
-                'cookie_secure'    => isset($_SERVER['HTTPS']),
+                'cookie_secure'    => $config['sessionSecure'] ?? isset($_SERVER['HTTPS']),
             ]);
         }
 
@@ -92,11 +92,11 @@ class SessionFactory
         // which is currently used in many Process pages.
         // TODO: replace this logic when switching to routing.
         $address = $_GET['q'] ?? $_POST['address'] ?? '';
-        $path = !empty($address) ? $address : $_SERVER['SCRIPT_FILENAME'];
+        $path = !empty($address) ? $address : (php_sapi_name() === 'cli' ? realpath($_SERVER['argv'][0]) : $_SERVER['SCRIPT_FILENAME']);
 
         $module = getModuleName($path);
         $action = getActionName($path);
-
+        
         // Create the instance from information of container
         // and environment.
         return new Session($_guid, $address, $module, $action);

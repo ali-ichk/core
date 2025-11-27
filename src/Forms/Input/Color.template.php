@@ -2,6 +2,7 @@
 <?php if ($palette == 'background') { ?>
     '#ffffff','#f5f5f5','#e5e5e5','#d4d4d4','#a3a3a3','#737373','#525252',
     '#fca5a5','#fdba74','#fde047','#86efac','#5eead4','#93c5fd','#c4b5fd','#f9a8d4',
+    '#fecaca','#fed7aa','#fef08a','#bbf7d0','#99f6e4','#bfdbfe','#ddd6fe','#fbcfe8',
     '#fee2e2','#ffedd5','#fef9c3','#dcfce7','#ccfbf1','#dbeafe','#ede9fe','#fce7f3',
 <?php } else { ?>
     '#ffffff','#f5f5f5','#d4d4d4','#737373','#404040','#171717','#000000',
@@ -13,7 +14,7 @@
 ],}" x-cloak>
 
     <button type="button" @click="isOpen = !isOpen"
-        class="w-10 h-10 rounded-full focus:outline-none inline-flex items-center justify-center shadow hover:ring" :class="{'text-gray-500': colorSelected == '#ffffff', 'text-white': colorSelected != '#ffffff'}"
+        class="w-10 h-10 rounded-full focus:outline-none inline-flex items-center justify-center shadow hover:ring" :class="{'text-gray-500': colorSelected == '#ffffff' || colorSelected == '', 'text-white': colorSelected != '#ffffff' && colorSelected != ''}"
         :style="`background: ${colorSelected};`">
         <?= icon('outline', 'swatch', 'size-6'); ?>
     </button>

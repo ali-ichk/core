@@ -223,7 +223,7 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
         return $this->db()->select($sql, $data);
     }
 
-    public function getTransportList() 
+    public function selectTransportList() 
     {
         $sql = "SELECT DISTINCT transport FROM gibbonPerson WHERE status = 'Full' AND NOT transport='' ORDER BY transport";
 
@@ -238,11 +238,11 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
         return $preferences;
     }
 
-    public function getUserPreferenceByScope($gibbonPersonID, $scope, $key, $default = null) 
+    public function getUserPreferenceByScope($gibbonPersonID, $scope, $key = null, $default = null) 
     {
         $preferences = $this->getUserPreferences($gibbonPersonID);
 
-        return $preferences[$scope][$key] ?? $default;
+        return !empty($key) ? ($preferences[$scope][$key] ?? $default) : ($preferences[$scope] ?? $default);
     }
 
     public function setUserPreferences($gibbonPersonID, $newPreferences, $replace = false) 

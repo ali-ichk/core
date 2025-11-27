@@ -120,7 +120,7 @@ class Core
     }
 
     /**
-     * Is Gibbon Installed? Based on existance of config.php file
+     * Is Gibbon Installed? Based on existence of config.php file
      *
      * @return   bool
      */
@@ -213,15 +213,17 @@ class Core
         // Otherwise load the config values from global scope
         if (empty($this->config) || !is_array($this->config)) {
             $this->config = [
-                'databaseServer' => $databaseServer ?? '',
-                'databaseUsername' => $databaseUsername ?? 'gibbon',
-                'databasePassword' => $databasePassword ?? '',
-                'databaseName' => $databaseName ?? 'gibbon',
-                'databasePort' => $databasePort ?? 3306,
-                'guid' => $guid ?? null,
-                'caching' => $caching ?? 10,
-                'sessionHandler' => $sessionHandler ?? null,
+                'databaseServer'       => $databaseServer ?? '',
+                'databaseUsername'     => $databaseUsername ?? 'gibbon',
+                'databasePassword'     => $databasePassword ?? '',
+                'databaseName'         => $databaseName ?? 'gibbon',
+                'databasePort'         => $databasePort ?? 3306,
+                'guid'                 => $guid ?? null,
+                'caching'              => $caching ?? 10,
+                'sessionHandler'       => $sessionHandler ?? null,
                 'sessionEncryptionKey' => $sessionEncryptionKey ?? null,
+                'sessionSecure'        => $sessionSecure ?? null,
+                'allowImpersonateUser' => $allowImpersonateUser ?? [],
             ];
         }
     }

@@ -279,14 +279,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units_edit_deploy.
         $form->addRow()->addHeading('Access', __('Access'));
 
         $row = $form->addRow();
-            $row->addLabel('viewableStudents', __('Viewable to Students'));
+            $row->addLabel('viewableStudents', __('Viewable by Students'));
             $row->addYesNo('viewableStudents')->required();
 
         $row = $form->addRow();
-            $row->addLabel('viewableParents', __('Viewable to Parents'));
+            $row->addLabel('viewableParents', __('Viewable by Parents'));
             $row->addYesNo('viewableParents')->required();
 
-        $form->addRow()->addSubmit();
+        $row = $form->addRow();
+        $row->addCheckbox('lessonNameReplace')->setValue('Y')->alignLeft()->description(__('Replace the lesson name with the smart block name?'));
+        $row->addSubmit();
 
         echo $form->getOutput();
     }

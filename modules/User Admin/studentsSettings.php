@@ -97,10 +97,11 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/studentsSetting
         $row->addYesNo($setting['name'])->selected($setting['value'])->required();
 
     $setting = $settingGateway->getSettingByScope('Students', 'noteCreationNotification', true);
-    $noteCreationNotificationRoles = array(
+    $noteCreationNotificationRoles = [
         'Tutors' => __('Tutors'),
-        'Tutors & Teachers' => __('Tutors & Teachers')
-    );
+        'Tutors & Teachers' => __('Tutors & Teachers'),
+        'None' => __('None')
+    ];
     $row = $form->addRow();
         $row->addLabel($setting['name'], __($setting['nameDisplay']))->description(__($setting['description']));
         $row->addSelect($setting['name'])->fromArray($noteCreationNotificationRoles)->selected($setting['value'])->required();
@@ -127,74 +128,6 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/studentsSetting
             ->selected($contacts)
             ->setParameter('resultsLimit', 10)
             ->resultsFormatter('function(item){ return "<li class=\'\'><div class=\'inline-block bg-cover w-12 h-12 rounded-full bg-gray-200 border border-gray-400 bg-no-repeat\' style=\'background-image: url(" + item.image + ");\'></div><div class=\'inline-block px-4 truncate\'>" + item.name + "<br/><span class=\'inline-block opacity-75 truncate text-xxs\'>" + item.jobTitle + "</span></div></li>"; }');
-
-    $form->addRow()->addHeading('Alerts', __('Alerts'));
-
-    $setting = $settingGateway->getSettingByScope('Students', 'academicAlertLowThreshold', true);
-    $row = $form->addRow();
-        $row->addLabel($setting['name'], __($setting['nameDisplay']))
-            ->description(__($setting['description']));
-        $row->addNumber($setting['name'])
-            ->setValue($setting['value'])
-            ->decimalPlaces(0)
-            ->minimum(0)
-            ->maximum(50)
-            ->required();
-
-    $setting = $settingGateway->getSettingByScope('Students', 'academicAlertMediumThreshold', true);
-    $row = $form->addRow();
-        $row->addLabel($setting['name'], __($setting['nameDisplay']))
-            ->description(__($setting['description']));
-        $row->addNumber($setting['name'])
-            ->setValue($setting['value'])
-            ->decimalPlaces(0)
-            ->minimum(0)
-            ->maximum(50)
-            ->required();
-
-    $setting = $settingGateway->getSettingByScope('Students', 'academicAlertHighThreshold', true);
-    $row = $form->addRow();
-        $row->addLabel($setting['name'], __($setting['nameDisplay']))
-            ->description(__($setting['description']));
-        $row->addNumber($setting['name'])
-            ->setValue($setting['value'])
-            ->decimalPlaces(0)
-            ->minimum(0)
-            ->maximum(50)
-            ->required();
-
-        $setting = $settingGateway->getSettingByScope('Students', 'behaviourAlertLowThreshold', true);
-        $row = $form->addRow();
-            $row->addLabel($setting['name'], __($setting['nameDisplay']))
-                ->description(__($setting['description']));
-            $row->addNumber($setting['name'])
-                ->setValue($setting['value'])
-                ->decimalPlaces(0)
-                ->minimum(0)
-                ->maximum(50)
-                ->required();
-
-        $setting = $settingGateway->getSettingByScope('Students', 'behaviourAlertMediumThreshold', true);
-        $row = $form->addRow();
-            $row->addLabel($setting['name'], __($setting['nameDisplay']))
-                ->description(__($setting['description']));
-            $row->addNumber($setting['name'])
-                ->setValue($setting['value'])
-                ->decimalPlaces(0)
-                ->minimum(0)
-                ->maximum(50)
-                ->required();
-
-        $setting = $settingGateway->getSettingByScope('Students', 'behaviourAlertHighThreshold', true);
-        $row = $form->addRow();
-            $row->addLabel($setting['name'], __($setting['nameDisplay']))
-                ->description(__($setting['description']));
-            $row->addNumber($setting['name'])
-                ->setValue($setting['value'])
-                ->decimalPlaces(0)
-                ->minimum(0)
-                ->maximum(50)
-                ->required();
 
     $row = $form->addRow()->addHeading('Day-Type Options', __('Day-Type Options'));
 

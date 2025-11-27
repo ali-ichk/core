@@ -80,8 +80,7 @@ class ClassesLayer extends AbstractTimetableLayer
 
     protected function loadItemsByPerson(\DatePeriod $dateRange, TimetableContext $context) 
     {
-        $specialDays = $this->specialDayGateway->selectSpecialDaysByDateRange($dateRange->getStartDate()->format('Y-m-d'), $dateRange->getEndDate()->format('Y-m-d'))->fetchGroupedUnique();
-
+        $specialDays = $context->get('specialDays', []);
         $offTimetable = array_reduce($specialDays, function ($group, $item) use ($context) {
             $group[$item['date']] = $this->specialDayGateway->getIsStudentOffTimetableByDate($context->get('gibbonSchoolYearID'), $context->get('gibbonPersonID'), $item['date']) ? $item['name'] : '';
 
@@ -104,6 +103,8 @@ class ClassesLayer extends AbstractTimetableLayer
         foreach ($classes as $class) {
             $teachers = $classTeachers[$class['gibbonTTDayRowClassID']] ?? [];
             $specialDay = $specialDays[$class['date']] ?? [];
+
+            if (!empty($specialDay['cancelClasses']) && $specialDay['cancelClasses'] == 'Y') continue;
 
             $item = $this->createItem($class['date'])->loadData([
                 'type'          => __('Class'),
@@ -179,8 +180,8 @@ class ClassesLayer extends AbstractTimetableLayer
                 if ($canEditTimetable) {
                     $item->set('secondaryAction', [
                         'name'      => 'edit',
-                        'label'     => __('Manage Exceptions'),
-                        'url'       => Url::fromModuleRoute('Timetable Admin', 'tt_edit_day_edit_class_exception')->withQueryParams(['gibbonSchoolYearID' => $context->get('gibbonSchoolYearID'), 'gibbonTTID' => $class['gibbonTTID'], 'gibbonTTDayID' => $class['gibbonTTDayID'], 'gibbonTTDayRowClassID' => $class['gibbonTTDayRowClassID'], 'gibbonTTColumnRowID' => $class['gibbonTTColumnRowID'], 'gibbonCourseClassID' => $class['gibbonCourseClassID']]),
+                        'label'     => __('Add Exception'),
+                        'url'       => Url::fromModuleRoute('Timetable Admin', 'tt_edit_day_edit_class_exception_addProcess')->withQueryParams(['gibbonSchoolYearID' => $context->get('gibbonSchoolYearID'), 'gibbonTTID' => $class['gibbonTTID'], 'gibbonTTDayID' => $class['gibbonTTDayID'], 'gibbonTTDayRowClassID' => $class['gibbonTTDayRowClassID'], 'gibbonTTColumnRowID' => $class['gibbonTTColumnRowID'], 'gibbonCourseClassID' => $class['gibbonCourseClassID'], 'gibbonPersonID' => $context->get('gibbonPersonID')])->directLink(),
                         'icon'      => 'user-minus',
                         'iconClass' => 'text-gray-600 hover:text-gray-800',
                     ]);
@@ -211,7 +212,8 @@ class ClassesLayer extends AbstractTimetableLayer
         }
 
         foreach ($lessons as $lesson) {
-            $specialDay = $specialDays[$class['date']] ?? [];
+            $specialDay = $specialDays[$lesson['date']] ?? [];
+            if (!empty($specialDay['cancelClasses']) && $specialDay['cancelClasses'] == 'Y') continue;
 
             $item = $this->createItem($lesson['date'])->loadData([
                 'type'          => __('Lesson'),
@@ -265,7 +267,7 @@ class ClassesLayer extends AbstractTimetableLayer
 
     public function loadItemsByFacility(\DatePeriod $dateRange, TimetableContext $context) 
     {
-        $specialDays = $this->specialDayGateway->selectSpecialDaysByDateRange($dateRange->getStartDate()->format('Y-m-d'), $dateRange->getEndDate()->format('Y-m-d'))->fetchGroupedUnique();
+        $specialDays = $context->get('specialDays', []);
 
         $classes = $this->timetableDayDateGateway->selectTimetabledPeriodsByFacilityAndDateRange($context->get('gibbonSpaceID'), $dateRange->getStartDate()->format('Y-m-d'), $dateRange->getEndDate()->format('Y-m-d'))->fetchAll();
 
@@ -278,6 +280,7 @@ class ClassesLayer extends AbstractTimetableLayer
 
         foreach ($classes as $class) {
             $specialDay = $specialDays[$class['date']] ?? [];
+            if (!empty($specialDay['cancelClasses']) && $specialDay['cancelClasses'] == 'Y') continue;
 
             $teachers = $classTeachers[$class['gibbonTTDayRowClassID']] ?? [];
 

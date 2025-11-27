@@ -109,5 +109,19 @@ class DepartmentGateway extends QueryableGateway
         $sql = 'SELECT gibbonDepartment.name AS department, gibbonCourse.name, gibbonCourse.description, gibbonSchoolYear.name AS year, gibbonCourse.gibbonSchoolYearID, gibbonCourse.fields FROM gibbonDepartment JOIN gibbonCourse ON (gibbonDepartment.gibbonDepartmentID=gibbonCourse.gibbonDepartmentID) JOIN gibbonSchoolYear ON (gibbonCourse.gibbonSchoolYearID=gibbonSchoolYear.gibbonSchoolYearID) WHERE gibbonDepartment.gibbonDepartmentID=:gibbonDepartmentID AND gibbonCourseID=:gibbonCourseID';
 
         return $this->db()->selectOne($sql, $data);
+    public function selectDepartmentsOfTypeLearningArea()
+    {
+        $data = [];
+        $sql = "SELECT gibbonDepartmentID as value, name FROM gibbonDepartment WHERE type='Learning Area' ORDER BY name";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    public function selectDepartmentsOfTypeLearningAreaByStaff($gibbonPersonID)
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID];
+        $sql = "SELECT gibbonDepartment.gibbonDepartmentID as value, gibbonDepartment.name FROM gibbonDepartment JOIN gibbonDepartmentStaff ON (gibbonDepartmentStaff.gibbonDepartmentID=gibbonDepartment.gibbonDepartmentID) WHERE gibbonPersonID=:gibbonPersonID AND (role='Coordinator' OR role='Teacher (Curriculum)') AND type='Learning Area' ORDER BY name";
+
+        return $this->db()->select($sql, $data);
     }
 }

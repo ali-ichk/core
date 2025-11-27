@@ -76,7 +76,7 @@ class ActivityStaffGateway extends QueryableGateway
             ])
             ->innerJoin('gibbonStaff', 'gibbonStaff.gibbonPersonID=gibbonPerson.gibbonPersonID')
             ->leftJoin('gibbonActivityCategory', 'gibbonActivityCategory.gibbonActivityCategoryID=:gibbonActivityCategoryID')
-            ->leftJoin('gibbonActivity', 'gibbonActivity.gibbonActivityCategoryID=gibbonActivityCategory.gibbonActivityCategoryID')
+            ->leftJoin('gibbonActivity', 'gibbonActivity.gibbonActivityCategoryID=gibbonActivityCategory.gibbonActivityCategoryID AND gibbonActivity.active="Y"')
             ->leftJoin('gibbonActivityStaff', 'gibbonActivityStaff.gibbonActivityID=gibbonActivity.gibbonActivityID AND gibbonActivityStaff.gibbonPersonID=gibbonPerson.gibbonPersonID')
             ->bindValue('gibbonActivityCategoryID', $gibbonActivityCategoryID)
             ->where("gibbonPerson.status = 'Full'")
@@ -100,8 +100,9 @@ class ActivityStaffGateway extends QueryableGateway
     public function selectStaffByCategory($gibbonActivityCategoryID)
     {
         $data = ['gibbonActivityCategoryID' => $gibbonActivityCategoryID];
-        $sql = "SELECT gibbonPerson.gibbonPersonID as groupBy,
+        $sql = "SELECT gibbonActivityStaff.gibbonActivityStaffID as groupBy,
                     gibbonActivity.gibbonActivityID,
+                    gibbonActivityStaff.gibbonActivityStaffID as enrolmentID,
                     gibbonActivityStaff.gibbonActivityStaffID,
                     gibbonActivityStaff.role,
                     gibbonPerson.gibbonPersonID,
