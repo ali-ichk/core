@@ -174,7 +174,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department.php
             //Print other courses
             if ($role == 'Coordinator' or $role == 'Assistant Coordinator' or $role == 'Teacher (Curriculum)' or $role == 'Teacher') {
                  
-                $result = $container->get(CourseGateway::class)->selectCourseListByOtherDepartment($gibbonDepartmentID, $session->get('gibbonSchoolYearID'));
+                $result = $container->get(CourseGateway::class)->selectPastCoursesByDepartment($gibbonDepartmentID, $session->get('gibbonSchoolYearID'));
 
                 $courses = ($result->rowCount() > 0)? $result->fetchAll() : array();
                 $courses = array_reduce($courses, function($carry, $item) {
