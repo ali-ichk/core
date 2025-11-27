@@ -47,7 +47,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Form Groups/formGroups_det
             try {
                 if ($highestAction == "View Form Groups_all") {
 
-                    $result = $container->get(FormGroupGateway::class)->getFormGroupDetailsBySchoolYear($session->get('gibbonSchoolYearID'), $gibbonFormGroupID);
+                    $result = $container->get(FormGroupGateway::class)->getFormGroupDetailsByID($gibbonFormGroupID);
                 }
                 else {
                     $result = $container->get(FormGroupGateway::class)->getFormGroupDetailsByFamilyAdult($session->get('gibbonSchoolYearID'), $gibbonFormGroupID, $session->get('gibbonPersonID'));
