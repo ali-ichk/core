@@ -346,6 +346,13 @@ class BehaviourGateway extends QueryableGateway implements ScrubbableGateway
         return $this->db()->select($sql, $data);
     }
 
+    public function selectBehavioursByCreatorAndStudent($gibbonSchoolYearID, $gibbonPersonIDCreator, $gibbonPersonID) {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDCreator' => $gibbonPersonIDCreator, 'gibbonPersonID' => $gibbonPersonID, 'today' => date('Y-m-d')];               
+        $sql = "SELECT gibbonPerson.gibbonPersonID, surname, preferredName, gibbonYearGroup.nameShort AS yearGroup, gibbonFormGroup.nameShort AS formGroup FROM gibbonBehaviour JOIN gibbonPerson ON (gibbonBehaviour.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonYearGroup ON (gibbonStudentEnrolment.gibbonYearGroupID=gibbonYearGroup.gibbonYearGroupID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonBehaviour.gibbonPersonIDCreator=:gibbonPersonIDCreator AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<=:today) AND (dateEnd IS NULL OR dateEnd>=:today) AND gibbonPerson.gibbonPersonID=:gibbonPersonID GROUP BY gibbonPerson.gibbonPersonID, yearGroup, formGroup ORDER BY surname, preferredName";
+        
+        return $this->db()->select($sql, $data);
+    }
+
     public function updateMultiIncidentIDByBehaviourID($gibbonBehaviourID, $gibbonMultiIncidentID)
     {
         $data = ['gibbonBehaviourID' => $gibbonBehaviourID, 'gibbonMultiIncidentID' => $gibbonMultiIncidentID];
@@ -353,19 +360,14 @@ class BehaviourGateway extends QueryableGateway implements ScrubbableGateway
                 
         return $this->db()->update($sql, $data);
     }
-
-    public function getExistingBehaviourRecordByID($gibbonSchoolYearID, $gibbonBehaviourID, $gibbonPersonID)
+    
+    public function getBehaviourRecordByID($gibbonBehaviourID)
     {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonBehaviourID' => $gibbonBehaviourID, 'gibbonPersonID' => $gibbonPersonID];
-        $sql = "SELECT * FROM gibbonBehaviour JOIN gibbonPerson ON (gibbonBehaviour.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonFormGroup.gibbonSchoolYearID=:gibbonSchoolYearID AND status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonBehaviourID=:gibbonBehaviourID AND gibbonBehaviour.gibbonPersonID=:gibbonPersonID";
+        $data = ['gibbonBehaviourID' => $gibbonBehaviourID];
+        $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonPerson.preferredName, gibbonPerson.surname FROM gibbonBehaviour JOIN gibbonPerson ON (gibbonBehaviour.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID AND gibbonBehaviour.gibbonSchoolYearID=gibbonStudentEnrolment.gibbonSchoolYearID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL OR dateEnd>='".date('Y-m-d')."') AND gibbonBehaviourID=:gibbonBehaviourID";
 
-        return $this->db()->select($sql, $data);
+        return $this->db()->selectOne($sql, $data);
     }
-
-    public function getBehaviourRecordToCheck($gibbonSchoolYearID, $gibbonBehaviourID)
-    {
-        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonBehaviourID' => $gibbonBehaviourID];
-        $sql = "SELECT * FROM gibbonBehaviour JOIN gibbonPerson ON (gibbonBehaviour.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonFormGroup.gibbonSchoolYearID=:gibbonSchoolYearID AND status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonBehaviourID=:gibbonBehaviourID";
 
     public function selectNegativeBehaviourByStudentAndDate($gibbonPersonID, $days = 60)
     {

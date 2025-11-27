@@ -253,31 +253,25 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                 header("Location: {$URL}");
             }
         } elseif ($step == 2 and $gibbonBehaviourID != null) {
-            //Proceed!
+            // Proceed!
             $gibbonPersonID = $_POST['gibbonPersonID'] ?? '';
             $gibbonPlannerEntryID = !empty($_POST['gibbonPlannerEntryID']) ? $_POST['gibbonPlannerEntryID'] : null;
             $AI = $_GET['editID'] ?? '';
-
 
             if ($gibbonPersonID == '') {
                 $URL .= '&return=error1';
                 header("Location: {$URL}");
             } else {
-                try {
-                    $result = $container->get(BehaviourGateway::class)->getExistingBehaviourRecordByID($session->get('gibbonSchoolYearID'), $gibbonBehaviourID, $gibbonPersonID);
-                } catch (PDOException $e) {
-                    $URL .= '&return=warning0&step=2';
-                    header("Location: {$URL}");
-                    exit();
-                }
-                if ($result->rowCount() != 1) {
+                $result = $container->get(BehaviourGateway::class)->getBehaviourRecordByID($gibbonBehaviourID);
+
+                if (empty($result)) {
                     $URL .= '&return=error2&step=2';
                     header("Location: {$URL}");
                     exit();
                 } else {
-                    //Write to database
+                    // Write to database
                     try {
-                        $data = array('gibbonPlannerEntryID' => $gibbonPlannerEntryID, 'gibbonBehaviourID' => $gibbonBehaviourID);
+                        $data = ['gibbonPlannerEntryID' => $gibbonPlannerEntryID, 'gibbonBehaviourID' => $gibbonBehaviourID];
                         $sql = 'UPDATE gibbonBehaviour SET gibbonPlannerEntryID=:gibbonPlannerEntryID WHERE gibbonBehaviourID=:gibbonBehaviourID';
                         $result = $connection2->prepare($sql);
                         $result->execute($data);
