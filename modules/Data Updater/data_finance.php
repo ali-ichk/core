@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
+use Gibbon\Domain\Finance\InvoiceeGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -67,27 +68,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_finance.
         echo '</h2>';
 
 		$gibbonFinanceInvoiceeID = $_GET['gibbonFinanceInvoiceeID'] ?? null;
+        $invoiceeGateway = $container->get(InvoiceeGateway::class);
 
         $form = Form::create('selectInvoicee', $session->get('absoluteURL').'/index.php', 'get');
         $form->addHiddenValue('q', '/modules/'.$session->get('module').'/data_finance.php');
 
         if ($highestAction == 'Update Finance Data_any') {
-            $data = array();
-            $sql = "SELECT username, surname, preferredName, gibbonPerson.gibbonPersonID, gibbonFinanceInvoiceeID FROM gibbonFinanceInvoicee JOIN gibbonPerson ON (gibbonFinanceInvoicee.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE status='Full' ORDER BY surname, preferredName";
+            $result = $invoiceeGateway->selectInvoiceesDetails();
         } else {
-            $data = array('gibbonPersonID' => $session->get('gibbonPersonID'));
-            $sql = "SELECT gibbonFamilyAdult.gibbonFamilyID, gibbonFamily.name as familyName, child.surname, child.preferredName, child.gibbonPersonID, gibbonFinanceInvoicee.gibbonFinanceInvoiceeID
-					FROM gibbonFamilyAdult
-					JOIN gibbonFamily ON (gibbonFamilyAdult.gibbonFamilyID=gibbonFamily.gibbonFamilyID)
-					JOIN gibbonFamilyChild ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamily.gibbonFamilyID)
-					JOIN gibbonPerson as child ON (gibbonFamilyChild.gibbonPersonID=child.gibbonPersonID)
-					JOIN gibbonFinanceInvoicee ON (gibbonFinanceInvoicee.gibbonPersonID=child.gibbonPersonID)
-					WHERE gibbonFamilyAdult.gibbonPersonID=:gibbonPersonID
-					AND gibbonFamilyAdult.childDataAccess='Y' AND child.status='Full'
-					ORDER BY gibbonFamily.name, child.surname, child.preferredName";
+            $result = $invoiceeGateway->selectInvoiceeByAdultID($session->get('gibbonPersonID'));
 		}
-		$result = $pdo->executeQuery($data, $sql);
-		$resultSet = ($result && $result->rowCount() > 0)? $result->fetchAll() : array();
+		$resultSet = ($result && $result->rowCount() > 0)? $result->fetchAll() : [];
 
 		$invoicees = array_reduce($resultSet, function($carry, $person) use ($highestAction) {
 			$id = $person['gibbonFinanceInvoiceeID'];
@@ -119,12 +110,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_finance.
 
             //Check access to person
             $checkCount = 0;
-            if ($highestAction == 'Update Finance Data_any') {
-
-                    $dataSelect = array('gibbonFinanceInvoiceeID' => $gibbonFinanceInvoiceeID);
-                    $sqlSelect = "SELECT surname, preferredName, gibbonPerson.gibbonPersonID, gibbonFinanceInvoiceeID FROM gibbonFinanceInvoicee JOIN gibbonPerson ON (gibbonFinanceInvoicee.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE status='Full' AND gibbonFinanceInvoiceeID=:gibbonFinanceInvoiceeID ORDER BY surname, preferredName";
-                    $resultSelect = $connection2->prepare($sqlSelect);
-                    $resultSelect->execute($dataSelect);
+            if ($highestAction == 'Update Finance Data_any') {                    
+                $resultSelect = $invoiceeGateway->selectInvoiceeByInvoiceeID($gibbonFinanceInvoiceeID);
                 $checkCount = $resultSelect->rowCount();
             } else {
 
