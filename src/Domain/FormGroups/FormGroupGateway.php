@@ -207,7 +207,7 @@ class FormGroupGateway extends QueryableGateway
         return $this->db()->select($sql, $data);
     }
   
-    public function getFormGroupDetailsByFamilyAdult($gibbonSchoolYearID, $gibbonFormGroupID, $gibbonPersonID)
+    public function getFormGroupDetailsByFamilyAdult($gibbonFormGroupID, $gibbonPersonID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonFormGroupID' => $gibbonFormGroupID, 'gibbonPersonID' => $gibbonPersonID,'today' => date('Y-m-d')];
         $sql = "SELECT gibbonSchoolYear.gibbonSchoolYearID, gibbonFormGroup.gibbonFormGroupID, gibbonSchoolYear.name as yearName, gibbonFormGroup.name, gibbonFormGroup.nameShort, gibbonPersonIDTutor, gibbonPersonIDTutor2, gibbonPersonIDTutor3, gibbonPersonIDEA, gibbonPersonIDEA2, gibbonPersonIDEA3, gibbonSpace.name AS space, website
