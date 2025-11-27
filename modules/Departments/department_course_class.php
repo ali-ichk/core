@@ -49,7 +49,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_cou
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
         if (!empty($gibbonDepartmentID)) {
-            $result = $courseGateway->getCourseClassInfoAndDepartment($gibbonCourseClassID);
+            $result = $courseGateway->getCourseClassDetails($gibbonCourseClassID);
         } else {
             $result = $courseGateway->getCourseClassInfoByID($gibbonCourseClassID);
         }
