@@ -44,9 +44,9 @@ class CourseClassPersonGateway extends QueryableGateway
      */
 
 
-     public function selectStudentsInEachClass($gibbonCourseClassID, $gibbonSchoolYearID)
+     public function selectStudentsByClass($gibbonCourseClassID)
      {
-        $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'gibbonSchoolYearID' => $gibbonSchoolYearID, 'today' => date('Y-m-d')];
+        $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'today' => date('Y-m-d')];
         $sql = "SELECT role, surname, preferredName, email, studentID, gibbonFormGroup.nameShort as formGroup
                 FROM gibbonCourseClassPerson
                 JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID
@@ -55,7 +55,6 @@ class CourseClassPersonGateway extends QueryableGateway
                 WHERE gibbonCourseClassID=:gibbonCourseClassID AND status='Full'
                 AND (dateStart IS NULL OR dateStart<=:today)
                 AND (dateEnd IS NULL  OR dateEnd>=:today)
-                AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID
                 AND gibbonCourseClassPerson.role='Student'
                 ORDER BY role DESC, surname, preferredName";
                 

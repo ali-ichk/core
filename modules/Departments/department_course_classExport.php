@@ -46,14 +46,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_cou
         header("Location: {$URL}");
         exit;
     } else {
+        $result = $container->get(CourseGateway::class)->getCourseClassDetails($gibbonCourseClassID);
 
-            $result = $container->get(CourseGateway::class)->selectCourseAndClassNameByCourseClassID($gibbonCourseClassID);
-        if ($result->rowCount() < 1) {
+        if (empty($result)) {
             $URL .= '&return=error1';
             header("Location: {$URL}");
             exit;
         } else {
-            //Proceed!
+            // Proceed!
             $result = $container->get(CourseClassPersonGateway::class)->selectStudentsByClass($gibbonCourseClassID);
 
             $exp = new Gibbon\Excel();
