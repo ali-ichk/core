@@ -54,7 +54,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_cou
             exit;
         } else {
             //Proceed!
-            $result = $container->get(CourseClassPersonGateway::class)->selectStudentsInEachClass($gibbonCourseClassID, $session->get('gibbonSchoolYearID'));
+            $result = $container->get(CourseClassPersonGateway::class)->selectStudentsByClass($gibbonCourseClassID);
 
             $exp = new Gibbon\Excel();
             $exp->exportWithQuery($result, 'classList.xls');
