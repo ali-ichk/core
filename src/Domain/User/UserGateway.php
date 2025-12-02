@@ -267,4 +267,19 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
         ]);
     }
 
+    public function selectAddressByFamilyAndPersonID($gibbonPersonID, $addressMatch, $gibbonFamilyPeople)
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID, 'addressMatch' => $addressMatch, 'gibbonFamilyPeople' => $gibbonFamilyPeople];
+        $sql = "SELECT gibbonPersonID, title, preferredName, surname, category FROM gibbonPerson JOIN gibbonRole ON (gibbonPerson.gibbonRoleIDPrimary=gibbonRole.gibbonRoleID) WHERE status='Full' AND address1 LIKE :addressMatch AND FIND_IN_SET(gibbonPersonID, :gibbonFamilyPeople) AND NOT gibbonPersonID=:gibbonPersonID ORDER BY surname, preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    public function selectCountOfMatchingEmailAddress($gibbonPersonID, $email) 
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID, 'email' => $email];
+        $sql = "SELECT COUNT(*) FROM gibbonPerson WHERE email=:email AND gibbonPersonID<>:gibbonPersonID";
+        
+        return $this->db()->select($sql, $data);
+    }
 }

@@ -21,26 +21,31 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
+use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\User\FamilyGateway;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\MedicalGateway;
+use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\User\FamilyAdultGateway;
+use Gibbon\Domain\User\FamilyChildGateway;
+use Gibbon\Domain\School\MedicalConditionGateway;
 use Gibbon\Domain\DataUpdater\MedicalUpdateGateway;
 
-//Module includes
+// Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    //Get action with highest precendence
+    // Get action with highest precendence
     $highestAction = getHighestGroupedAction($guid, $_GET['q'], $connection2);
     if ($highestAction == false) {
         $page->addError(__('The highest grouped action cannot be determined.'));
     } else {
-        //Proceed!
+        // Proceed!
         $page->breadcrumbs->add(__('Update Medical Data'));
 
         if ($highestAction == 'Update Medical Data_any') {
@@ -53,7 +58,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
             echo '</p>';
         }
 
-        $customResponces = array();
+        $customResponces = [];
 
         $success0 = __('Your request was completed successfully. An administrator will process your request as soon as possible. You will not see the updated data in the system until it has been processed.');
         if ($session->get('organisationDBAEmail') != '' and $session->get('organisationDBAName') != '') {
@@ -78,22 +83,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 		$form->addHiddenValue('q', '/modules/'.$session->get('module').'/data_medical.php');
 
 		if ($highestAction == 'Update Medical Data_any') {
-			$data = array('gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'));
-            $sql = "SELECT gibbonPerson.gibbonPersonID, username, surname, preferredName FROM gibbonPerson JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonSchoolYearID=:gibbonSchoolYearID AND status='Full' ORDER BY surname, preferredName";
+            $result = $container->get(StudentGateway::class)->selectActiveStudentsBySchoolYear($session->get('gibbonSchoolYearID'));
 		} else {
-			$data = array('gibbonPersonID' => $session->get('gibbonPersonID'));
-            $sql = "SELECT gibbonFamilyAdult.gibbonFamilyID, gibbonFamily.name as familyName, child.surname, child.preferredName, child.gibbonPersonID
-					FROM gibbonFamilyAdult
-					JOIN gibbonFamily ON (gibbonFamilyAdult.gibbonFamilyID=gibbonFamily.gibbonFamilyID)
-					LEFT JOIN gibbonFamilyChild ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamilyAdult.gibbonFamilyID)
-					LEFT JOIN gibbonPerson AS child ON (gibbonFamilyChild.gibbonPersonID=child.gibbonPersonID)
-					WHERE gibbonFamilyAdult.gibbonPersonID=:gibbonPersonID
-					AND gibbonFamilyAdult.childDataAccess='Y' AND child.status='Full'
-					ORDER BY gibbonFamily.name, child.surname, child.preferredName";
+            $result = $container->get(FamilyAdultGateway::class)->selectStudentsByAdultID($session->get('gibbonPersonID'));
 		}
-
-		$result = $pdo->executeQuery($data, $sql);
-		$resultSet = ($result && $result->rowCount() > 0)? $result->fetchAll() : array();
+		$resultSet = ($result && $result->rowCount() > 0) ? $result->fetchAll() : [];
 		$people = array_reduce($resultSet, function($carry, $person) use ($highestAction) {
 			$value = $person['gibbonPersonID'];
 			$carry[$value] = Format::name('', htmlPrep($person['preferredName']), htmlPrep($person['surname']), 'Student', true);
@@ -101,7 +95,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 				$carry[$value] .= ' ('.$person['username'].')';
 			}
 			return $carry;
-		}, array());
+		}, []);
 
 		$row = $form->addRow();
 			$row->addLabel('gibbonPersonID', __('Person'));
@@ -116,29 +110,22 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 
 		echo $form->getOutput();
 
-
         if ($gibbonPersonID != '') {
             echo '<h2>';
             echo __('Update Data');
             echo '</h2>';
 
-            //Check access to person
+            // Check access to person
             $checkCount = 0;
             if ($highestAction == 'Update Medical Data_any') {
+                $resultSelect = $container->get(UserGateway::class)->selectBy(['status' => 'Full'], ['surname', 'preferredName', 'gibbonPersonID']);
 
-                    $dataSelect = array();
-                    $sqlSelect = "SELECT surname, preferredName, gibbonPerson.gibbonPersonID FROM gibbonPerson WHERE status='Full' ORDER BY surname, preferredName";
-                    $resultSelect = $connection2->prepare($sqlSelect);
-                    $resultSelect->execute($dataSelect);
                 $checkCount = $resultSelect->rowCount();
             } else {
                 $resultCheck = $container->get(FamilyGateway::class)->selectFamilyIDAndNameByAdultID($session->get('gibbonPersonID'));
 
                 while ($rowCheck = $resultCheck->fetch()) {
-                    $dataCheck2 = array('gibbonFamilyID' => $rowCheck['gibbonFamilyID'], 'gibbonFamilyID2' => $rowCheck['gibbonFamilyID']);
-                    $sqlCheck2 = '(SELECT surname, preferredName, gibbonPerson.gibbonPersonID, gibbonFamilyID FROM gibbonFamilyChild JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonFamilyID=:gibbonFamilyID) UNION (SELECT surname, preferredName, gibbonPerson.gibbonPersonID, gibbonFamilyID FROM gibbonFamilyAdult JOIN gibbonPerson ON (gibbonFamilyAdult.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonFamilyID=:gibbonFamilyID2)';
-                    $resultCheck2 = $connection2->prepare($sqlCheck2);
-                    $resultCheck2->execute($dataCheck2);
+                    $resultCheck2 = $container->get(FamilyChildGateway::class)->selectStudentsByFamilyID($rowCheck['value']);
                     
                     while ($rowCheck2 = $resultCheck2->fetch()) {
                         if ($gibbonPersonID == $rowCheck2['gibbonPersonID']) {
@@ -150,24 +137,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
             if ($checkCount < 1) {
                 $page->addError(__('The selected record does not exist, or you do not have access to it.'));
             } else {
-                //Get user's data
+                // Get user's data
+                $result = $container->get(UserGateway::class)->getSafeUserData($gibbonPersonID);
 
-                    $data = array('gibbonPersonID' => $gibbonPersonID);
-                    $sql = 'SELECT * FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID';
-                    $result = $connection2->prepare($sql);
-                    $result->execute($data);
-
-                if ($result->rowCount() != 1) {
+                if (empty($result)) {
                     $page->addError(__('The specified record cannot be found.'));
                 } else {
-                    //Check if there is already a pending form for this user
+                    // Check if there is already a pending form for this user
                     $existing = false;
                     $proceed = false;
 
-                        $dataForm = array('gibbonPersonID' => $gibbonPersonID, 'gibbonPersonID2' => $session->get('gibbonPersonID'));
-                        $sqlForm = "SELECT * FROM gibbonPersonMedicalUpdate WHERE gibbonPersonID=:gibbonPersonID AND gibbonPersonIDUpdater=:gibbonPersonID2 AND status='Pending'";
-                        $resultForm = $connection2->prepare($sqlForm);
-                        $resultForm->execute($dataForm);
+                    $resultForm = $container->get(MedicalUpdateGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID, 'gibbonPersonIDUpdater' => $session->get('gibbonPersonID'), 'status' => 'Pending']);
+
                     if ($resultForm->rowCount() > 1) {
                         $page->addError(__('Your request failed due to a database error.'));
                     } elseif ($resultForm->rowCount() == 1) {
@@ -177,14 +158,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         echo '</div>';
                         $proceed = true;
                     } else {
-                        //Get user's data
+                        // Get user's data
+                        $resultForm = $container->get(MedicalGateway::class)->selectBy(['gibbonPersonID'=> $gibbonPersonID]);
 
-                        $dataForm = array('gibbonPersonID' => $gibbonPersonID);
-                        $sqlForm = 'SELECT * FROM gibbonPersonMedical WHERE gibbonPersonID=:gibbonPersonID';
-                        $resultForm = $connection2->prepare($sqlForm);
-                        $resultForm->execute($dataForm);
-
-                        if ($result->rowCount() == 1) {
+                        if ($resultForm->rowCount() == 1) {
                             $proceed = true;
                         }
                     }
@@ -218,8 +195,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         // CUSTOM FIELDS
                         $container->get(CustomFieldHandler::class)->addCustomFieldsToForm($form, 'Medical Form', ['dataUpdater' => 1], $values['fields'] ?? '');
 
-                        
-
 						// EXISTING CONDITIONS
 						$count = 0;
 						if (!empty($values['gibbonPersonMedicalID']) or $existing == true) {
@@ -238,10 +213,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 
 								$form->addRow()->addHeading(__('Medical Condition').' '.($count+1) );
 
-								$sql = "SELECT name AS value, name FROM gibbonMedicalCondition ORDER BY name";
+                                $results = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditionNames();
+
 								$row = $form->addRow();
 									$row->addLabel('name'.$count, __('Condition Name'));
-									$row->addSelect('name'.$count)->fromQuery($pdo, $sql)->required()->placeholder()->selected($rowCond['name']);
+									$row->addSelect('name'.$count)->fromResults($results)->required()->placeholder()->selected($rowCond['name']);
 
 								$row = $form->addRow();
 									$row->addLabel('gibbonAlertLevelID'.$count, __('Risk'));
@@ -300,10 +276,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 						$row = $form->addRow();
 							$row->addCheckbox('addCondition')->setValue('Yes')->description(__('Check the box to add a new medical condition'));
 
-						$sql = "SELECT name AS value, name FROM gibbonMedicalCondition ORDER BY name";
+                        $results = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditionNames();
+
 						$row = $form->addRow()->addClass('addConditionRow');
 							$row->addLabel('name', __('Condition Name'));
-							$row->addSelect('name')->fromQuery($pdo, $sql)->required()->placeholder();
+							$row->addSelect('name')->fromResults($results)->required()->placeholder();
 
 						$row = $form->addRow()->addClass('addConditionRow');
 							$row->addLabel('gibbonAlertLevelID', __('Risk'));
