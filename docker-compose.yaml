@@ -4,8 +4,6 @@ services:
     app:
         build: .
         container_name: gibbon_app
-        # ports:
-        #   - "8080:80"
         depends_on:
             - db
         restart: always
