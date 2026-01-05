@@ -21,6 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Gibbon\Forms\Input;
 
+use Gibbon\View\Component;
+
 /**
  * Editor - Rich text
  *
@@ -29,8 +31,9 @@ namespace Gibbon\Forms\Input;
  */
 class Editor extends Input
 {
+    protected $mode = 'full';
     protected $tinymceInit = true;
-    protected $rows = 20;
+    protected $rows = 6;
     protected $showMedia = false;
     protected $initiallyHidden = false;
     protected $allowUpload = true;
@@ -49,11 +52,35 @@ class Editor extends Input
     }
 
     /**
+     * Sets the TinyMCE editor display mode to minimal.
+     *
+     * @param string $mode
+     * @return self
+     */
+    public function minimalMode() : Editor
+    {
+        $this->mode = 'minimal';
+        return $this;
+    }
+
+    /**
+     * Sets the TinyMCE editor display mode to inline.
+     *
+     * @param string $mode
+     * @return self
+     */
+    public function inlineMode() : Editor
+    {
+        $this->mode = 'inline';
+        return $this;
+    }
+
+    /**
      * Set the textarea rows attribute to control the height of the editor box.
      * @param  int  $count
      * @return $this
      */
-    public function setRows($count)
+    public function setRows($count) : Editor
     {
         $this->rows = $count;
         return $this;
@@ -63,9 +90,9 @@ class Editor extends Input
      * Set whether tinyMCE uploader should be enabled.
      *
      * @param   bool  $value
-     * @return  $this
+     * @return  self
      */
-    public function tinymceInit(bool $value)
+    public function tinymceInit(bool $value) : Editor
     {
         $this->tinymceInit = $value;
         return $this;
@@ -74,9 +101,9 @@ class Editor extends Input
     /**
      * Set whether the media bar for upload and quick inser is available.
      * @param   bool    $value
-     * @return  $this
+     * @return  self
      */
-    public function showMedia($value = true)
+    public function showMedia($value = true) : Editor
     {
         $this->showMedia = $value;
         return $this;
@@ -85,9 +112,9 @@ class Editor extends Input
     /**
      * Set whether the editor input is initially hidden.
      * @param   bool    $value
-     * @return  $this
+     * @return  self
      */
-    public function initiallyHidden($value = true)
+    public function initiallyHidden($value = true) : Editor
     {
         $this->initiallyHidden = $value;
         return $this;
@@ -96,9 +123,9 @@ class Editor extends Input
     /**
      * Allow resources to be uploaded through the editor window.
      * @param   bool    $value
-     * @return  $this
+     * @return  self
      */
-    public function allowUpload($value = true)
+    public function allowUpload($value = true) : Editor
     {
         $this->allowUpload = $value;
         return $this;
@@ -107,9 +134,9 @@ class Editor extends Input
     /**
      * Sets the sort order for resource upload.
      * @param   bool    $value
-     * @return  $this
+     * @return  self
      */
-    public function resourceAlphaSort($value = true)
+    public function resourceAlphaSort($value = true) : Editor
     {
         $this->resourceAlphaSort = $value;
         return $this;
@@ -120,7 +147,7 @@ class Editor extends Input
      * @param string $function
      * @return self
      */
-    public function enableAutoSave(string $url, string $formId)
+    public function enableAutoSave(string $url, string $formId) : Editor
     {
         $this->onKeyDownSubmitUrl = $url;
         $this->onKeyDownSubmitFormId = $formId;
@@ -130,46 +157,37 @@ class Editor extends Input
     /**
      * Sets a filter for resource upload.
      * @param   string    $value
-     * @return  $this
+     * @return  self
      */
-    public function initialFilter($value = '')
+    public function initialFilter($value = '') : Editor
     {
         $this->initialFilter = $value;
         return $this;
+    }
+
+    protected function getMinHeight()
+    {
+        return $this->mode == 'minimal'
+            ? (intval($this->rows ?? 2) * 20) + 39
+            : (intval($this->rows ?? 2) * 20) + 110;
     }
 
     /**
      * Gets the HTML output for this form element.
      * @return  string
      */
-    protected function getElement(): string
+    protected function getElement(): string 
     {
-        if ($this->getReadonly()) {
-            return '<p>'.$this->getValue().'</p>';
-        } else {
-            /**
-             * @var \Gibbon\View\Page $page
-             * @var \Gibbon\Contracts\Services\Session $session
-             */
-            global $page, $session;
-            $templateData = [
-                'tinymceInit' => $this->tinymceInit,
-                'name' => $this->getName(),
-                'id' => preg_replace('/[^a-zA-Z0-9_-]/', '', ($this->getID() ?: $this->getName())),
-                'value' => $this->getValue(),
-                'rows' => $this->rows,
-                'showMedia' => $this->showMedia,
-                'required' => $this->getRequired(),
-                'initiallyHidden' => $this->initiallyHidden,
-                'allowUpload' => $this->allowUpload,
-                'initialFilter' => $this->initialFilter,
-                'resourceAlphaSort' => $this->resourceAlphaSort,
-                'absoluteURL' => $session->get('absoluteURL'),
-                'onKeyDownSubmitUrl' => $this->onKeyDownSubmitUrl,
-                'onKeyDownSubmitFormId' => $this->onKeyDownSubmitFormId,
-            ];
-
-            return $page->fetchFromTemplate('components/editor.twig.html', $templateData);
-        }
+        return Component::render(Editor::class, [
+            'id'                    => preg_replace('/[^a-zA-Z0-9_-]/', '', $this->getName()),
+            'mode'                  => $this->mode,
+            'rows'                  => $this->rows,
+            'showMedia'             => $this->showMedia,
+            'required'              => $this->getRequired(),
+            'minHeight'             => $this->getMinHeight(),
+            'allowUpload'           => $this->allowUpload,
+            'onKeyDownSubmitUrl'    => $this->onKeyDownSubmitUrl,
+            'onKeyDownSubmitFormId' => $this->onKeyDownSubmitFormId,
+        ] + $this->getAttributeArray());
     }
 }

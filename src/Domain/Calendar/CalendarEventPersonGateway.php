@@ -40,7 +40,7 @@ class CalendarEventPersonGateway extends QueryableGateway
     public function queryEventAttendees($criteria, $gibbonCalendarEventID) {
         $query = $this
             ->newQuery()
-            ->cols(['gibbonCalendarEventPerson.*', 'gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.image_240', 'gibbonRole.category as roleCategory', 'gibbonStudentEnrolment.gibbonFormGroupID', 'gibbonFormGroup.nameShort as formGroup', 'gibbonStudentEnrolment.gibbonYearGroupID'])
+            ->cols(['gibbonCalendarEventPerson.*', 'gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.image_240', 'gibbonRole.category as roleCategory', 'gibbonStudentEnrolment.gibbonFormGroupID', 'gibbonFormGroup.nameShort as formGroup', 'gibbonStudentEnrolment.gibbonYearGroupID', 'gibbonYearGroup.nameShort as yearGroup'])
             ->from($this->getTableName())
             ->innerJoin('gibbonCalendarEvent', 'gibbonCalendarEvent.gibbonCalendarEventID=gibbonCalendarEventPerson.gibbonCalendarEventID')
             ->innerJoin('gibbonCalendar', 'gibbonCalendarEvent.gibbonCalendarID=gibbonCalendar.gibbonCalendarID')
@@ -48,6 +48,7 @@ class CalendarEventPersonGateway extends QueryableGateway
             ->leftJoin('gibbonRole', 'gibbonPerson.gibbonRoleIDPrimary=gibbonRole.gibbonRoleID')
             ->leftJoin('gibbonStudentEnrolment', 'gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=gibbonCalendar.gibbonSchoolYearID')
             ->leftJoin('gibbonFormGroup', 'gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID')
+            ->leftJoin('gibbonYearGroup', 'gibbonYearGroup.gibbonYearGroupID=gibbonStudentEnrolment.gibbonYearGroupID')
             ->where('gibbonCalendarEventPerson.gibbonCalendarEventID = :gibbonCalendarEventID')
             ->bindValue('gibbonCalendarEventID', $gibbonCalendarEventID)
             ->where('gibbonCalendarEventPerson.role = :role')

@@ -325,14 +325,14 @@ class StudentGateway extends QueryableGateway
         $data = array('gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID, 'gibbonYearGroupID' => $gibbonYearGroupID, 'gibbonFormGroupID' => $gibbonFormGroupID);
         $sql = "
             (
-                SELECT DISTINCT '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, 'Head of Year' as type, 1 as listOrder
+                SELECT 'Head of Year' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, gibbonYearGroup.name as context, 1 as listOrder
                 FROM gibbonPerson
                 JOIN gibbonYearGroup ON (gibbonYearGroup.gibbonPersonIDHOY=gibbonPersonID)
                 WHERE status='Full' AND gibbonYearGroupID=:gibbonYearGroupID
             )
             UNION
             (
-                SELECT DISTINCT '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, 'IN Assistant' as type, 2 as listOrder
+                SELECT 'IN Assistant' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, '' as context, 2 as listOrder
                 FROM gibbonPerson
                     JOIN gibbonINAssistant ON (gibbonINAssistant.gibbonPersonIDAssistant=gibbonPerson.gibbonPersonID)
                     JOIN gibbonStaff ON (gibbonStaff.gibbonPersonID=gibbonPerson.gibbonPersonID)
@@ -341,7 +341,7 @@ class StudentGateway extends QueryableGateway
             )
             UNION
             (
-                SELECT DISTINCT '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240,  'Educational Assistant' as type, 2 as listOrder
+                SELECT 'Educational Assistant' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, '' as context, 2 as listOrder
                 FROM gibbonPerson
                 JOIN gibbonFormGroup ON (gibbonFormGroup.gibbonPersonIDEA=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDEA2=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDEA3=gibbonPerson.gibbonPersonID)
                 JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID)
@@ -352,7 +352,7 @@ class StudentGateway extends QueryableGateway
             )
             UNION
             (
-                SELECT DISTINCT '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, 'Form Tutor' as type, 0 as listOrder
+                SELECT 'Form Tutor' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, gibbonFormGroup.name as context, image_240, 0 as listOrder
                 FROM gibbonFormGroup
                 JOIN gibbonPerson ON (gibbonFormGroup.gibbonPersonIDTutor=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDTutor2=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDTutor3=gibbonPerson.gibbonPersonID)
                 WHERE gibbonFormGroupID=:gibbonFormGroupID AND gibbonPerson.status='Full'
@@ -360,7 +360,7 @@ class StudentGateway extends QueryableGateway
 
             if ($includeClassTeachers) {
                 $sql .= "UNION (
-                    SELECT DISTINCT gibbonCourseClass.gibbonCourseClassID as classID, teacher.gibbonPersonID, teacher.surname, teacher.preferredName, teacher.email, teacher.image_240, gibbonCourse.name as type, 4 as listOrder
+                    SELECT DISTINCT 'Class Teacher' as type, gibbonCourseClass.gibbonCourseClassID as classID, teacher.gibbonPersonID, teacher.surname, teacher.preferredName, teacher.email, teacher.image_240, gibbonCourse.name as context, 4 as listOrder
                     FROM gibbonPerson AS teacher
                     JOIN gibbonCourseClassPerson AS teacherClass ON (teacherClass.gibbonPersonID=teacher.gibbonPersonID)
                     JOIN gibbonCourseClassPerson AS studentClass ON (studentClass.gibbonCourseClassID=teacherClass.gibbonCourseClassID)

@@ -623,6 +623,7 @@ CustomBlocks.prototype.removeBlock = function (block) {
     var index = _.identifiers.indexOf(block.identifier);
     if (index !== -1) _.identifiers.splice(index, 1);
 
+
     _.removeBlockValidation(block);
 
     $(block).fadeOut(_.settings.animationSpeed, function () {
@@ -788,19 +789,8 @@ CustomBlocks.prototype.addBlockValidation = function (block) {
 CustomBlocks.prototype.removeBlockValidation = function (block) {
     var _ = this;
 
-    $("input, textarea, select", block).each(function (index, element) {
-        if ($(this).data("validation") && !$(this).prop("readonly")) {
-            var id = $(this).prop("id");
-            eval("block." + id + "Validate.destroy();");
-        }
-    });
-
     $("textarea.tinymce", block).each(function (index, element) {
-        tinymce.EditorManager.execCommand(
-            "mceRemoveEditor",
-            false,
-            $(this).prop("id")
-        );
+        tinymce.remove($(this).prop("id"));
     });
 };
 

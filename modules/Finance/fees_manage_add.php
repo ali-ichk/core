@@ -92,8 +92,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Finance/fees_manage_add.ph
 
         $row = $form->addRow();
             $row->addLabel('gibbonFinanceFeeCategoryID', __('Category'));
-            $row->addSelect('gibbonFinanceFeeCategoryID')->fromResults($categories)->fromArray(['1' => __('Other')])->required()->placeholder();
-            
+            $row->addSelect('gibbonFinanceFeeCategoryID')->fromResults($categories)->fromArray(['1' => __('Other')])->required()->placeholder()
+        
         $row = $form->addRow();
             $row->addLabel('fee', __('Fee'))
                 ->description(__('Numeric value of the fee.'));

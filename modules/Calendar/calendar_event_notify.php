@@ -98,12 +98,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_ed
 
     $row = $form->addRow();
         $row->addCheckbox('notifyGroups')->fromArray([
-            'participants' => __('Staff').' '.__('Participants'),
-            'HOY'          => __('Head of Year'),
-            'tutors'       => __('Form Tutors'),
-            'teachers'     => __('Class Teachers'),
-            'INAssistant'  => __('Educational Assistants'),
-        ])->checkAll()->addClass('notifyGroups');
+            'participants'     => __('Staff').' '.__('Participants'),
+            'HOY'              => __('Head of Year'),
+            'tutors'           => __('Form Tutors'),
+            'INAssistant'      => __('Educational Assistants'),
+            'teachersAffected' => __('Teachers (Affected Classes)'),
+            'teachersAll'      => __('Teachers (All Classes)'),
+        ])->checked(['participants','HOY','tutors','teachersAffected','INAssistant'])->addClass('notifyGroups');
 
     $row = $form->addRow();
         $row->addLabel('notificationList', __('Notify Additional People'))->addClass('notifyGroups');

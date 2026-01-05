@@ -23,18 +23,33 @@ v31.0.00
 --------
 
     Headlines
+        Improved text editing with drag-drop image uploads and more formatting options
 
     Security
 
     Changes With Important Notices
 
     Tweaks & Additions
+        System: updated TinyMCE to version 8 and added a minimal mode to Editor fields
         Admissions: added a progress bar for admissions milestones to Manage Applications
         Admissions: added a warning to Accept Application when milestones have not been completed
+        Attendance: student attendance history now ordered by timetable period
+        User Admin: linked user names to Student and Staff profiles in Manage Users
 
     Bug Fixes
+        School Admin: fixed inactive grade scales not selectable in Manage External Assessment 
 
     Deprecations
+
+v30.0.01
+--------
+
+    Bug Fixes
+        System: fixed default collation in gibbon.sql causing installation issues for MariaDB systems
+        System: added a upper character limit of 2048 to translation strings, to prevent gettext errors
+        Attendance: fixed empty list in Set Future Absence when using Select Students for Multiple Students
+        Calendar: fixed access to View Event when users only have View Calendar access
+        Planner: fixed an error on the Year Overview of the Lesson Planner
 
 v30.0.00
 --------

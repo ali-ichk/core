@@ -27,33 +27,30 @@ use Gibbon\Module\Calendar\CalendarEventNotificationProcess;
 require_once '../../gibbon.php';
 
 $_POST = $container->get(Validator::class)->sanitize($_POST, ['notes' => 'HTML']);
+
 $gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
 $URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_view.php&gibbonCalendarEventID='.$gibbonCalendarEventID;
 
-if (empty($gibbonCalendarEventID)) {
-    $URL .= '&return=error1';
-    header("Location: {$URL}");
-    exit;
-}
-
-$criteria = $container->get(CalendarEventPersonGateway::class)->newQueryCriteria()
-            ->sortBy(['surname', 'preferredName', 'category'])
-            ->fromPOST();
-$students = $container->get(CalendarEventPersonGateway::class)->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
-if (empty($students)) {
-    $URL .= '&return=error1';
-    header("Location: {$URL}");
-    exit;
-}
 
 if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
-    $URL .= '&return=error0';
-    header("Location: {$URL}");
+    header("Location: {$URL}&return=error0");
     exit;
 } else {
     // Proceed!
     $calendarEventGateway = $container->get(CalendarEventGateway::class);
     $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
+
+    if (empty($gibbonCalendarEventID)) {
+        header("Location: {$URL}&return=error1");
+        exit;
+    }
+
+    $criteria = $calendarEventPersonGateway->newQueryCriteria();
+    $students = $calendarEventPersonGateway->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
+    if (empty($students)) {
+        header("Location: {$URL}&return=error2");
+        exit;
+    }
 
     $subject = $_POST['subject'] ?? '';
     $notes = $_POST['notes'] ?? '';
@@ -63,6 +60,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_ed
     $gibbonPersonIDSender = $session->get('gibbonPersonID') ?? '';
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID') ?? '';
     $organisationEmail = $session->get('organisationEmail') ?? '';
+
+    if ($allStaff == 'N' && empty($notifyGroups)) {
+        header("Location: {$URL}&return=error1");
+        exit;
+    }
 
     $process = $container->get(CalendarEventNotificationProcess::class);
     $success = $process->startNotifyStaff($gibbonCalendarEventID, $subject, $notes, $notifyGroups, $allStaff, $notificationList, $gibbonPersonIDSender, $gibbonSchoolYearID, $organisationEmail);

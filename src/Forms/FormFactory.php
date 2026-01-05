@@ -32,6 +32,7 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Tables\Action;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Forms\Layout\Section;
+use DateTimeZone;
 
 /**
  * FormFactory
@@ -207,6 +208,7 @@ class FormFactory implements FormFactoryInterface
     {
         return (new Input\TextField($name))
             ->addValidation('Validate.Email')
+            ->setType('email')
             ->maxLength(75);
     }
 
@@ -251,17 +253,22 @@ class FormFactory implements FormFactoryInterface
 
     public function createCheckbox($name)
     {
-        return (new Input\Checkbox($name));
+        return new Input\Checkbox($name);
     }
 
     public function createRadio($name)
     {
-        return (new Input\Radio($name));
+        return new Input\Radio($name);
     }
 
     public function createToggle($name)
     {
-        return (new Input\Toggle($name));
+        return new Input\Toggle($name);
+    }
+
+    public function createToggleButton($name)
+    {
+        return new Input\ToggleButton($name);
     }
 
     /**
@@ -272,12 +279,17 @@ class FormFactory implements FormFactoryInterface
         return new Input\Select($name);
     }
 
+    public function createSearchSelect($name)
+    {
+        return new Input\SearchSelect($name);
+    }
+
     public function createMultiSelect($name)
     {
         return new Input\MultiSelect($this, $name);
     }
 
-    public function createButton($label = 'Button', $onClick = null, $id = null)
+    public function createButton($label = '', $onClick = null, $id = null)
     {
         return new Input\Button($label, 'button', $onClick, $id);
     }
@@ -443,16 +455,19 @@ class FormFactory implements FormFactoryInterface
         $languages = array(
             'af_ZA' => 'Afrikaans - Suid-Afrika',
             'nl_NL' => 'Dutch - Nederland',
+            'ca_CA' => 'Català - Catalonia',
             'en_GB' => 'English - United Kingdom',
             'en_US' => 'English - United States',
-            'es_ES' => 'Español',
+            'es_ES' => 'Español - España',
             'fr_FR' => 'Français - France',
             'he_IL' => 'עברית - ישראל',
             'hr_HR' => 'Hrvatski - Hrvatska',
             'it_IT' => 'Italiano - Italia',
+            'ja_JP' => '日本語 (にほんご)',
             'pl_PL' => 'Język polski - Polska',
             'pt_BR' => 'Português - Brasil',
-            'ro_RO' => 'Română',
+            'pt_PT' => 'Português - Portugal',
+            'ro_RO' => 'Română - România',
             'sq_AL' => 'Shqip - Shqipëri',
             'vi_VN' => 'Tiếng Việt - Việt Nam',
             'tr_TR' => 'Türkçe - Türkiye',
@@ -464,7 +479,7 @@ class FormFactory implements FormFactoryInterface
             'zh_HK' => '繁體字 - 香港',
         );
 
-        return $this->createSelect($name)->fromArray($languages);
+        return $this->createSearchSelect($name)->fromArray($languages);
     }
 
     public function createSelectCurrency($name)
@@ -550,6 +565,16 @@ class FormFactory implements FormFactoryInterface
             ),
         );
 
-        return $this->createSelect($name)->fromArray($currencies)->placeholder();
+        return $this->createSearchSelect($name)->fromArray($currencies)->placeholder();
+    }
+
+    public function createSelectTimezone($name)
+    {
+        $timezones = array_reduce(DateTimeZone::listIdentifiers(DateTimeZone::ALL), function($group, $item) {
+            $group[$item] = __($item);
+            return $group;
+        }, []);
+
+        return $this->createSearchSelect($name)->fromArray($timezones)->placeholder();
     }
 }

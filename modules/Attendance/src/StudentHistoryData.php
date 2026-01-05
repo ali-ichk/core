@@ -30,6 +30,7 @@ use Gibbon\Services\Format;
 use Gibbon\Contracts\Database\Connection;
 use Gibbon\Domain\School\SchoolYearTermGateway;
 use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
+use Gibbon\Domain\Timetable\TimetableDayDateGateway;
 
 /**
  * Student History Data
@@ -42,17 +43,20 @@ class StudentHistoryData
     protected $pdo;
     protected $termGateway;
     protected $attendanceLogGateway;
+	protected $timetableGateway;
     protected $settingGateway;
 
     public function __construct(
         Connection $pdo,
         SchoolYearTermGateway $termGateway,
         AttendanceLogPersonGateway $attendanceLogGateway,
+		TimetableDayDateGateway $timetableGateway,
         SettingGateway $settingGateway
     ) {
         $this->pdo = $pdo;
         $this->termGateway = $termGateway;
         $this->attendanceLogGateway = $attendanceLogGateway;
+		$this->timetableGateway = $timetableGateway;
         $this->settingGateway = $settingGateway;
     }
 
@@ -147,7 +151,69 @@ class StudentHistoryData
                     });
                 }
                 
-                $endOfDay = isset($logs[$dateYmd]) ? end($logs[$dateYmd]) : [];
+                // School logs only (non-class)
+				$schoolLogs = array_filter($logs[$dateYmd] ?? [], function ($log) {
+					return $log['context'] !== 'Class';
+				});
+
+				// Sort by timestampTaken
+				usort($schoolLogs, function ($a, $b) {
+					return strcmp($a['timestampTaken'], $b['timestampTaken']);
+				});
+
+				$endOfDay = !empty($schoolLogs) ? end($schoolLogs) : [];
+			
+				// Get all timetable periods for this student on this date, augment classLogs with timetable periods (including missing attendance)
+				$periods = $this->timetableGateway
+					->selectTimetablePeriodsByPersonAndDate($gibbonSchoolYearID, $gibbonPersonID, $dateYmd, $dateYmd)
+					->fetchAll();
+
+				// Existing class logs for this day (may be empty)
+				$classLogsForDay = $classLogs[$dateYmd] ?? [];
+
+				// Index existing logs by timetable row, if available
+				$logsByTT = [];
+				foreach ($classLogsForDay as $log) {
+					if (!empty($log['gibbonTTDayRowClassID'])) {
+						$logsByTT[$log['gibbonTTDayRowClassID']] = $log;
+					}
+				}
+
+				$mergedClassLogs = [];
+
+				foreach ($periods as $period) {
+                    if ($period['attendance'] != 'Y') continue;
+
+					$ttID = $period['gibbonTTDayRowClassID'] ?? null;
+                    $log = [];
+                    
+					if ($ttID !== null && !empty($logsByTT[$ttID])) {
+						// Real attendance log exists for this period
+						$log = $logsByTT[$ttID];
+
+						// Ensure periodName is set even if it wasn't returned in the main query
+						if (empty($log['periodName'])) {
+							$log['periodName'] = $period['periodName'];
+						}
+					} else if (!empty($endOfDay['type']) && stripos($endOfDay['type'], 'Present') !== false) {
+						// No attendance taken for this period: create a synthetic log
+						$log = [
+							'periodName'     => $period['periodName'],
+							'context'        => 'Class',
+							'contextName'    => $period['courseName'].'.'.$period['className'],
+							'type'           => __('Not Available'),
+							'reason'         => '',
+							'status'         => 'notTaken',
+							'statusClass'    => 'dull', // grey background
+							'timestampTaken' => null,
+						];
+					}
+
+					$mergedClassLogs[] = $log;
+				}
+
+				// Replace classLogs for this day with the merged list
+				$classLogs[$dateYmd] = array_filter($mergedClassLogs);
 
                 // Handle cases where school-wide attendance does not exist, but class attendance does
                 if (empty($endOfDay) && !empty($classLogs)) {

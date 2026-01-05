@@ -110,23 +110,47 @@ class AttendanceLogPersonGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
     }
 
+	/**
+     * Select all attendance logs for a person within a school year.
+     *
+     * @param string $gibbonSchoolYearID
+     * @param string $gibbonPersonID
+     * @return \Gibbon\Domain\DataSet|array
+     */
     public function selectAllAttendanceLogsByPerson($gibbonSchoolYearID, $gibbonPersonID)
     {
         $query = $this
             ->newSelect()
             ->from('gibbonSchoolYear')
             ->cols([
-                'gibbonAttendanceLogPerson.date as groupBy','gibbonAttendanceLogPerson.date', 'gibbonAttendanceLogPerson.type', 'gibbonAttendanceLogPerson.reason', 'gibbonAttendanceLogPerson.timestampTaken', 'gibbonAttendanceCode.nameShort as code', 'gibbonAttendanceCode.direction', 'gibbonAttendanceCode.scope', 'gibbonAttendanceLogPerson.context', "(CASE WHEN gibbonCourse.gibbonCourseID IS NOT NULL THEN CONCAT(gibbonCourse.nameShort, '.', gibbonCourseClass.nameShort) END) as contextName",
-            ])
+				'gibbonAttendanceLogPerson.date as groupBy',
+				'gibbonAttendanceLogPerson.date',
+				'gibbonAttendanceLogPerson.type',
+				'gibbonAttendanceLogPerson.reason',
+				'gibbonAttendanceLogPerson.timestampTaken',
+				'gibbonAttendanceCode.nameShort as code',
+				'gibbonAttendanceCode.direction',
+				'gibbonAttendanceCode.scope',
+				'gibbonAttendanceLogPerson.context',
+				"(CASE WHEN gibbonCourse.gibbonCourseID IS NOT NULL THEN CONCAT(gibbonCourse.nameShort, '.', gibbonCourseClass.nameShort) END) as contextName",
+				'gibbonTTColumnRow.name AS periodName',
+				'gibbonAttendanceLogPerson.gibbonTTDayRowClassID',
+			])
             ->innerJoin('gibbonAttendanceLogPerson', 'gibbonAttendanceLogPerson.date >= firstDay AND gibbonAttendanceLogPerson.date <= lastDay')
             ->innerJoin('gibbonAttendanceCode', 'gibbonAttendanceLogPerson.type=gibbonAttendanceCode.name')
             ->leftJoin('gibbonCourseClass', "gibbonCourseClass.gibbonCourseClassID=gibbonAttendanceLogPerson.gibbonCourseClassID AND gibbonAttendanceLogPerson.context='Class'")
             ->leftJoin('gibbonCourse', 'gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID')
+			->leftJoin('gibbonTTDayRowClass', 'gibbonTTDayRowClass.gibbonTTDayRowClassID = gibbonAttendanceLogPerson.gibbonTTDayRowClassID')
+			->leftJoin('gibbonTTColumnRow',	'gibbonTTColumnRow.gibbonTTColumnRowID = gibbonTTDayRowClass.gibbonTTColumnRowID')
             ->where('gibbonSchoolYear.gibbonSchoolYearID=:gibbonSchoolYearID')
             ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID)
             ->where('gibbonAttendanceLogPerson.gibbonPersonID=:gibbonPersonID')
             ->bindValue('gibbonPersonID', $gibbonPersonID)
-            ->orderBy(['timestampTaken ASC']);
+			->orderBy([
+				'gibbonAttendanceLogPerson.date ASC',
+				'gibbonTTColumnRow.timeStart ASC',
+				'gibbonAttendanceLogPerson.timestampTaken ASC'
+			]);
 
         return $this->runSelect($query);
     }

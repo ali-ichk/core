@@ -281,7 +281,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 						$row = $form->addRow()->addClass('addConditionRow');
 							$row->addLabel('name', __('Condition Name'));
 							$row->addSelect('name')->fromResults($results)->required()->placeholder();
-
+                      
 						$row = $form->addRow()->addClass('addConditionRow');
 							$row->addLabel('gibbonAlertLevelID', __('Risk'));
 							$row->addSelectAlert('gibbonAlertLevelID')->required();

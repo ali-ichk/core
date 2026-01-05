@@ -153,7 +153,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
                     {% elseif element.isInstanceOf('Gibbon\\Forms\\Layout\\Label') %}
                         {% set class = 'sm:w-2/5 flex flex-col justify-center sm:mb-0' %}
                     {% elseif element.isInstanceOf('Gibbon\\Forms\\Layout\\Column')  %}
-                        {% set class = loop.last and loop.length == 2 ? 'flex-1 relative flex justify-end items-center' : '' %}
+                        {% set class = loop.last and loop.length == 2 and 'flex-col' not in element.getClass ? 'flex-1 relative flex justify-end items-center' : '' %}
                     {% elseif loop.last and (loop.length == 2 or "noIntBorder" in form.getClass) %}
                         {% set class = 'flex-1 relative flex justify-end items-center' %}
                     {% else %}
@@ -187,7 +187,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
         </div>
 
         {% if form.hasMeta and form.getMeta.getElementCount > 0 %}
-        <aside class="hidden xl:flex flex-col col-span-2 h-min bg-gray-50 rounded border border-gray-400 border-t-4 border-t-gray-400">
+        <aside class="hidden xl:flex flex-col col-span-2 sticky top-0 h-min bg-gray-50 rounded border border-gray-400 border-t-4 border-t-gray-400">
             {% for element in form.getMeta.getElements %}
                 {% set hasClass = element.instanceOf('Gibbon\\Forms\\Layout\\Element') or element.instanceOf('Gibbon\\Forms\\Layout\\Row') %}
             
@@ -198,13 +198,13 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
             {% endfor %}
 
             <template x-if="invalid">
-                <div class="p-4 border-t">
+                <div x-from-template class="p-4 border-t">
                     <span class="tag error">{{ __('Please check these fields') }}:</span>
 
                     <ul class="ml-6">
                     <template x-for="v in $validate.data($refs.form)" >
                         <template x-if="!v.valid && v.node.labels.length > 0">
-                        <li class="py-0.5">
+                        <li x-from-template class="py-0.5">
                             <a x-bind:href="'#' + v.name" target="_self" x-text="v.node.labels[0].ariaLabel" :aria-label="v.name" class="text-sm hover:underline"></a>
                         </li>
                         </template>
