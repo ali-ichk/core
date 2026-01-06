@@ -143,7 +143,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable Admin/ttDates.ph
 
                             $column->addCheckbox('dates[]')->setValue($i)->setClass($dayOfWeek.$values['nameShort'])->alignCenter();
 
-                            $column->addContent("<br/><a href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/ttDates_edit.php&gibbonSchoolYearID=$gibbonSchoolYearID&dateStamp=".$i."'><img style='margin-top: 3px' title='".__('Edit')."' src='./themes/".$session->get('gibbonThemeName')."/img/config.png'/></a><br/>");
+                            $column->addContent("<br/><a href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/ttDates_edit.php&gibbonSchoolYearID=$gibbonSchoolYearID&dateStamp=".$i."'>".icon('solid', 'edit', 'size-6 mb-2 text-gray-600 hover:text-blue-500')."</a><br/>");
 
                             if (isset($ttDays[$date])) {
                                 foreach ($ttDays[$date] as $day) {
@@ -174,7 +174,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable Admin/ttDates.ph
             $table = $form->addRow()->addTable()->setClass('w-full smallIntBorder');
             $row = $table->addRow();
                 $row->addLabel('gibbonTTDayID', __('Day'));
-                $row->addSelect('gibbonTTDayID')->fromQuery($pdo, $sql, $data)->addClass('mediumWidth');
+                $row->addSearchSelect('gibbonTTDayID')->fromQuery($pdo, $sql, $data)->addClass('mediumWidth');
 
             $row = $table->addRow();
                 $row->addLabel('overwrite', __('Overwrite'))->description(__('Should existing timetable days be replaced by the new ones?'));

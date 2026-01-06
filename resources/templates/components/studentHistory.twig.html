@@ -7,18 +7,15 @@ Gibbon™, Gibbon Education Ltd. (Hong Kong)
 This is a Gibbon template file, written in HTML and Twig syntax.
 For info about editing, see: https://twig.symfony.com/doc/2.x/
 -->#}
-
 {% extends "components/dataTable.twig.html" %}
 {% import _self as attendance  %}
 
 {% block tableInner %}
-
     <div class="flex flex-wrap justify-center md:justify-between rounded bg-gray-100 border">
         <div class="md:flex-1 p-4 text-sm text-gray-700">
             <h3 class="mt-2 border-b-0">
                 {{ __('Summary') }}
             </h3>
-
             {% if summary.total %}
                 {% if summary.total != (summary.present + summary.partial + summary.absent) %}
                     <div class="italic mb-4 text-xs">
@@ -63,7 +60,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
                 {% endfor %}
 
                 {% for dayNameShort, dayName in daysOfWeek %}
-                    <div class="hidden md:block {{ blockWidth }} py-1" title="{{ __(dayName) }}">
+                    <div class="hidden xl:block {{ blockWidth }} py-1" title="{{ __(dayName) }}">
                         {{ __(dayNameShort) }}
                     </div>
                 {% endfor %}
@@ -71,7 +68,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
 
             {#<!-- Attendance Days: grouped by week -->#}
             {% for weekNumber, week in term.weeks %}
-                <div class="w-full md:w-1/2 flex items-stretch text-xxs text-center text-gray-600" style="min-height: 55px;">
+                <div class="w-full xl:w-1/2 flex items-stretch text-xxs text-center text-gray-600" style="min-height: 55px;">
 
                 {% for day in week %}
                     {% if day.outsideTerm %}
@@ -160,13 +157,22 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
 
         {%if day.classLogs %}
             <li class='text-xxs  font-bold mt-2'>{{ __('Class Attendance') }}:</li>
-            {% for log in day.classLogs %}
-                <li class='{{ log.statusClass }} leading-relaxed'>
-                    {{ log.timestampTaken|date( log.timestampTaken|date('Y-m-d') == day.date ? 'H:i' : 'H:i Y-m-d') }} -
-                    {{ __(log.type) }} {{- log.reason ? ', ' ~ __(log.reason) }} - 
-                    {{ log.contextName ? log.contextName : __(log.context) }}
-                </li>
-            {% endfor %}
+			{% for log in day.classLogs %}
+				<li class='{{ log.statusClass }} leading-relaxed'>
+					{% if log.periodName %}
+						<strong>{{ log.periodName }}</strong> -
+					{% endif %}
+
+					{{ log.contextName ? log.contextName : __(log.context) }} -
+					{{ __(log.type) }}{{ log.reason ? ', ' ~ __(log.reason) }}
+
+					{% if log.timestampTaken %}
+						({{ log.timestampTaken|date(
+							log.timestampTaken|date('Y-m-d') == day.date ? 'H:i' : 'Y-m-d H:i'
+						) }})
+					{% endif %}
+				</li>
+			{% endfor %}
         {% endif %}
     </section>
 {% endmacro tooltip %}
