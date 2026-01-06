@@ -57,7 +57,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_atte
     $result = $container->get(ActivityGateway::class)->selectActivitiesBySchoolYear($session->get('gibbonSchoolYearID'));
     $row = $form->addRow();
         $row->addLabel('gibbonActivityID', __('Activity'));
-        $row->addSelect('gibbonActivityID')->fromResults($result)->selected($gibbonActivityID)->required()->placeholder();
+        $row->addSearchSelect('gibbonActivityID')->fromResults($result)->selected($gibbonActivityID)->required()->placeholder();
 
     $row = $form->addRow();
         $row->addLabel('numberOfColumns', __('Number of Columns'));

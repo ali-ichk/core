@@ -569,7 +569,7 @@ class Format
      */
     public static function small($value)
     {
-        return '<span class="text-xxs italic">'.$value.'</span>';
+        return '<span class="text-xs italic">'.$value.'</span>';
     }
 
     /**
@@ -780,7 +780,15 @@ class Format
 
     public static function heading(string $text, string $tag = 'h3', string $class = '')
     {
-        return "<{$tag} class='{$class}'>{$text}</{$tag}>";
+        return "<{$tag} ".($class ? "class='{$class}'" : '').">{$text}</{$tag}>";
+    }
+
+    public static function paragraph(string $text, string $class = '')
+    {
+        $text = nl2br($text);
+        $class = $class ?: 'text-sm';
+
+        return "<p class='{$class}'>{$text}</p>";
     }
 
     public static function list(array $items, $tag = 'ul', $listClass = '', $itemClass = 'leading-normal')
@@ -1181,8 +1189,9 @@ class Format
      */
     public static function colorSwatch($color)
     {
-        $colorValue = '#ffffff00';
+        $colorValue = '';
         $colorTitle = '';
+        $colorClass = '';
 
         if (substr($color, 0, 1) == '#') {
             $color = trim(preg_replace('/[^a-fA-F0-9]/', '', $color), '#');
@@ -1192,9 +1201,11 @@ class Format
             $color = preg_replace('/[^rgba0-9., \(\)]/', '', $color);
             $colorValue = !empty($color) ? $color : '#ffffff00';
             $colorTitle = !empty($color) ? $colorValue : __('None');
+        } else {
+            $colorClass = trim(preg_replace('/[^a-zA-Z0-9_-]/', '', $color));
         }
 
-        return '<div class="rounded-md border h-8 w-8" style="background-color:'.$colorValue.'" title="'.$colorTitle.'"></div>';
+        return "<div class='rounded-md border h-8 w-8 {$colorClass}' style='background-color:{$colorValue}' title='{$colorTitle}'></div>";
     }
 
     /**

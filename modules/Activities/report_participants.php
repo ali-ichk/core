@@ -54,7 +54,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/report_particip
 
         $row = $form->addRow();
             $row->addLabel('gibbonActivityID', __('Activity'));
-            $row->addSelect('gibbonActivityID')->fromResults($results)->selected($gibbonActivityID)->required()->placeholder();
+            $row->addSearchSelect('gibbonActivityID')->fromResults($results)->selected($gibbonActivityID)->required()->placeholder();
 
         $row = $form->addRow();
             $row->addFooter();

@@ -65,7 +65,7 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
             ->from($this->getTableName())
             ->cols([
                 'gibbonPerson.gibbonPersonID', 'gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.username',
-                'gibbonPerson.image_240', 'gibbonPerson.status', 'gibbonRole.name as primaryRole'
+                'gibbonPerson.image_240', 'gibbonPerson.status', 'gibbonRole.name as primaryRole', 'gibbonRole.category as roleCategory'
             ])
             ->leftJoin('gibbonRole', 'gibbonPerson.gibbonRoleIDPrimary=gibbonRole.gibbonRoleID');
 
@@ -286,11 +286,11 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
         return $preferences;
     }
 
-    public function getUserPreferenceByScope($gibbonPersonID, $scope, $key, $default = null) 
+    public function getUserPreferenceByScope($gibbonPersonID, $scope, $key = null, $default = null) 
     {
         $preferences = $this->getUserPreferences($gibbonPersonID);
 
-        return $preferences[$scope][$key] ?? $default;
+        return !empty($key) ? ($preferences[$scope][$key] ?? $default) : ($preferences[$scope] ?? $default);
     }
 
     public function setUserPreferences($gibbonPersonID, $newPreferences, $replace = false) 

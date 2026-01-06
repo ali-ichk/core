@@ -1,6 +1,6 @@
-<textarea <?= $attributes; ?> class="hidden"><?= htmlentities($text, ENT_QUOTES, 'UTF-8'); ?></textarea>
+<textarea <?= $attributes; ?> class="hidden"><?= htmlentities($text ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
 
-<div id="editor<?= $id; ?>" class="w-full" style="height: <?= $height; ?>px;"><?= htmlentities($text, ENT_QUOTES, 'UTF-8'); ?></div>
+<div id="editor<?= $id; ?>" class="w-full" style="height: <?= $height; ?>px;"><?= htmlentities($text ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
 
 <script type="text/javascript">
     function setupEditor () {
@@ -53,7 +53,5 @@
     // Remove the existing editor before htmx swaps to a new page
     document.addEventListener('htmx:beforeRequest', function (event) {
         ace.edit("editor<?= $id; ?>").destroy();
-        $editor = $("#editor<?= $id; ?>")
-        $editor.remove();
     }, { once: true });
 </script>

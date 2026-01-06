@@ -152,4 +152,64 @@ class TimetableDayDateGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
+    
+    /**
+     * Get all timetable periods for a given student on a specific date.
+     *
+     * @param string $gibbonSchoolYearID
+     * @param string $gibbonPersonID
+     * @param string $date  Y-m-d
+     * @return \Gibbon\Contracts\Database\Result
+     */	
+    public function selectTimetablePeriodsByPersonAndDate($gibbonSchoolYearID, $gibbonPersonID, $dateStart, $dateEnd, $timeStart = null, $timeEnd = null, $includeTeachers = false)
+    {
+        $query = $this
+            ->newSelect()
+            ->from('gibbonTTDayRowClass')
+            ->cols([
+                'gibbonTTDayRowClass.gibbonTTDayRowClassID',
+                'gibbonTTColumnRow.name AS periodName',
+                'gibbonTTColumnRow.nameShort AS periodNameShort',
+                'gibbonTTColumnRow.timeStart',
+                'gibbonTTColumnRow.timeEnd',
+                'gibbonCourseClass.nameShort AS className',
+                'gibbonCourse.nameShort AS courseName',
+                'gibbonCourseClass.attendance',
+            ])
+            ->innerJoin('gibbonTTDay', 'gibbonTTDay.gibbonTTDayID = gibbonTTDayRowClass.gibbonTTDayID')
+            ->innerJoin('gibbonTTDayDate', 'gibbonTTDayDate.gibbonTTDayID = gibbonTTDay.gibbonTTDayID')
+            ->innerJoin('gibbonTTColumnRow', 'gibbonTTColumnRow.gibbonTTColumnRowID = gibbonTTDayRowClass.gibbonTTColumnRowID')
+            ->innerJoin('gibbonCourseClass', 'gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID')
+            ->innerJoin('gibbonCourse', 'gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID')
+            ->innerJoin('gibbonCourseClassPerson','gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID')
+            ->where('gibbonCourse.gibbonSchoolYearID = :gibbonSchoolYearID')
+            ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID)
+            ->where('gibbonCourseClassPerson.gibbonPersonID = :gibbonPersonID')
+            ->where('gibbonCourseClassPerson.role = "Student"')
+            ->bindValue('gibbonPersonID', $gibbonPersonID)
+            ->where('gibbonTTDayDate.date BETWEEN :dateStart AND :dateEnd')
+            ->bindValue('dateStart', $dateStart)
+            ->bindValue('dateEnd', $dateEnd)
+            ->groupBy(['gibbonTTDayRowClass.gibbonTTDayRowClassID'])
+            ->orderBy(['gibbonTTColumnRow.timeStart ASC']);
+
+        if (!empty($timeStart) && !empty($timeEnd)) {
+            $query->where(
+                '((gibbonTTColumnRow.timeStart >= :timeStart AND gibbonTTColumnRow.timeStart < :timeEnd)
+                OR (:timeStart >= gibbonTTColumnRow.timeStart AND :timeStart < gibbonTTColumnRow.timeEnd)
+                OR (:timeStart = gibbonTTColumnRow.timeStart AND :timeEnd = gibbonTTColumnRow.timeEnd))'
+            )
+            ->bindValue('timeStart', $timeStart)
+            ->bindValue('timeEnd', $timeEnd);
+        }
+
+        if ($includeTeachers) {
+            $query
+                ->cols(['GROUP_CONCAT(DISTINCT teacher.gibbonPersonID) as teacherIDs'])
+                ->leftJoin('gibbonCourseClassPerson as teacher','teacher.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND (teacher.role="Teacher" OR teacher.role="Assistant")');
+        }
+
+        return $this->runSelect($query);
+    }
+
 }

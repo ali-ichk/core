@@ -19,10 +19,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Http\Url;
 use Gibbon\Forms\Form;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Forms\DatabaseFormFactory;
-use Gibbon\Http\Url;
+use Gibbon\Domain\Departments\DepartmentGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -78,10 +79,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable Admin/course_man
 				$row->addLabel('schoolYearName', __('School Year'));
 				$row->addTextField('schoolYearName')->required()->readonly()->setValue($schoolYear['name']);
 			
-			$sql = "SELECT gibbonDepartmentID as value, name FROM gibbonDepartment WHERE type='Learning Area' ORDER BY name";
+            $results = $container->get(DepartmentGateway::class)->selectDepartmentsOfTypeLearningArea();
 			$row = $form->addRow();
 				$row->addLabel('gibbonDepartmentID', __('Learning Area'));
-				$row->addSelect('gibbonDepartmentID')->fromQuery($pdo, $sql)->placeholder();
+				$row->addSearchSelect('gibbonDepartmentID')->fromResults($results)->placeholder();
 			
 			$row = $form->addRow();
 				$row->addLabel('name', __('Name'))->description(__('Must be unique for this school year.'));
@@ -89,7 +90,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Timetable Admin/course_man
 			
 			$row = $form->addRow();
 				$row->addLabel('nameShort', __('Short Name'));
-				$row->addTextField('nameShort')->required()->maxLength(12);
+				$row->addTextField('nameShort')->required()->maxLength(16);
 			
 			$row = $form->addRow();
 				$row->addLabel('orderBy', __('Order'))->description(__('May be used to adjust arrangement of courses in reports.'));
