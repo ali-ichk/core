@@ -145,8 +145,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                 } else {
                     // Check if there is already a pending form for this user
                     $existing = false;
-                    $proceed = false;
-
+                    
                     $resultForm = $container->get(MedicalUpdateGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID, 'gibbonPersonIDUpdater' => $session->get('gibbonPersonID'), 'status' => 'Pending']);
 
                     if ($resultForm->rowCount() > 1) {
@@ -156,177 +155,170 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         echo "<div class='warning'>";
                         echo __('You have already submitted a form, which is awaiting processing by an administrator. If you wish to make changes, please edit the data below, but remember your data will not appear in the system until it has been processed.');
                         echo '</div>';
-                        $proceed = true;
                     } else {
                         // Get user's data
                         $resultForm = $container->get(MedicalGateway::class)->selectBy(['gibbonPersonID'=> $gibbonPersonID]);
-
-                        if ($resultForm->rowCount() == 1) {
-                            $proceed = true;
-                        }
                     }
 
-                    if ($proceed == true) {
-						$values = $resultForm->fetch();
+                    $values = $resultForm->fetch();
 
-						$form = Form::create('updateFamily', $session->get('absoluteURL').'/modules/'.$session->get('module').'/data_medicalProcess.php?gibbonPersonID='.$gibbonPersonID);
-						$form->setFactory(DatabaseFormFactory::create($pdo));
+                    $form = Form::create('updateFamily', $session->get('absoluteURL').'/modules/'.$session->get('module').'/data_medicalProcess.php?gibbonPersonID='.$gibbonPersonID);
+                    $form->setFactory(DatabaseFormFactory::create($pdo));
 
-						$form->addHiddenValue('address', $session->get('address'));
-						$form->addHiddenValue('gibbonPersonMedicalID', $values['gibbonPersonMedicalID'] ?? '');
-						$form->addHiddenValue('existing', $values['gibbonPersonMedicalUpdateID'] ?? 'N');
+                    $form->addHiddenValue('address', $session->get('address'));
+                    $form->addHiddenValue('gibbonPersonMedicalID', $values['gibbonPersonMedicalID'] ?? '');
+                    $form->addHiddenValue('existing', $values['gibbonPersonMedicalUpdateID'] ?? 'N');
 
-                        $form->addRow()->addHeading('General Information', __('General Information'));
-                        
-						$row = $form->addRow();
-							$row->addLabel('longTermMedication', __('Long-Term Medication?'));
-							$row->addYesNo('longTermMedication')->placeholder();
+                    $form->addRow()->addHeading('General Information', __('General Information'));
+                    
+                    $row = $form->addRow();
+                        $row->addLabel('longTermMedication', __('Long-Term Medication?'));
+                        $row->addYesNo('longTermMedication')->placeholder();
 
-						$form->toggleVisibilityByClass('longTermMedicationDetails')->onSelect('longTermMedication')->when('Y');
+                    $form->toggleVisibilityByClass('longTermMedicationDetails')->onSelect('longTermMedication')->when('Y');
 
-						$row = $form->addRow()->addClass('longTermMedicationDetails');
-							$row->addLabel('longTermMedicationDetails', __('Medication Details'));
-							$row->addTextArea('longTermMedicationDetails')->setRows(5);
+                    $row = $form->addRow()->addClass('longTermMedicationDetails');
+                        $row->addLabel('longTermMedicationDetails', __('Medication Details'));
+                        $row->addTextArea('longTermMedicationDetails')->setRows(5);
 
-                        $row = $form->addRow();
-							$row->addLabel('comment', __('Comment'));
-							$row->addTextArea('comment')->setRows(6);
+                    $row = $form->addRow();
+                        $row->addLabel('comment', __('Comment'));
+                        $row->addTextArea('comment')->setRows(6);
 
-                        // CUSTOM FIELDS
-                        $container->get(CustomFieldHandler::class)->addCustomFieldsToForm($form, 'Medical Form', ['dataUpdater' => 1], $values['fields'] ?? '');
+                    // CUSTOM FIELDS
+                    $container->get(CustomFieldHandler::class)->addCustomFieldsToForm($form, 'Medical Form', ['dataUpdater' => 1], $values['fields'] ?? '');
 
-						// EXISTING CONDITIONS
-						$count = 0;
-						if (!empty($values['gibbonPersonMedicalID']) or $existing == true) {
+                    // EXISTING CONDITIONS
+                    $count = 0;
+                    if (!empty($values['gibbonPersonMedicalID']) or $existing == true) {
 
-                            if ($existing == true) {
-                                $medicalUpdateGateway = $container->get(MedicalUpdateGateway::class);
-                                $conditions = $medicalUpdateGateway->selectMedicalConditionUpdatesByID($values['gibbonPersonMedicalUpdateID'])->fetchAll();
-                            } else {
-                                $medicalGateway = $container->get(MedicalGateway::class);
-                                $conditions = $medicalGateway->selectMedicalConditionsByID($values['gibbonPersonMedicalID'])->fetchAll();
-                            }
+                        if ($existing == true) {
+                            $medicalUpdateGateway = $container->get(MedicalUpdateGateway::class);
+                            $conditions = $medicalUpdateGateway->selectMedicalConditionUpdatesByID($values['gibbonPersonMedicalUpdateID'])->fetchAll();
+                        } else {
+                            $medicalGateway = $container->get(MedicalGateway::class);
+                            $conditions = $medicalGateway->selectMedicalConditionsByID($values['gibbonPersonMedicalID'])->fetchAll();
+                        }
 
-                            foreach ($conditions as $rowCond) {
-								$form->addHiddenValue('gibbonPersonMedicalConditionID'.$count, $rowCond['gibbonPersonMedicalConditionID']);
-								$form->addHiddenValue('gibbonPersonMedicalConditionUpdateID'.$count, $existing ? $rowCond['gibbonPersonMedicalConditionUpdateID'] : 0);
+                        foreach ($conditions as $rowCond) {
+                            $form->addHiddenValue('gibbonPersonMedicalConditionID'.$count, $rowCond['gibbonPersonMedicalConditionID']);
+                            $form->addHiddenValue('gibbonPersonMedicalConditionUpdateID'.$count, $existing ? $rowCond['gibbonPersonMedicalConditionUpdateID'] : 0);
 
-								$form->addRow()->addHeading(__('Medical Condition').' '.($count+1) );
+                            $form->addRow()->addHeading(__('Medical Condition').' '.($count+1) );
 
-                                $results = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditionNames();
+                            $results = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditionNames();
 
-								$row = $form->addRow();
-									$row->addLabel('name'.$count, __('Condition Name'));
-									$row->addSelect('name'.$count)->fromResults($results)->required()->placeholder()->selected($rowCond['name']);
-
-								$row = $form->addRow();
-									$row->addLabel('gibbonAlertLevelID'.$count, __('Risk'));
-									$row->addSelectAlert('gibbonAlertLevelID'.$count)->required()->selected($rowCond['gibbonAlertLevelID']);
-
-								$row = $form->addRow();
-									$row->addLabel('triggers'.$count, __('Triggers'));
-									$row->addTextField('triggers'.$count)->maxLength(255)->setValue($rowCond['triggers']);
-
-								$row = $form->addRow();
-									$row->addLabel('reaction'.$count, __('Reaction'));
-									$row->addTextField('reaction'.$count)->maxLength(255)->setValue($rowCond['reaction']);
-
-								$row = $form->addRow();
-									$row->addLabel('response'.$count, __('Response'));
-									$row->addTextField('response'.$count)->maxLength(255)->setValue($rowCond['response']);
-
-								$row = $form->addRow();
-									$row->addLabel('medication'.$count, __('Medication'));
-									$row->addTextField('medication'.$count)->maxLength(255)->setValue($rowCond['medication']);
-
-								$row = $form->addRow();
-									$row->addLabel('lastEpisode'.$count, __('Last Episode Date'));
-									$row->addDate('lastEpisode'.$count)->setValue(Format::date($rowCond['lastEpisode']) );
-
-								$row = $form->addRow();
-									$row->addLabel('lastEpisodeTreatment'.$count, __('Last Episode Treatment'));
-									$row->addTextField('lastEpisodeTreatment'.$count)->maxLength(255)->setValue($rowCond['lastEpisodeTreatment']);
-
-								$row = $form->addRow();
-									$row->addLabel('commentCond'.$count, __('Comment'));
-                                    $row->addTextArea('commentCond'.$count)->setValue($rowCond['comment']);
-
-                                $row = $form->addRow();
-                                    $row->addLabel('attachment'.$count, __('Attachment'))
-                                        ->description(__('Additional details about this medical condition. Attachments are only visible to users who manage medical data.'));
-                                    $row->addFileUpload('attachment'.$count)
-                                        ->setAttachment('attachment', $session->get('absoluteURL'), $rowCond['attachment'] ?? '');
-
-								$count++;
-							}
-
-							$form->addHiddenValue('count', $count);
-						}
-
-						// ADD NEW CONDITION
-						$form->addRow()->addHeading('Add Medical Condition', __('Add Medical Condition'));
-
-						$form->toggleVisibilityByClass('addConditionRow')->onCheckbox('addCondition')->when('Yes');
-
-                        if ($medicalConditionIntro = $container->get(SettingGateway::class)->getSettingByScope('Students', 'medicalConditionIntro')) {
                             $row = $form->addRow();
-                                $row->addContent($medicalConditionIntro);
+                                $row->addLabel('name'.$count, __('Condition Name'));
+                                $row->addSelect('name'.$count)->fromResults($results)->required()->placeholder()->selected($rowCond['name']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('gibbonAlertLevelID'.$count, __('Risk'));
+                                $row->addSelectAlert('gibbonAlertLevelID'.$count)->required()->selected($rowCond['gibbonAlertLevelID']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('triggers'.$count, __('Triggers'));
+                                $row->addTextField('triggers'.$count)->maxLength(255)->setValue($rowCond['triggers']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('reaction'.$count, __('Reaction'));
+                                $row->addTextField('reaction'.$count)->maxLength(255)->setValue($rowCond['reaction']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('response'.$count, __('Response'));
+                                $row->addTextField('response'.$count)->maxLength(255)->setValue($rowCond['response']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('medication'.$count, __('Medication'));
+                                $row->addTextField('medication'.$count)->maxLength(255)->setValue($rowCond['medication']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('lastEpisode'.$count, __('Last Episode Date'));
+                                $row->addDate('lastEpisode'.$count)->setValue(Format::date($rowCond['lastEpisode']) );
+
+                            $row = $form->addRow();
+                                $row->addLabel('lastEpisodeTreatment'.$count, __('Last Episode Treatment'));
+                                $row->addTextField('lastEpisodeTreatment'.$count)->maxLength(255)->setValue($rowCond['lastEpisodeTreatment']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('commentCond'.$count, __('Comment'));
+                                $row->addTextArea('commentCond'.$count)->setValue($rowCond['comment']);
+
+                            $row = $form->addRow();
+                                $row->addLabel('attachment'.$count, __('Attachment'))
+                                    ->description(__('Additional details about this medical condition. Attachments are only visible to users who manage medical data.'));
+                                $row->addFileUpload('attachment'.$count)
+                                    ->setAttachment('attachment', $session->get('absoluteURL'), $rowCond['attachment'] ?? '');
+
+                            $count++;
                         }
 
-						$row = $form->addRow();
-							$row->addCheckbox('addCondition')->setValue('Yes')->description(__('Check the box to add a new medical condition'));
-
-                        $results = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditionNames();
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('name', __('Condition Name'));
-							$row->addSelect('name')->fromResults($results)->required()->placeholder();
-                      
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('gibbonAlertLevelID', __('Risk'));
-							$row->addSelectAlert('gibbonAlertLevelID')->required();
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('triggers', __('Triggers'));
-							$row->addTextField('triggers')->maxLength(255);
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('reaction', __('Reaction'));
-							$row->addTextField('reaction')->maxLength(255);
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('response', __('Response'));
-							$row->addTextField('response')->maxLength(255);
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('medication', __('Medication'));
-							$row->addTextField('medication')->maxLength(255);
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('lastEpisode', __('Last Episode Date'));
-							$row->addDate('lastEpisode');
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('lastEpisodeTreatment', __('Last Episode Treatment'));
-							$row->addTextField('lastEpisodeTreatment')->maxLength(255);
-
-						$row = $form->addRow()->addClass('addConditionRow');
-							$row->addLabel('commentCond', __('Comment'));
-                            $row->addTextArea('commentCond');
-
-                        $row = $form->addRow()->addClass('addConditionRow');
-                            $row->addLabel('attachment', __('Attachment'))
-                                ->description(__('Additional details about this medical condition. Attachments are only visible to users who manage medical data.'));
-                            $row->addFileUpload('attachment');
-
-						$row = $form->addRow();
-							$row->addFooter();
-							$row->addSubmit();
-
-						$form->loadAllValuesFrom($values);
-
-						echo $form->getOutput();
+                        $form->addHiddenValue('count', $count);
                     }
+
+                    // ADD NEW CONDITION
+                    $form->addRow()->addHeading('Add Medical Condition', __('Add Medical Condition'));
+
+                    $form->toggleVisibilityByClass('addConditionRow')->onCheckbox('addCondition')->when('Yes');
+
+                    if ($medicalConditionIntro = $container->get(SettingGateway::class)->getSettingByScope('Students', 'medicalConditionIntro')) {
+                        $row = $form->addRow();
+                            $row->addContent($medicalConditionIntro);
+                    }
+
+                    $row = $form->addRow();
+                        $row->addCheckbox('addCondition')->setValue('Yes')->description(__('Check the box to add a new medical condition'));
+
+                    $results = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditionNames();
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('name', __('Condition Name'));
+                        $row->addSelect('name')->fromResults($results)->required()->placeholder();
+                    
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('gibbonAlertLevelID', __('Risk'));
+                        $row->addSelectAlert('gibbonAlertLevelID')->required();
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('triggers', __('Triggers'));
+                        $row->addTextField('triggers')->maxLength(255);
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('reaction', __('Reaction'));
+                        $row->addTextField('reaction')->maxLength(255);
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('response', __('Response'));
+                        $row->addTextField('response')->maxLength(255);
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('medication', __('Medication'));
+                        $row->addTextField('medication')->maxLength(255);
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('lastEpisode', __('Last Episode Date'));
+                        $row->addDate('lastEpisode');
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('lastEpisodeTreatment', __('Last Episode Treatment'));
+                        $row->addTextField('lastEpisodeTreatment')->maxLength(255);
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('commentCond', __('Comment'));
+                        $row->addTextArea('commentCond');
+
+                    $row = $form->addRow()->addClass('addConditionRow');
+                        $row->addLabel('attachment', __('Attachment'))
+                            ->description(__('Additional details about this medical condition. Attachments are only visible to users who manage medical data.'));
+                        $row->addFileUpload('attachment');
+
+                    $row = $form->addRow();
+                        $row->addFooter();
+                        $row->addSubmit();
+
+                    $form->loadAllValuesFrom($values);
+
+                    echo $form->getOutput();
                 }
             }
         }

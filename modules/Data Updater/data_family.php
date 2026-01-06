@@ -49,7 +49,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_family.p
             echo '</p>';
         }
 
-        $customResponces = array();
+        $customResponces = [];
         $error3 = __('Your request was successful, but some data was not properly saved. An administrator will process your request as soon as possible. You will not see the updated data in the system until it has been processed.');
         if ($session->get('organisationDBAEmail') != '' and $session->get('organisationDBAName') != '') {
             $error3 .= ' '.sprintf(__('Please contact %1$s if you have any questions.'), "<a href='mailto:".$session->get('organisationDBAEmail')."'>".$session->get('organisationDBAName').'</a>');
@@ -69,14 +69,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_family.p
         echo '</h2>';
 
         $gibbonFamilyID = $_GET['gibbonFamilyID'] ?? null;
+        $familyGateway = $container->get(FamilyGateway::class);
 
         $form = Form::create('selectFamily', $session->get('absoluteURL').'/index.php', 'get');
         $form->addHiddenValue('q', '/modules/'.$session->get('module').'/data_family.php');
 
         if ($highestAction == 'Update Family Data_any') {
-            $results = $container->get(FamilyGateway::class)->selectAllFamiliesIDAndName();
+            $results = $familyGateway->selectAllFamiliesIDAndName();
         } else {
-            $results = $container->get(FamilyGateway::class)->selectFamilyIDAndNameByAdultID($session->get('gibbonPersonID'));
+            $results = $familyGateway->selectFamilyIDAndNameByAdultID($session->get('gibbonPersonID'));
         }
         $row = $form->addRow();
             $row->addLabel('gibbonFamilyID', __('Family'));
@@ -98,15 +99,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_family.p
 
             // Check access to person
             if ($highestAction == 'Update Family Data_any') {
-                $resultCheck = $container->get(FamilyGateway::class)->getByID($gibbonFamilyID, ['name', 'gibbonFamilyID']);
+                $resultCheck = $familyGateway->getByID($gibbonFamilyID, ['name', 'gibbonFamilyID']);
             } else {
-                $resultCheck = $container->get(FamilyGateway::class)->selectFamilyIDByAdultID($gibbonFamilyID, $session->get('gibbonPersonID'));
+                $resultCheck = $familyGateway->selectFamilyIDByAdultID($gibbonFamilyID, $session->get('gibbonPersonID'));
             }
 
             if (empty($resultCheck)) {
                 $page->addError(__('The selected record does not exist, or you do not have access to it.'));
             } else {
-                // Check if there is already a pending form for this user
+                // Check if there is already a pending form for this family
                 $existing = false;
                 $proceed = false;
                 $values = [];
@@ -125,8 +126,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_family.p
                     $proceed = true;
                     $values = $pendingUpdates[0];
                 } else {
-                    // Get user's data
-                    $result = $container->get(FamilyGateway::class)->getByID($gibbonFamilyID);
+                    // Get family's data
+                    $result = $familyGateway->getByID($gibbonFamilyID);
                     if (empty($result)) {
                         $page->addError(__('The specified record cannot be found.'));
                     } else {
