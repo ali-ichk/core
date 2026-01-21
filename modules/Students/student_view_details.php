@@ -51,7 +51,10 @@ use Gibbon\Module\Planner\Tables\HomeworkTable;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\Attendance\StudentHistoryData;
 use Gibbon\Module\Attendance\StudentHistoryView;
+use Gibbon\Domain\Timetable\TimetableDayDateGateway;
+use Gibbon\Domain\School\SchoolYearSpecialDayGateway;
 use Gibbon\Module\Students\View\LibraryBorrowingView;
+use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 
 //Module includes for User Admin (for custom fields)
@@ -290,6 +293,65 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/student_view_deta
                             echo "<div class='error' style='background-color: #".$alert['colorBG'].'; border: 1px solid #'.$alert['color'].'; color: #'.$alert['color']."'>";
                             echo '<b>'.__('This student has one or more {level} risk medical conditions.', ['level' => __($alert['name'])]).'</b>';
                             echo '</div>';
+                        }
+
+                        $today = date('Y-m-d');
+                        $attendanceLogPersonGateway = $container->get(AttendanceLogPersonGateway::class);
+                        $lastNonClassAttendanceLog = $attendanceLogPersonGateway->selectNonClassAttendanceLogsByPersonAndDate($gibbonPersonID, $today)->fetch();
+
+                        if (!empty($lastNonClassAttendanceLog)) {
+                            $absent = $lastNonClassAttendanceLog['type'] == 'Absent' ?? false;
+
+                            if ($absent) {
+                                $absenceMessage = __('{name} is {type} today.', [
+                                    'name' =>Format::name('', $row['preferredName'], $row['surname'], 'Student'),
+                                    'type' => __($lastNonClassAttendanceLog['type'])]);
+                            } else {
+                                $absenceMessage = __('{name} is {type} today.', [
+                                    'name' =>Format::name('', $row['preferredName'], $row['surname'], 'Student'),
+                                    'type' => __($lastNonClassAttendanceLog['type'])]);
+
+                                $absenceMessage .= '<br/><br/><ul>';
+
+                                $isStudentOffTimetableToday = $container->get(SchoolYearSpecialDayGateway::class)->getIsStudentOffTimetableByDate($session->get('gibbonSchoolYearID'), $gibbonPersonID, $today);
+
+                                if ($isStudentOffTimetableToday) {
+                                    $absenceMessage .= '<li> The student is off timetable today for '.$isStudentOffTimetableToday['name'].'</li>';                                  
+                                } else {
+                                    $classes = $container->get(TimetableDayDateGateway::class)->selectTimetabledPeriodsByPersonAndDateRange($gibbonPersonID, $today, $today)->fetchAll();
+
+                                    $currentTime = date('H:i:s');
+                                    $currentClass = null;
+
+                                    foreach ($classes as $class) {
+                                        if ($class['timeStart'] <= $currentTime and $class['timeEnd'] > $currentTime) {
+                                            $currentClass = $class;
+                                            break;
+                                        }
+                                    }
+
+                                    if ($currentClass) {
+                                        // Handle room changes
+                                        if (!empty($currentClass['spaceChanged'])) {
+                                            $currentClass['roomName'] = $currentClass['roomNameChange'] ?? '';
+                                        }
+
+                                        $currentClassAttendance = $attendanceLogPersonGateway->selectClassAttendanceLogsByPersonAndDate($currentClass['gibbonCourseClassID'], $gibbonPersonID, $today)->fetch();
+
+                                       $absenceMessage .= '<li>' . strtr(
+                                        _('Currently, {type} in {class}, {room}.'),
+                                        [
+                                            '{type}'  => $currentClassAttendance['type'] ?? 'No Status',
+                                            '{class}' => Format::courseClassName($currentClass['courseNameShort'], $class['classNameShort']),
+                                            '{room}'  => $currentClass['roomName']
+                                        ]
+                                    ) . '</li>';
+                                    }
+                                }                                
+                            }
+
+
+                            echo $absent ? Format::alert($absenceMessage, 'warning') : Format::alert($absenceMessage, 'success');
                         }
 
                         $table = DataTable::createDetails('generalInfo');

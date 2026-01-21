@@ -526,7 +526,7 @@ class AttendanceLogPersonGateway extends QueryableGateway
         return $this->db()->select($sql, $data);
     }
 
-    public function selectConsecutiveAbsencesByPersonAndDates($datesList, $gibbonSchoolYearID, $threshold) {
+    public function selectConsecutiveAbsencesByDates($datesList, $gibbonSchoolYearID, $threshold) {
 
         $datesList = is_array($datesList) ? implode(',', $datesList) : $datesList;
 

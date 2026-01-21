@@ -68,7 +68,7 @@ if ((empty($schoolDays)) ) {
 }
 
 $yearGroupGateway = $container->get(YearGroupGateway::class);
-$absentStudents = $container->get(AttendanceLogPersonGateway::class)->selectConsecutiveAbsencesByPersonAndDates($schoolDays, $session->get('gibbonSchoolYearID'), $threshold);
+$absentStudents = $container->get(AttendanceLogPersonGateway::class)->selectConsecutiveAbsencesByDates($schoolDays, $session->get('gibbonSchoolYearID'), $threshold);
 
 if (empty($absentStudents)) {
     print __("No absent students found.") ;
