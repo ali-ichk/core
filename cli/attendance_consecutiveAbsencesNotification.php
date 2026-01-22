@@ -87,7 +87,7 @@ if ($event->getEventDetails($notificationGateway, 'active') == 'Y') {
     if ($absentStudents->rowCount() > 0) {
         while ($row = $absentStudents->fetch()) { // For every staff
             $studentName = $row['surname']. ', ' . $row['preferredName'] . ' - ' . $row['formGroup'];
-            $url = Url::fromModuleRoute('Attendance', 'report_studentHistory.php')->withQueryParams(['gibbonPersonID' => $row['gibbonPersonID']]);
+            $url = Url::fromModuleRoute('Attendance', 'report_studentHistory.php')->withQueryParams(['gibbonPersonID' => $row['gibbonPersonID']])->withAbsoluteUrl();
             $studentsList[] = Format::link($url, $studentName);
 
             // Add Head of Year as an automatic recipient
