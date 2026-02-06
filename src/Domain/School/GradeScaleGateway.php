@@ -72,12 +72,18 @@ class GradeScaleGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
     }
   
+    public function selectAllGradeScales()
+    {
+        $sql = "SELECT gibbonScaleID as value, name FROM gibbonScale ORDER BY name";
+    
+        return $this->db()->select($sql);
+    }
+
     public function selectActiveGradeScales()
     {
-        $data = [];
         $sql = "SELECT gibbonScaleID as value, name FROM gibbonScale WHERE (active='Y') ORDER BY name";
     
-        return $this->db()->select($sql, $data);
+        return $this->db()->select($sql);
     }
 
     public function selectGradesByScale($gibbonScaleID)

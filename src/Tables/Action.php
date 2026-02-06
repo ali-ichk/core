@@ -72,6 +72,14 @@ class Action extends WebLink
     protected $icon;
 
     /**
+     * The display type for this action.
+     * Options: button, interface
+     *
+     * @var string
+     */
+    protected $type = 'button';
+
+    /**
      * The icon css class
      *
      * @var string
@@ -111,7 +119,7 @@ class Action extends WebLink
      *
      * @var boolean
      */
-    protected $displayLabel = false;
+    protected $displayLabel = true;
 
     /**
      * Class constructor of Action.
@@ -163,6 +171,19 @@ class Action extends WebLink
 
         $this->setAttribute('target', mb_stripos($url, '://') !== false ? '_blank' : '');
         $this->setAttribute('download', $downloadable);
+
+        return $this;
+    }
+
+    /**
+     * Sets the action display type.
+     *
+     * @param string $type
+     * @return self
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
 
         return $this;
     }
@@ -308,6 +329,7 @@ class Action extends WebLink
             $this->setAttribute('hx-boost', 'true')
                 ->setAttribute('hx-target', '#content-wrap')
                 ->setAttribute('hx-select', '#content-wrap')
+                ->setAttribute('hx-indicator', '#loadingIndicator')
                 ->setAttribute('hx-swap', 'outerHTML show:window:top swap:0s');
         } elseif (!empty($this->getAttribute('hx-confirm'))) {
             $this->setAttribute('hx-post', Url::fromHandlerRoute(ltrim($this->url, '/')) )
@@ -336,6 +358,7 @@ class Action extends WebLink
         return Component::render(Action::class, $this->getAttributeArray() + [
             'action'       => $this->name,
             'modal'        => $this->modal,
+            'type'         => $this->type,
             'icon'         => $this->icon,
             'iconClass'    => $this->iconClass,
             'iconLibrary'  => $this->iconLibrary,

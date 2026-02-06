@@ -71,4 +71,13 @@ class UnitGateway extends QueryableGateway
        
         return $this->db()->select($sql, $data);
     }
+  
+    public function getUnitClassIDByUnit($gibbonUnitID, $gibbonCourseClassID)
+    {
+        $data = ['gibbonUnitID' => $gibbonUnitID, 'gibbonCourseClassID' => $gibbonCourseClassID];
+        $sql = "SELECT gibbonUnitClassID FROM gibbonUnitClass WHERE gibbonUnitID=:gibbonUnitID AND gibbonCourseClassID=:gibbonCourseClassID";
+
+        return $this->db()->selectOne($sql, $data);
+    }
+
 }

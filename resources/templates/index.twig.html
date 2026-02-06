@@ -17,9 +17,13 @@ TODO: add template variable details.
         {{ include('head.twig.html') }}
         {% endblock head %}
     </head>
-    <body x-data="{ modalOpen: false, modalType: 'none', globalShowHide: false }"
-        class="h-full flex flex-col font-sans {{ bodyBackground  ? '' : 'body-gradient-' ~ themeColour|lower }}" style="{{ bodyBackground  ? bodyBackground : '' }} {{ themeColour is empty ? 'background: linear-gradient(to left top, #402568 2%, #935ee1 65%, #a871ec) no-repeat fixed' : '' }}" @modalwindow="modalType=$event.detail; modalOpen = true">
+    <body x-data="{ modalOpen: false, modalType: 'none', modalAlert: false, globalShowHide: false }"
+        class="h-full flex flex-col font-sans {{ bodyBackground  ? '' : 'body-gradient-' ~ themeColour|lower }}" style="{{ bodyBackground  ? bodyBackground : '' }} {{ themeColour is empty ? 'background: linear-gradient(to left top, #402568 2%, #935ee1 65%, #a871ec) no-repeat fixed' : '' }}" @modalwindow="modalType=$event.detail; modalOpen = true"
+        hx-indicator="#loadingIndicator" >
+
+        <div id="loadingIndicator" style="--d:900px;--angle:45deg;"></div>
         <a id="top"></a>
+
         {% set sidebarPos = isLoggedIn ? 'left' : 'right' %}
 
         <div class="px-4 sm:px-6 lg:px-12 pb-24">
@@ -87,7 +91,7 @@ TODO: add template variable details.
 
             {% endblock %}
         </div>
-        <div id="wrapOuter" class="flex-1 pt-24 bg-transparent-100">
+        <div id="wrapOuter" class="flex-1 pt-24 bg-transparent-100" hx-history-elt>
             <div id="wrap" class="px-0 sm:px-6 lg:px-12 -mt-48">
                 {% block beforePage %}
                 {% endblock beforePage %}

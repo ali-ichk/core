@@ -239,7 +239,7 @@ div.message:not(.tag), div.warning:not(.tag), div.exception:not(.tag), div.succe
 }
 
 div.message, div.success, div.warning, div.error, div.exception, div.dull, div.magic, div.empty {
-    @apply rounded border my-4 p-4 text-xs relative border-opacity-15;
+    @apply rounded border my-4 p-4 text-[0.825rem] leading-[1.125rem] relative border-opacity-15;
 }
 
 div.message a, div.success a, div.warning a, div.error a, div.exception a, div.dull a {
@@ -396,6 +396,51 @@ input[type="color"]::-moz-color-swatch {
     @apply border-gray-400;
 }
 
+/* Alpine Sortable */
+.sortable-ghost {
+    opacity: .4 !important;
+}
+
+.tox-tinymce {
+    border: 1px solid hsl(220 14% 84%) !important;
+}
+
+/*
+ --------------------------------------------------------------------------
+  TinyMCE
+ --------------------------------------------------------------------------
+*/
+
+.tox-tinymce {
+    border: 1px solid hsl(220 14% 84%) !important;
+}
+
+.tox-promotion {
+    display: none;
+}
+
+.editor-minimal .tox-edit-area::before {
+    border-radius: 9px !important;
+}
+
+.editor-full .tox .tox-menubar {
+    display: none;
+}
+
+.editor-full .tox.tox-fullscreen .tox-menubar {
+    display: flex !important;
+}
+
+.editor-full .tox .tox-menubar .tox-mbtn:last-child {
+    margin-left: auto;
+}
+
+.editor-full .tox-toolbar .tox-toolbar__group:first-child[aria-label],
+.editor-full .tox-toolbar__primary .tox-toolbar__group:first-child[aria-label] {
+    position: absolute;
+    right: 0;
+}
+
 /*
  --------------------------------------------------------------------------
   Validation
@@ -430,21 +475,25 @@ textarea + .error-msg {
     @apply top-auto bottom-0 mb-2 ml-2;
 }
 
-
-.tinymce + .error-msg,
-.tox-tinymce + .error-msg  {
+.editor-full .tox-tinymce + .error-msg  {
     @apply top-auto bottom-0 mb-6 ml-2;
 }
 
-*[aria-invalid="true"] {
+.editor-minimal .tox-tinymce + .error-msg  {
+    @apply top-auto bottom-0 mb-1 ml-2;
+}
+
+*[aria-invalid="true"],
+div[data-error] .inner-input {
     @apply text-red-700 hover:text-red-700;
 }
 
 input[aria-invalid="true"],
 select[aria-invalid="true"],
 textarea[aria-invalid="true"],
-textarea[aria-invalid="true"] + .tox-tinymce {
-    @apply border border-red-700  hover:border-red-700;
+textarea[aria-invalid="true"] + .tox-tinymce,
+div[data-error] .inner-input {
+    @apply border !border-red-700 hover:!border-red-700;
 }
 
 
@@ -452,12 +501,14 @@ input:not([type='checkbox']) + .error-msg::before {
     content: "";
     background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22rgb(197%2048%2048)%22%20class%3D%22size-4%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M8%2015A7%207%200%201%200%208%201a7%207%200%200%200%200%2014Zm2.78-4.22a.75.75%200%200%201-1.06%200L8%209.06l-1.72%201.72a.75.75%200%201%201-1.06-1.06L6.94%208%205.22%206.28a.75.75%200%200%201%201.06-1.06L8%206.94l1.72-1.72a.75.75%200%201%201%201.06%201.06L9.06%208l1.72%201.72a.75.75%200%200%201%200%201.06Z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E');
     background-color: inherit;
-    top: -1.75rem;
-    right: 0.5rem;
+    top: -1.9rem;
+    right: .825rem;
     position: absolute;
     color: rgb(197 48 48/var(--tw-text-opacity));
     width: 1.2rem;
     height: 1.2rem;
+    z-index: 10;
+    background-color: white;
 }
 
 /*

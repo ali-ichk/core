@@ -33,7 +33,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_she
     $page->breadcrumbs
         ->add(__('Manage Library Shelves'), 'library_manage_shelves.php')
         ->add(__('Add Shelf'));
-    $urlParamKeys = array('shelfName' => '', 'active' => '', 'type' => '', 'gibbonLibraryTypeID' => '', 'field' => '', 'fieldValue' => '', 'addItems' => '', 'shuffle' => '');
+
+    $urlParamKeys = ['shelfName' => '', 'active' => '', 'type' => '', 'gibbonLibraryTypeID' => '', 'field' => '', 'fieldValue' => '', 'addItems' => '', 'shuffle' => ''];
     $editLink = '';
     if (isset($_GET['editID'])) {
         $editLink = $session->get('absoluteURL').'/index.php?q=/modules/Library/library_manage_shelves_edit.php&gibbonLibraryShelfID='.$_GET['editID'];
@@ -117,19 +118,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_she
                 ->placeholder('Enter Term Name...');
 
         $form->toggleVisibilityByClass('manual')->onSelect('type')->when('Manual');
-
+        
         $row = $form->addRow()->addClass('manual');
-            $row->addLabel('field', __('Category'));
-            $row->addTextField('field')->setValue('Custom')->readOnly()
-                ->required();
-
-        $row = $form->addRow()->addClass('manual');
-            $row->addLabel('fieldValue', __('Custom Sub-Category'));
-            $row->addTextField('fieldValue')->setValue('Custom')->readOnly();
-
-        $row = $form->addRow();
             $row->addLabel('addItems', __('Add More Items'));
-            $row->addClass('manual');
             $row->addFinder('addItems')
                 ->fromAjax($session->get('absoluteURL').'/modules/Library/library_searchAjax.php')
                 ->setParameter('resultsLimit', 10)

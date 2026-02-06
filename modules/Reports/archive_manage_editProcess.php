@@ -25,7 +25,8 @@ use Gibbon\Data\Validator;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST);
+$validator = $container->get(Validator::class);
+$_POST = $validator->sanitize($_POST);
 
 $gibbonReportArchiveID = $_POST['gibbonReportArchiveID'] ?? '';
 
@@ -38,18 +39,28 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage_edi
 } else {
     // Proceed!
     $reportArchiveGateway = $container->get(ReportArchiveGateway::class);
+    
+    $path = $_POST['path'] ?? '';
+    if (substr($path, 0, 8) != '/uploads') {
+        $path = '/uploads/' . trim($path, ' /');
+    }
+
+    $securePath = $validator->sanitizeFilePath($path, $session->get('absolutePath'));
+    if (empty($securePath)) {
+        $URL .= '&return=error1';
+        header("Location: {$URL}");
+        exit;
+    }
 
     $data = [
         'name'             => $_POST['name'] ?? '',
-        'path'             => $_POST['path'] ?? '',
+        'path'             => $securePath ?? '',
         'readonly'         => $_POST['readonly'] ?? 'Y',
         'viewableStaff'    => $_POST['viewableStaff'] ?? 'N',
         'viewableStudents' => $_POST['viewableStudents'] ?? 'N',
         'viewableParents'  => $_POST['viewableParents'] ?? 'N',
         'viewableOther'    => $_POST['viewableOther'] ?? 'N',
     ];
-
-    $data['path'] = '/'.trim($data['path'], '/');
 
     // Validate the required values are present
     if (empty($gibbonReportArchiveID) || empty($data['name'])) {
