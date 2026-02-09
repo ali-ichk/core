@@ -99,7 +99,11 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage.php
         ->context('primary')
         ->width('30%')
         ->sortable(['surname', 'preferredName'])
-        ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', true]));
+        ->format(function ($values) {
+            return $values['status'] == 'Full' && ($values['roleCategory'] == 'Student' || $values['roleCategory'] == 'Staff')
+                ? Format::nameLinked($values['gibbonPersonID'], '', $values['preferredName'], $values['surname'], $values['roleCategory'], true, true)
+                : Format::name('', $values['preferredName'], $values['surname'], 'Other', true, true);
+        });
 
     $table->addColumn('status', __('Status'))
         ->width('10%')

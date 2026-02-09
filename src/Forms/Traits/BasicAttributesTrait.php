@@ -170,9 +170,9 @@ trait BasicAttributesTrait
      * Get the internal collection of attributes.
      * @return  array
      */
-    public function getAttributeArray()
+    public function getAttributeArray($filter = '', $exclude = 'class')
     {
-        return array_merge($this->attributeDefaults, ['attributes' => $this->getAttributeString(false, 'class')], $this->attributes);
+        return array_merge($this->attributeDefaults, ['attributes' => $this->getAttributeString($filter, $exclude)], $this->attributes);
     }
 
     /**
@@ -188,7 +188,7 @@ trait BasicAttributesTrait
             $attributes = array_intersect_key($attributes, array_flip($filter));
         }
 
-        if (!empty($exclude) && isset($attributes[$exclude])) {
+        if (!empty($exclude)) {
             $exclude = is_string($exclude)? explode(',', $exclude) : $exclude;
             $attributes = array_diff_key($attributes, array_flip($exclude));
         }
@@ -199,7 +199,7 @@ trait BasicAttributesTrait
                     return $attributes[$key]? $key : '';
                 }
                 if (isset($attributes[$key])) {
-                    return $attributes[$key] != ''
+                    return !is_array($attributes[$key]) && $attributes[$key] != ''
                         ? $key.'="'.htmlPrep($attributes[$key]).'"'
                         : $key;
                 }
