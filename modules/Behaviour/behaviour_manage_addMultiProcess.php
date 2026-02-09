@@ -112,13 +112,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
             } 
 
             // Attempt to notify tutor(s) and EA(s) of negative behaviour
-            $resultDetail = $container->get(FormGroupGateway::class)-> getTutorsByStudent($session->get('gibbonSchoolYearID'), $gibbonPersonID);
-  
-            $dataDetail = ['gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'), 'gibbonPersonID' => $gibbonPersonID];
-            $sqlDetail = 'SELECT gibbonPersonIDTutor, gibbonPersonIDTutor2, gibbonPersonIDTutor3, surname, preferredName, gibbonStudentEnrolment.gibbonYearGroupID FROM gibbonFormGroup JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) JOIN gibbonPerson ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonStudentEnrolment.gibbonPersonID=:gibbonPersonID';
-            $resultDetail = $connection2->prepare($sqlDetail);
-            $resultDetail->execute($dataDetail);
-            if ($resultDetail->rowCount() == 1) {
+            $resultDetail = $container->get(FormGroupGateway::class)->selectTutorsByStudent($session->get('gibbonSchoolYearID'), $gibbonPersonID);
+
+            if (!empty($resultDetail)) {
                 $rowDetail = $resultDetail->fetch();
 
                 $studentName = Format::name('', $rowDetail['preferredName'], $rowDetail['surname'], 'Student', false);

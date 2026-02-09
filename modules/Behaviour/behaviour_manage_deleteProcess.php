@@ -48,23 +48,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
             $URL .= '&return=error1';
             header("Location: {$URL}");
         } else {
-            try {
-                $result = $container->get(BehaviourGateway::class)->selectBy(['gibbonBehaviourID' => $gibbonBehaviourID]);
-            } catch (PDOException $e) {
-                $URL .= '&return=error2';
-                header("Location: {$URL}");
-                exit();
-            }
+            $result = $container->get(BehaviourGateway::class)->getByID($gibbonBehaviourID);
 
-            if ($result->rowCount() != 1) {
+            if (!empty($result)) {
                 $URL .= '&return=error2';
                 header("Location: {$URL}");
             } else {
-                $row = $result->fetch();
+                $row = $result;
 
-                //Write to database
+                // Write to database
                 try {
-                    $data = array('gibbonBehaviourID' => $gibbonBehaviourID);
+                    $data = ['gibbonBehaviourID' => $gibbonBehaviourID];
                     $sql = 'DELETE FROM gibbonBehaviour WHERE gibbonBehaviourID=:gibbonBehaviourID';
                     $result = $connection2->prepare($sql);
                     $result->execute($data);

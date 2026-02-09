@@ -40,10 +40,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
         if ($gibbonBehaviourID == '') {
             $page->addError(__('You have not specified one or more required parameters.'));
         } else {
+            $result = $container->get(BehaviourGateway::class)->getByID($gibbonBehaviourID);
 
-            $result = $container->get(BehaviourGateway::class)->selectBy(['gibbonBehaviourID' => $gibbonBehaviourID]);
-
-            if ($result->rowCount() != 1) {
+            if (!empty($result)) {
                 $page->addError(__('The selected record does not exist, or you do not have access to it.'));
             } else {
                 $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/'.$session->get('module')."/behaviour_manage_deleteProcess.php?type=".$_GET['type']);

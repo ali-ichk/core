@@ -128,7 +128,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                 } 
 
                 // Attempt to notify tutor(s) and EA(s) of negative behaviour
-                $resultDetail = $container->get(FormGroupGateway::class)-> getTutorsByStudent($session->get('gibbonSchoolYearID'), $gibbonPersonID);
+                $resultDetail = $container->get(FormGroupGateway::class)->selectTutorsByStudent($session->get('gibbonSchoolYearID'), $gibbonPersonID);
 
                 if ($resultDetail->rowCount() == 1) {
                     $rowDetail = $resultDetail->fetch();
