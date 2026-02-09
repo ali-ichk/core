@@ -14,7 +14,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
 {% set useSaveWarning = "noIntBorder" not in form.getClass and "disable-warnings" not in form.getClass %}
 
 {% if quickSave and form.getAction %}
-    <form x-validate {{ form.getAttributeString|raw }} hx-trigger="quicksave, keydown[metaKey&&key=='s'] from:body" hx-post="{{ form.getAction }}" hx-target=".formStatusReturn" hx-select="#alerts" hx-swap="innerHTML show:none swap:0.5s" hx-disinherit="*" hx-vals='{"HX-QuickSave": true}' x-data="{'show': true, 'saving': false, 'invalid': false, 'submitting': false, 'showTimeout': false}" x-on:htmx:before-request="if ($event.detail.requestConfig.elt.nodeName == 'FORM') { saving = true; show = true;  clearTimeout(showTimeout); }" x-on:htmx:after-swap="saving = false" x-on:htmx:after-settle="showTimeout = setTimeout(() => show = false, 5000); $dispatch('saved');" x-ref="form" @submit="$validate.submit; invalid = !$validate.isComplete($el); if (invalid) submitting = false;" @change.debounce.750ms="if (invalid) invalid = !$validate.isComplete($el); ">
+    <form x-validate {{ form.getAttributeString|raw }} @keydown.cmd.s.window.prevent="$dispatch('quicksave')" hx-trigger="quicksave" hx-post="{{ form.getAction }}" hx-target=".formStatusReturn" hx-select="#alerts" hx-swap="innerHTML show:none swap:0.5s" hx-disinherit="*" hx-vals='{"HX-QuickSave": true}' x-data="{'show': true, 'saving': false, 'invalid': false, 'submitting': false, 'showTimeout': false}" x-on:htmx:before-request="if ($event.detail.requestConfig.elt.nodeName == 'FORM') { saving = true; show = true;  clearTimeout(showTimeout); }" x-on:htmx:after-swap="saving = false" x-on:htmx:after-settle="showTimeout = setTimeout(() => show = false, 5000); $dispatch('saved');" x-ref="form" @submit="$validate.submit; invalid = !$validate.isComplete($el); if (invalid) submitting = false;" @change.debounce.750ms="if (invalid) invalid = !$validate.isComplete($el); ">
 
     <div class="formStatus fixed bottom-0 right-4 z-50" x-cloak>
         <div class="formIndicator magic drop-shadow-md" x-show="saving" >{{ __('Saving') }} ...</div>
@@ -97,7 +97,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
             {% set sectionLoop = loop %}
 
             {% if useSections %}
-            <section x-data="{sectionOpen: {{ section.getOpen|default(0) }} }" class="relative {{ (rows|first).class|split(' ')|first }} mb-6 rounded bg-gray-50 border  {{ not sectionLoop.last ? 'pb-4 border-t-4 focus-within:border-t-blue-500 transition' }} {{ section.getID == 'submit' ? 'w-full sm:sticky -bottom-px -mt-px mb-px z-40' : standardLayout ? '  ' : ''}}" >
+            <section id="{{ section.getID }}" x-data="{sectionOpen: {{ section.getOpen|default(0) }} }" class="relative {{ (rows|first).class|split(' ')|first }} mb-6 rounded bg-gray-50 border  {{ not sectionLoop.last ? 'pb-4 border-t-4 focus-within:border-t-blue-500 transition' }} {{ section.getID == 'submit' ? 'w-full sm:sticky -bottom-px -mt-px mb-px z-40' : standardLayout ? '  ' : ''}}" >
 
                 {% if not section.getOpen %}
                 <div @click="sectionOpen = !sectionOpen" class="text-gray-500 hover:text-blue-500">
@@ -153,16 +153,16 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
                     {% elseif element.isInstanceOf('Gibbon\\Forms\\Layout\\Label') %}
                         {% set class = 'sm:w-2/5 flex flex-col justify-center sm:mb-0' %}
                     {% elseif element.isInstanceOf('Gibbon\\Forms\\Layout\\Column')  %}
-                        {% set class = loop.last and loop.length == 2 ? 'flex-1 relative flex justify-end items-center' : '' %}
+                        {% set class = loop.last and loop.length == 2 and 'flex-col' not in element.getClass ? 'flex-1 relative flex justify-end items-center' : '' %}
                     {% elseif loop.last and (loop.length == 2 or "noIntBorder" in form.getClass) %}
                         {% set class = 'flex-1 relative flex justify-end items-center' %}
                     {% else %}
                         {% set class = '' %}
                     {% endif %}
 
-                    {% set hasClass = element.instanceOf('Gibbon\\Forms\\Layout\\Element') or element.instanceOf('Gibbon\\Forms\\Layout\\Row') %}
+                    {% set hasClass = element.instanceOf('Gibbon\\Forms\\Layout\\Element') or element.instanceOf('Gibbon\\Forms\\Layout\\Column') %}
                     {% set class = hasClass ? class ~ ' ' ~  element.getClass : class %}
-                    <div class="{{ class }} {{ 'flex-' not in class and section != 'submit' ? 'flex-1' }}" {{ element.getAttributeString('x-show')|raw }}>
+                    <div class="{{ class }} {{ 'flex-' not in class and section != 'submit' ? element.getOuterClass|default('flex-1') }}" {{ element.getAttributeString('x-show')|raw }}>
 
                         {% if useSaveWarning and element.getAttribute('id') == 'Submit' %}
                             <span x-cloak x-show="changed" class="tag message mr-4 whitespace-nowrap">{{ __('Unsaved Changes') }}</span>
@@ -187,7 +187,7 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
         </div>
 
         {% if form.hasMeta and form.getMeta.getElementCount > 0 %}
-        <aside class="hidden xl:flex flex-col col-span-2 h-min bg-gray-50 rounded border border-gray-400 border-t-4 border-t-gray-400">
+        <aside class="hidden xl:flex flex-col col-span-2 sticky top-0 h-min bg-gray-50 rounded border border-gray-400 border-t-4 border-t-gray-400">
             {% for element in form.getMeta.getElements %}
                 {% set hasClass = element.instanceOf('Gibbon\\Forms\\Layout\\Element') or element.instanceOf('Gibbon\\Forms\\Layout\\Row') %}
             
@@ -198,13 +198,13 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
             {% endfor %}
 
             <template x-if="invalid">
-                <div class="p-4 border-t">
+                <div x-from-template class="p-4 border-t">
                     <span class="tag error">{{ __('Please check these fields') }}:</span>
 
                     <ul class="ml-6">
                     <template x-for="v in $validate.data($refs.form)" >
                         <template x-if="!v.valid && v.node.labels.length > 0">
-                        <li class="py-0.5">
+                        <li x-from-template class="py-0.5">
                             <a x-bind:href="'#' + v.name" target="_self" x-text="v.node.labels[0].ariaLabel" :aria-label="v.name" class="text-sm hover:underline"></a>
                         </li>
                         </template>
@@ -225,13 +225,6 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
     {% endif %}
 
     <script type="text/javascript">
-        {% if quickSave and form.getAction %}
-        $(document).keydown(function(event) {
-            if (!((String.fromCharCode(event.which).toLowerCase() == 's' || event.keyCode == 13) && event.metaKey) && !(event.which == 19)) return true;
-            event.preventDefault();
-            return false;
-        });
-        {% endif %}
 
         {% for code in javascript %}
             {{ code|raw }}

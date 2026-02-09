@@ -41,8 +41,10 @@ class Button extends Element
     private $icon;
     private $iconClass;
     private $iconLibrary;
+    private $iconOptions;
     private $size;
     private $color;
+    private $tag;
 
     public function __construct($name, $type = 'button', $onClick = null, $id = null)
     {
@@ -87,11 +89,13 @@ class Button extends Element
      * @param string $class
      * @return self
      */
-    public function setIcon($icon, $class = '', $library = 'solid')
+    public function setIcon($library, $icon, $class = '', $options = [] )
     {
         $this->icon = $icon;
         $this->iconClass = $class;
         $this->iconLibrary = $library;
+        $this->iconOptions = $options;
+        
         return $this;
     }
 
@@ -116,6 +120,18 @@ class Button extends Element
     public function setColor($value)
     {
         $this->color = $value;
+        return $this;
+    }
+
+    /**
+     * Sets a display color for the button.
+     *
+     * @param string $value     One of: red, gray, purple
+     * @return self
+     */
+    public function setTag($value)
+    {
+        $this->tag = $value;
         return $this;
     }
 
@@ -144,8 +160,10 @@ class Button extends Element
             'icon'        => $this->icon,
             'iconClass'   => $this->iconClass,
             'iconLibrary' => $this->iconLibrary,
+            'iconOptions' => $this->iconOptions,
             'size'        => $this->size,
             'color'       => $this->color,
+            'tag'       => $this->tag,
         ]);
     }
 }

@@ -41,7 +41,6 @@ use Gibbon\Contracts\Services\Session;
 class ClassesLayer extends AbstractTimetableLayer
 {
     protected $session;
-
     protected $plannerEntryGateway;
     protected $timetableDayGateway;
     protected $timetableDayDateGateway;
@@ -80,8 +79,7 @@ class ClassesLayer extends AbstractTimetableLayer
 
     protected function loadItemsByPerson(\DatePeriod $dateRange, TimetableContext $context) 
     {
-        $specialDays = $this->specialDayGateway->selectSpecialDaysByDateRange($dateRange->getStartDate()->format('Y-m-d'), $dateRange->getEndDate()->format('Y-m-d'))->fetchGroupedUnique();
-
+        $specialDays = $context->get('specialDays', []);
         $offTimetable = array_reduce($specialDays, function ($group, $item) use ($context) {
             $group[$item['date']] = $this->specialDayGateway->getIsStudentOffTimetableByDate($context->get('gibbonSchoolYearID'), $context->get('gibbonPersonID'), $item['date']) ? $item['name'] : '';
 
@@ -104,6 +102,8 @@ class ClassesLayer extends AbstractTimetableLayer
         foreach ($classes as $class) {
             $teachers = $classTeachers[$class['gibbonTTDayRowClassID']] ?? [];
             $specialDay = $specialDays[$class['date']] ?? [];
+
+            if (!empty($specialDay['cancelClasses']) && $specialDay['cancelClasses'] == 'Y') continue;
 
             $item = $this->createItem($class['date'])->loadData([
                 'type'          => __('Class'),
@@ -141,10 +141,17 @@ class ClassesLayer extends AbstractTimetableLayer
 
             // Handle covered class
             if ($canViewCoverage && !empty($class['coverageID'])) {
-                $person = $this->userGateway->getByID($class['coveragePerson'], ['title', 'surname', 'preferredName']);
-                $description = !empty($person)
-                    ? __('Covered by {name}', ['name' => Format::name($person['title'], $person['preferredName'], $person['surname'], 'Staff', false, true)])
-                    : __('Coverage').': '.$class['coverageStatus'];
+                
+
+                if ($class['coverageStatus'] == 'Accepted') {
+                    $person = $this->userGateway->getByID($class['coveragePerson'], ['title', 'surname', 'preferredName']);
+                    $description = !empty($person)
+                        ? __('Covered by {name}', ['name' => Format::name($person['title'], $person['preferredName'], $person['surname'], 'Staff', false, true)])
+                        : __('Coverage').': '.$class['coverageStatus'];
+                } else {
+                    $person = '';
+                    $description = $class['coverageStatus'];
+                }
 
                 $item->addStatus('covered')
                     ->set('description', $description);
@@ -200,7 +207,7 @@ class ClassesLayer extends AbstractTimetableLayer
                     $item->set('primaryAction', [
                         'name'      => 'add',
                         'label'     => __('Add lesson plan'),
-                        'url'       => Url::fromModuleRoute('Planner', 'planner_add')->withQueryParams(['viewBy' => 'class', 'gibbonCourseClassID' => $class['gibbonCourseClassID'], 'date' => $class['date'], 'timeStart' => $class['timeStart'], 'timeEnd' => $class['timeEnd']]),
+                        'url'       => Url::fromModuleRoute('Planner', 'planner_add')->withQueryParams(['viewBy' => 'class', 'gibbonCourseClassID' => $class['gibbonCourseClassID'], 'date' => $class['date'], 'timeStart' => $class['timeStart'], 'timeEnd' => $class['timeEnd'], 'gibbonTTDayRowClassID' => $class['gibbonTTDayRowClassID']]),
                         'icon'      => 'add',
                         'iconClass' => 'text-gray-600 hover:text-gray-800',
                     ]);
@@ -211,20 +218,52 @@ class ClassesLayer extends AbstractTimetableLayer
         }
 
         foreach ($lessons as $lesson) {
-            $specialDay = $specialDays[$class['date']] ?? [];
+            $specialDay = $specialDays[$lesson['date']] ?? [];
+            if (!empty($specialDay['cancelClasses']) && $specialDay['cancelClasses'] == 'Y') continue;
+
+            // Build class shortcode prefix (same as slotted lessons)
+            $prefix = Format::courseClassName(
+                $lesson['courseNameShort'] ?? '',
+                $lesson['classNameShort'] ?? ''
+            );
+
+            // Look up teachers using gibbonCourseClassID (correct for loose lessons)
+            // Convert flat teacher fields into an array
+            $teachers = [];
+
+            if (!empty($lesson['teachers_surname'])) {
+                $teachers[] = [
+                    'title' => $lesson['teachers_title'],
+                    'preferredName' => $lesson['teachers_preferredName'],
+                    'surname' => $lesson['teachers_surname'],
+                ];
+            }
+
+            $teacherList = !empty($teachers)
+                ? __n('Teacher', 'Teachers', count($teachers)).': '.Format::nameList($teachers, 'Staff', false, true, ', ')
+                : '';
+
+            // Build enriched description
+            $description =
+                (!empty($teacherList) ? $teacherList.'<br>' : '');
 
             $item = $this->createItem($lesson['date'])->loadData([
-                'type'          => __('Lesson'),
-                'title'         => $lesson['name'],
-                'period'        => $lesson['period'],
-                'label'         => $lesson['name'],
-                'description'   => __('Course').': ' .$lesson['courseName'].'<br>'.__('Class').': '.Format::courseClassName($lesson['courseNameShort'], $lesson['classNameShort']),
-                'subtitle'      => $lesson['unitName'] ?? '',
-                'timeStart'     => $lesson['timeStart'],
-                'timeEnd'       => $lesson['timeEnd'],
-                'link'          => Url::fromModuleRoute('Planner', 'planner_view_full')->withQueryParams(['viewBy' => 'class', 'gibbonCourseClassID' => $lesson['gibbonCourseClassID'], 'gibbonPlannerEntryID' => $lesson['gibbonPlannerEntryID']]),
+                'type'        => __('Lesson'),
+                'title'       => $prefix,
+                'label'       => $lesson['courseName'],
+                'description' => $description,
+                'subtitle'    => $lesson['plannerRoomName'] ?? '',
+                'location'    => $lesson['plannerRoomName'] ?? '',
+                'phone'       => $lesson['plannerRoomPhone'] ?? '',
+                'timeStart'   => $lesson['timeStart'],
+                'timeEnd'     => $lesson['timeEnd'],
+                'link'        => Url::fromModuleRoute('Planner', 'planner_view_full')->withQueryParams([
+                    'viewBy'              => 'class',
+                    'gibbonCourseClassID' => $lesson['gibbonCourseClassID'],
+                    'gibbonPlannerEntryID'=> $lesson['gibbonPlannerEntryID']
+                ]),
             ]);
-
+ 
             // Add a button for the lesson plan
             $item->set('primaryAction', [
                 'name'      => 'view',
@@ -265,12 +304,21 @@ class ClassesLayer extends AbstractTimetableLayer
 
     public function loadItemsByFacility(\DatePeriod $dateRange, TimetableContext $context) 
     {
-        $specialDays = $this->specialDayGateway->selectSpecialDaysByDateRange($dateRange->getStartDate()->format('Y-m-d'), $dateRange->getEndDate()->format('Y-m-d'))->fetchGroupedUnique();
+        $specialDays = $context->get('specialDays', []);
 
         $classes = $this->timetableDayDateGateway->selectTimetabledPeriodsByFacilityAndDateRange($context->get('gibbonSpaceID'), $dateRange->getStartDate()->format('Y-m-d'), $dateRange->getEndDate()->format('Y-m-d'))->fetchAll();
 
         $ttRowClassIDs = array_column($classes, 'gibbonTTDayRowClassID');
         $classTeachers = $this->timetableDayGateway->selectTTDayRowClassTeachersByID($ttRowClassIDs)->fetchGrouped();
+        // Build a teacher map indexed by gibbonCourseClassID for loose lessons
+        $teachersByCourseClass = [];
+        foreach ($classTeachers as $rowClassID => $teachers) {
+            foreach ($teachers as $t) {
+                if (!empty($t['gibbonCourseClassID'])) {
+                    $teachersByCourseClass[$t['gibbonCourseClassID']][] = $t;
+                }
+            }
+        }
 
         $canViewClasses = Access::allows('Departments', 'department_course_class');
         $canAddChanges = Access::allows('Timetable', 'spaceChange_manage_add');
@@ -278,6 +326,7 @@ class ClassesLayer extends AbstractTimetableLayer
 
         foreach ($classes as $class) {
             $specialDay = $specialDays[$class['date']] ?? [];
+            if (!empty($specialDay['cancelClasses']) && $specialDay['cancelClasses'] == 'Y') continue;
 
             $teachers = $classTeachers[$class['gibbonTTDayRowClassID']] ?? [];
 

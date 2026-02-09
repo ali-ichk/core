@@ -43,13 +43,14 @@ use Gibbon\Domain\Students\FirstAidGateway;
 use Gibbon\Domain\System\AlertLevelGateway;
 use Gibbon\Domain\FormGroups\FormGroupGateway;
 use Gibbon\Domain\Planner\PlannerEntryGateway;
-use Gibbon\Domain\Students\StudentNoteGateway;
-use Gibbon\Domain\Library\LibraryReportGateway;
+use Gibbon\Domain\Students\StudentNoteGateway;;
 use Gibbon\Domain\School\SchoolYearTermGateway;
 use Gibbon\Domain\User\PersonalDocumentGateway;
 use Gibbon\Module\Planner\Tables\HomeworkTable;
+use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\Attendance\StudentHistoryData;
 use Gibbon\Module\Attendance\StudentHistoryView;
+use Gibbon\Module\Students\StudentAttendanceStatus;
 use Gibbon\Module\Students\View\LibraryBorrowingView;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 
@@ -290,6 +291,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/student_view_deta
                             echo '<b>'.__('This student has one or more {level} risk medical conditions.', ['level' => __($alert['name'])]).'</b>';
                             echo '</div>';
                         }
+
+                        // Show student's attendance and Current Location
+                        $currentAttendanceStatus = $container->get(StudentAttendanceStatus::class)->getCurrentAttendanceStatus($session->get('gibbonSchoolYearID'), $gibbonPersonID, $row['preferredName'], $row['surname']);
+                        
+                        echo $currentAttendanceStatus ?? '';
 
                         $table = DataTable::createDetails('generalInfo');
 
@@ -543,10 +549,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/student_view_deta
                                 ->notSortable()
                                 ->format(function ($person) use ($view) {
                                     $class = $view == 'grid'? 'unselectable text-xxs italic text-gray-800' : 'unselectable';
+                                    $context = $person['type'] == 'Class Teacher' ? $person['context'] : $person['type'];
                                     if (!empty($person['classID'])) {
-                                        return Format::link('./index.php?q=/modules/Departments/department_course_class.php&gibbonCourseClassID='.$person['classID'], __($person['type']), ['class' => $class.' underline']);
+                                        return Format::link('./index.php?q=/modules/Departments/department_course_class.php&gibbonCourseClassID='.$person['classID'], __($context), ['class' => $class.' underline']);
                                     } else {
-                                        return '<span class="'.$class.'">'.__($person['type']).'</span>';
+                                        return '<span class="'.$class.'">'.__($context).'</span>';
                                     }
                                 });
 
@@ -1619,12 +1626,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/student_view_deta
                                 $form->addHiddenValue('search', $search);
                                 $form->addHiddenValue('subpage', 'Markbook');
 
-                                $sqlSelect = "SELECT gibbonDepartmentID as value, name FROM gibbonDepartment WHERE type='Learning Area' ORDER BY name";
+                                $results = $container->get(DepartmentGateway::class)->selectDepartmentsOfTypeLearningArea();
                                 $rowFilter = $form->addRow();
                                     $rowFilter->addLabel('gibbonDepartmentID', __('Learning Areas'));
                                     $rowFilter->addSelect('gibbonDepartmentID')
                                         ->fromArray(array('*' => __('All Learning Areas')))
-                                        ->fromQuery($pdo, $sqlSelect)
+                                        ->fromResults($results)
                                         ->selected($gibbonDepartmentID);
 
                                 $dataSelect = array('gibbonPersonID' => $gibbonPersonID);
