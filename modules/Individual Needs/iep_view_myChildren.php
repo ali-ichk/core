@@ -21,9 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Domain\User\FamilyAdultGateway;
+use Gibbon\Domain\Students\StudentGateway;
 use Gibbon\Domain\IndividualNeeds\INGateway;
-use Gibbon\Domain\User\FamilyChildGateway;
 
 if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_myChildren.php') == false) {
     // Access denied
@@ -36,27 +35,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
     echo __('This section allows you to view individual education plans, where they exist, for children within your family.').'<br/>';
     echo '</p>';
 
-    //Test data access field for permission
+    // Test data access field for permission
+    $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
 
-    $result = $container->get(FamilyAdultGateway::class)->selectBy(['gibbonPersonID' => $session->get('gibbonPersonID'), 'childDataAccess' => 'Y']);
-
-    if ($result->rowCount() < 1) {
+    if (empty($children)) {
         echo $page->getBlankSlate();
     } else {
-        //Get child list
-        $count = 0;
-        $options = array();
-
-        while ($row = $result->fetch()) {
-
-            $resultChild = $container->get(FamilyChildGateway::class)->selectChildByFamilyID($row['gibbonFamilyID'], $session->get('gibbonSchoolYearID'));
-
-            while ($rowChild = $resultChild->fetch()) {
-                $options[$rowChild['gibbonPersonID']]=Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
-            }
+        // Get child list
+		$options = [];
+        foreach($children as $child) {
+            $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
         }
 
-        $gibbonPersonID = (isset($_GET['gibbonPersonID']))? $_GET['gibbonPersonID'] : null;
+        $gibbonPersonID = (isset($_GET['gibbonPersonID'])) ? $_GET['gibbonPersonID'] : null;
 
         if (count($options) == 0) {
             echo $page->getBlankSlate();
@@ -84,48 +75,40 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
         }
 
         if ($gibbonPersonID != '' && count($options) > 0) {
-            //Confirm access to this student
+            $rowChild = $resultChild->fetch();
 
-                $resultChild = $container->get(FamilyChildGateway::class)->selectChildByFamilyAdultID($gibbonPersonID, $session->get('gibbonPersonID'));
+            $result = $container->get(INGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID]);
 
-            if ($resultChild->rowCount() < 1) {
-                $page->addError(__('The selected record does not exist, or you do not have access to it.'));
+            if ($result->rowCount() != 1) {
+                echo '<h3>';
+                echo __('View');
+                echo '</h3>';
+
+                echo $page->getBlankSlate();
             } else {
-                $rowChild = $resultChild->fetch();
+                echo '<h3>';
+                echo __('View');
+                echo '</h3>';
 
-                $result = $container->get(INGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID]);
+                $row = $result->fetch(); ?>
+                <table class='smallIntBorder w-full' cellspacing='0'>
+                    <tr>
+                        <td colspan=2 style='padding-top: 25px'>
+                            <span style='font-weight: bold; font-size: 135%'><?php echo __('Targets') ?></span><br/>
+                            <?php
+                            echo '<p>'.$row['targets'].'</p>'; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2>
+                            <span style='font-weight: bold; font-size: 135%'><?php echo __('Teaching Strategies') ?></span><br/>
+                            <?php
+                            echo '<p>'.$row['strategies'].'</p>'; ?>
+                        </td>
+                    </tr>
+                </table>
+                <?php
 
-                if ($result->rowCount() != 1) {
-                    echo '<h3>';
-                    echo __('View');
-                    echo '</h3>';
-
-                    echo $page->getBlankSlate();
-                } else {
-                    echo '<h3>';
-                    echo __('View');
-                    echo '</h3>';
-
-                    $row = $result->fetch(); ?>
-					<table class='smallIntBorder w-full' cellspacing='0'>
-						<tr>
-							<td colspan=2 style='padding-top: 25px'>
-								<span style='font-weight: bold; font-size: 135%'><?php echo __('Targets') ?></span><br/>
-								<?php
-                                echo '<p>'.$row['targets'].'</p>'; ?>
-							</td>
-						</tr>
-						<tr>
-							<td colspan=2>
-								<span style='font-weight: bold; font-size: 135%'><?php echo __('Teaching Strategies') ?></span><br/>
-								<?php
-                                echo '<p>'.$row['strategies'].'</p>'; ?>
-							</td>
-						</tr>
-					</table>
-					<?php
-
-                }
             }
         }
     }

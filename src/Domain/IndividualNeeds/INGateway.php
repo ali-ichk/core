@@ -236,7 +236,7 @@ class INGateway extends QueryableGateway implements ScrubbableGateway
       return $this->db()->select($sql, $data);
     }
 
-    public function selecINDescriptor()
+    public function selectINDescriptor()
     {
       $data = [];
       $sql = "SELECT gibbonINDescriptorID as value, name FROM gibbonINDescriptor ORDER BY sequenceNumber";

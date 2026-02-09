@@ -21,14 +21,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Domain\User\FamilyAdultGateway;
-use Gibbon\Domain\User\FamilyChildGateway;
 use Gibbon\Tables\DataTable;
-use Gibbon\Domain\User\UserGateway;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Finance\InvoiceGateway;
-use Gibbon\Domain\User\FamilyAdultGateway;
-use Gibbon\Domain\User\FamilyChildGateway;
 use Gibbon\Domain\Students\StudentGateway;
 
 // Module includes
@@ -50,20 +45,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Finance/invoices_view.php'
 
         $page->breadcrumbs->add(__('View Invoices'));
         $page->navigator->addSchoolYearNavigation($gibbonSchoolYearID, ['search' => $search]);
-      
-        if ($highestAction=="View Invoices_myChildren") {
-            //Test data access field for permission
-            $result = $container->get(FamilyAdultGateway::class)->selectBy(['gibbonPersonID' => $session->get('gibbonPersonID'), 'childDataAccess' => 'Y']);
-        
+
         // Online payment
         $settingGateway = $container->get(SettingGateway::class);
         $studentGateway = $container->get(StudentGateway::class);
         $enablePayments = $settingGateway->getSettingByScope('System', 'enablePayments');
-        $paymentGateway = $settingGateway->getSettingByScope('System', 'paymentGateway');
+        $paymentGateway = $settingGateway->getSettingByScope('System', 'paymentGateway');     
 
         if ($highestAction == "View Invoices_myChildren") {
             // Get children for this adult
-            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
+            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
             
             if (empty($children)) {
                 echo $page->getBlankSlate();
@@ -73,15 +64,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Finance/invoices_view.php'
             } else {
                 // Get child list
                 $count = 0;
-                $options = array();
-                while ($row = $result->fetch()) {
-                    
-                        $resultChild = $container->get(FamilyChildGateway::class)->selectChildByFamilyID($row['gibbonFamilyID'], $session->get('gibbonSchoolYearID'));
-                        
-                    while ($rowChild = $resultChild->fetch()) {
-                        $options[$rowChild['gibbonPersonID']]=Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
-                    }
+                $options = [];
+
+                foreach($children as $child) {
+                    $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
+                    ++$count;
                 }
+
+                $options[$rowChild['gibbonPersonID']]=Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
 
                 if (count($options) == 0) {
                     echo $page->getBlankSlate();
@@ -92,28 +82,29 @@ if (isActionAccessible($guid, $connection2, '/modules/Finance/invoices_view.php'
                     echo 'Choose Student';
                     echo '</h2>';
                   
-                $form = Form::create('filter', $session->get('absoluteURL') . '/index.php', 'get');
-                $form->setClass('noIntBorder fullWidth');
-                $form->setTitle(__('Choose Student'));
-                  
-                $form->addHiddenValue('q', '/modules/Finance/invoices_view.php');
-                $form->addHiddenValue('address', $session->get('address'));
-                $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
+                    $form = Form::create('filter', $session->get('absoluteURL') . '/index.php', 'get');
+                    $form->setClass('noIntBorder fullWidth');
+                    $form->setTitle(__('Choose Student'));
+                    
+                    $form->addHiddenValue('q', '/modules/Finance/invoices_view.php');
+                    $form->addHiddenValue('address', $session->get('address'));
+                    $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
 
-                $row = $form->addRow();
-                $row->addLabel('search', __('Student'));
-                $row->addSelect('search')
-                    ->fromArray(Format::nameListArray($children, 'Student'))
-                    ->selected($search)
-                    ->placeholder();
+                    $row = $form->addRow();
+                    $row->addLabel('search', __('Student'));
+                    $row->addSelect('search')
+                        ->fromArray(Format::nameListArray($children, 'Student'))
+                        ->selected($search)
+                        ->placeholder();
 
-                $row = $form->addRow();
-                $row->addSearchSubmit($session);
+                    $row = $form->addRow();
+                    $row->addSearchSubmit($session);
 
-                echo $form->getOutput();
+                    echo $form->getOutput();
 
-                $gibbonPersonID = $search;
-                $student = $children[$gibbonPersonID] ?? '';
+                    $gibbonPersonID = $search;
+                    $student = $children[$gibbonPersonID] ?? '';
+                }
             }
 
         } else if ($highestAction == 'View Invoices_mine') {

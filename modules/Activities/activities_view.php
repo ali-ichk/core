@@ -23,7 +23,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\User\FamilyAdultGateway;
+use Gibbon\Domain\Students\StudentGateway;
 use Gibbon\Domain\Activities\ActivityGateway;
 use Gibbon\Domain\School\SchoolYearTermGateway;
 
@@ -45,6 +45,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
 
         //Get current role category
         $roleCategory = $session->get('gibbonRoleIDCurrentCategory');
+        $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
         $gibbonPersonID = null;
 
@@ -80,30 +81,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                 echo '</div>';
             }
 
-           
-            //IF PARENT, SET UP LIST OF CHILDREN
+            // IF PARENT, SET UP LIST OF CHILDREN
             $countChild = 0;
             if ($roleCategory == 'Parent' and $highestAction == 'View Activities_studentRegisterByParent') {
                 $gibbonPersonID = $_GET['gibbonPersonID'] ?? '';
-                   
-                $result = $container->get(FamilyAdultGateway::class)->selectBy(['gibbonPersonID' => $session->get('gibbonPersonID'), 'childDataAccess' => 'Y']);
+                $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
 
-                if ($result->rowCount() < 1) {
+                if (empty($children)) {
                     echo $page->getBlankSlate();
                 } else {
-                    $options = array();
-                    while ($row = $result->fetch()) {
+                    $options = [];
 
-                        $dataChild = array('gibbonFamilyID' => $row['gibbonFamilyID'], 'gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'), 'date' => date('Y-m-d'));
-                        $sqlChild = "SELECT * FROM gibbonFamilyChild JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonFamilyID=:gibbonFamilyID AND gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<=:date) AND (dateEnd IS NULL OR dateEnd>=:date) AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY surname, preferredName ";
-                        $resultChild = $connection2->prepare($sqlChild);
-                        $resultChild->execute($dataChild);
-                        if ($resultChild->rowCount() > 0) {
-                            while ($rowChild = $resultChild->fetch()) {
-                                $options[$rowChild['gibbonPersonID']] = Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
-                                ++$countChild;
-                            }
-                        }
+                    foreach($children as $child) {
+                        $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
+                        ++$countChild;
                     }
 
                     if (count($options) == 1) {
@@ -152,7 +143,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
             if ($roleCategory == 'Student' and $highestAction == 'View Activities_studentRegister') {
                 $continue = false;
 
-                    $dataStudent = array('gibbonPersonID' => $session->get('gibbonPersonID'), 'gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'));
+                    $dataStudent = array('gibbonPersonID' => $session->get('gibbonPersonID'), 'gibbonSchoolYearID' => $gibbonSchoolYearID);
                     $sqlStudent = 'SELECT * FROM gibbonStudentEnrolment WHERE gibbonPersonID=:gibbonPersonID AND gibbonSchoolYearID=:gibbonSchoolYearID';
                     $resultStudent = $connection2->prepare($sqlStudent);
                     $resultStudent->execute($dataStudent);
@@ -176,7 +167,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                 $resultChild->execute($dataChild);
                 if ($resultChild->rowCount() == 1) {
 
-                    $dataStudent = array('gibbonPersonID' => $gibbonPersonID, 'gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'));
+                    $dataStudent = array('gibbonPersonID' => $gibbonPersonID, 'gibbonSchoolYearID' => $gibbonSchoolYearID);
                     $sqlStudent = 'SELECT * FROM gibbonStudentEnrolment WHERE gibbonPersonID=:gibbonPersonID AND gibbonSchoolYearID=:gibbonSchoolYearID';
                     $resultStudent = $connection2->prepare($sqlStudent);
                     $resultStudent->execute($dataStudent);
@@ -213,7 +204,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                  * @var SchoolYearTermGateway
                  */
                 $schoolYearTermGateway = $container->get(SchoolYearTermGateway::class);
-                $schoolTerms = $schoolYearTermGateway->selectTermsBySchoolYear((int) $session->get('gibbonSchoolYearID'))->fetchKeyPair();
+                $schoolTerms = $schoolYearTermGateway->selectTermsBySchoolYear((int) $gibbonSchoolYearID)->fetchKeyPair();
                 $yearGroups = getYearGroups($connection2);
 
                 // Toggle Features 
@@ -229,7 +220,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                     ->pageSize(50)
                     ->fromArray($_POST);
 
-                $activities = $activityGateway->queryActivitiesBySchoolYear($criteria, $session->get('gibbonSchoolYearID'), $dateType, $gibbonYearGroupID);
+                $activities = $activityGateway->queryActivitiesBySchoolYear($criteria, $gibbonSchoolYearID, $dateType, $gibbonYearGroupID);
 
                 // Registration Limit Check
                 if ($allActivityAccess == 'Register' && $canAccessRegistration && $activities->count() > 0) {
@@ -237,7 +228,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                         echo "<div class='warning'>";
                         echo __("Remember, each student can register for no more than $maxPerTerm activities per term. Your current registration count by term is:");
 
-                        $terms = $container->get(SchoolYearTermGateway::class)->selectTermsBySchoolYear($session->get('gibbonSchoolYearID'))->fetchAll();
+                        $terms = $container->get(SchoolYearTermGateway::class)->selectTermsBySchoolYear($gibbonSchoolYearID)->fetchAll();
 
                         echo '<ul>';
                         foreach ($terms as $termCount => $term) {
@@ -245,7 +236,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                             echo '<b>'.$term['name'].':</b> ';
 
 
-                                $dataActivityCount = array('gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'), 'gibbonPersonID' => $gibbonPersonID, 'gibbonSchoolYearTermIDList' => '%'.$term['gibbonSchoolYearTermID'].'%');
+                                $dataActivityCount = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID, 'gibbonSchoolYearTermIDList' => '%'.$term['gibbonSchoolYearTermID'].'%'];
                                 $sqlActivityCount = "SELECT * FROM gibbonActivityStudent JOIN gibbonActivity ON (gibbonActivityStudent.gibbonActivityID=gibbonActivity.gibbonActivityID) WHERE gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonID=:gibbonPersonID AND gibbonSchoolYearTermIDList LIKE :gibbonSchoolYearTermIDList AND NOT status='Not Accepted'";
                                 $resultActivityCount = $connection2->prepare($sqlActivityCount);
                                 $resultActivityCount->execute($dataActivityCount);
@@ -289,7 +280,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
 
                 // Add enrolment details & row highlights only when viewing registerable activities
                 if ($canAccessRegistration && !empty($gibbonPersonID)) {
-                    $enroledActivities = $activityGateway->selectActivityEnrolmentByStudent($session->get('gibbonSchoolYearID'), $gibbonPersonID)->fetchGroupedUnique();
+                    $enroledActivities = $activityGateway->selectActivityEnrolmentByStudent($gibbonSchoolYearID, $gibbonPersonID)->fetchGroupedUnique();
 
                     $activities->transform(function (&$activity) use ($enroledActivities) {
                         $activity['enrolmentFull'] = $activity['waitingList'] != 'Y' && $activity['enrolment'] >= $activity['maxParticipants'];
