@@ -88,8 +88,8 @@ class CourseClassGateway extends QueryableGateway
 
     public function selectStudentListByClass($gibbonCourseClassID)
     {
-        $data = ['gibbonCourseClassID' => $gibbonCourseClassID];
-        $sql = "SELECT title, surname, preferredName, gibbonPerson.gibbonPersonID, dateStart FROM gibbonCourseClassPerson JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE role='Student' AND gibbonCourseClassID=:gibbonCourseClassID AND status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonCourseClassPerson.reportable='Y' ORDER BY surname, preferredName";
+        $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'today' => date('Y-m-d')];
+        $sql = "SELECT title, surname, preferredName, gibbonPerson.gibbonPersonID, dateStart FROM gibbonCourseClassPerson JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE role='Student' AND gibbonCourseClassID=:gibbonCourseClassID AND status='Full' AND (dateStart IS NULL OR dateStart<=:today) AND (dateEnd IS NULL  OR dateEnd>=:today) AND gibbonCourseClassPerson.reportable='Y' ORDER BY surname, preferredName";
 
         return $this->db()->select($sql, $data);
     }

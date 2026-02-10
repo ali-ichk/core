@@ -1,6 +1,4 @@
 <?php
-
-use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 /*
 Gibbon: the flexible, open school platform
 Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
@@ -21,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
+
 include '../../gibbon.php';
 
 $gibbonCourseClassID = $_POST['gibbonCourseClassID'] ?? '';
@@ -33,23 +33,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
     $URL .= '&return=error0';
     header("Location: {$URL}");
 } else {
-    //Proceed!
-    //Check if gibbonInternalAssessmentColumnID and gibbonCourseClassID specified
+    // Proceed!
+    // Check if gibbonInternalAssessmentColumnID and gibbonCourseClassID specified
     if ($gibbonInternalAssessmentColumnID == '' or $gibbonCourseClassID == '') {
         $URL .= '&return=error1';
         header("Location: {$URL}");
-    } else {
-        try {
-            
-            $result = $container->get(InternalAssessmentColumnGateway::class)->selectBy(['gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonCourseClassID' => $gibbonCourseClassID]);
-            
-        } catch (PDOException $e) {
-            $URL .= '&return=error2';
-            header("Location: {$URL}");
-            exit();
-        }
-
-        if ($result->rowCount() != 1) {
+    } else {            
+        $result = $container->get(InternalAssessmentColumnGateway::class)->selectBy(['gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonCourseClassID' => $gibbonCourseClassID]);
+        
+        if (empty($result)) {
             $URL .= '&return=error2';
             header("Location: {$URL}");
         } else {

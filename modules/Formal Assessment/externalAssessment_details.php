@@ -20,7 +20,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Http\Url;
-use Gibbon\Domain\DataSet;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Domain\User\UserGateway;
@@ -32,12 +31,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    //Get action with highest precendence
+    //Get action with highest precedence
     $highestAction = getHighestGroupedAction($guid, $_GET['q'], $connection2);
     if ($highestAction == false) {
         $page->addError(__('The highest grouped action cannot be determined.'));
     } else {
-        //Get action with highest precendence
+        //Get action with highest precedence
         $gibbonPersonID = $_GET['gibbonPersonID'] ?? '';
         $search = $_GET['search'] ?? '';
         $allStudents = $_GET['allStudents'] ?? '';
@@ -45,18 +44,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
         $page->breadcrumbs
             ->add(__('View All Assessments'), 'externalAssessment.php')
             ->add(__('Student Details'));
-
-        try {
-            if ($allStudents != 'on') {
-                $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
-
-            } else {
-                $result = $container->get(UserGateway::class)->getUserByPersonID($gibbonPersonID);
-
-            }
-
-        } catch (PDOException $e) {
-        }
+            
+        $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
 
         if (empty($result)) {
             $page->addError(__('The selected record does not exist, or you do not have access to it.'));

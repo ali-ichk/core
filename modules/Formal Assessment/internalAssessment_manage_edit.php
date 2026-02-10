@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Forms\Form;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\Timetable\CourseClassGateway;
+use Gibbon\Domain\Timetable\CourseGateway;
 use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 
 //Module includes
@@ -44,18 +44,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
 
-            $result = $container->get(CourseClassGateway::class)->getCourseClass($gibbonCourseClassID);
+        $result = $container->get(CourseGateway::class)->getCourseClassDetails($gibbonCourseClassID);
 
         if (empty($result)) {
             $page->addError(__('The selected record does not exist, or you do not have access to it.'));
         } else {
             
-                $result2 = $container->get(InternalAssessmentColumnGateway::class)->getByID($gibbonInternalAssessmentColumnID);
+            $result2 = $container->get(InternalAssessmentColumnGateway::class)->getByID($gibbonInternalAssessmentColumnID);
 
             if (empty($result2)) {
                 $page->addError(__('The selected record does not exist, or you do not have access to it.'));
             } else {
-                //Let's go!
+                // Let's go!
                 $class = $result;
                 $values = $result2;
 
@@ -153,7 +153,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             }
         }
 
-        //Print sidebar
+        // Print sidebar
         $session->set('sidebarExtra', sidebarExtra($guid, $connection2, $gibbonCourseClassID));
     }
 }

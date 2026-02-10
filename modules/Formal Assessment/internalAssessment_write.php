@@ -21,12 +21,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\Timetable\CourseGateway;
 use Gibbon\Domain\School\GradeScaleGateway;
 use Gibbon\Domain\System\AlertLevelGateway;
 use Gibbon\Domain\Timetable\CourseClassGateway;
+use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
 use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 use Gibbon\Domain\FormalAssessment\ExternalAssessmentStudentGateway;
-use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -74,17 +75,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             echo __('Use the class listing on the right to choose an Internal Assessment to write.');
             echo '</div>';
         }
-        //Check existence of and access to this class.
+        // Check existence of and access to this class.
         else {
-            try {
-                if ($highestAction == 'Write Internal Assessments_all') {
-                    $result = $container->get(CourseClassGateway::class)->getCourseClass($gibbonCourseClassID);
-
-                } else {
-                    $result = $container->get(CourseClassGateway::class)->getCourseClassByPerson($gibbonCourseClassID, $session->get('gibbonPersonID'));
-                }
-            } catch (PDOException $e) {
+            if ($highestAction == 'Write Internal Assessments_all') {
+                $result = $container->get(CourseGateway::class)->getCourseClassDetails($gibbonCourseClassID);
+            } else {
+                $result = $container->get(CourseClassGateway::class)->getCourseClassByPerson($gibbonCourseClassID, $session->get('gibbonPersonID'));
             }
+
             if (empty($result)) {
                 $page->breadcrumbs->add(__('Write Internal Assessments'));
                 $page->addError(__('The specified record does not exist or you do not have access to it.'));
@@ -95,7 +93,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                 $gibbonYearGroupIDList = $row['gibbonYearGroupIDList'] ?? '';
                 $page->breadcrumbs->add(__('Write {courseClass} Internal Assessments', ['courseClass' => $row['course'].'.'.$row['class']]));
 
-                //Get teacher list
+                // Get teacher list
                 $teaching = false;
 
                 $result = $container->get(CourseClassGateway::class)->selectTeacherListByClass($gibbonCourseClassID);
@@ -116,14 +114,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     echo '</ul>';
                 }
 
-                //Print marks
+                // Print marks
                 echo '<h3>';
                 echo __('Marks');
                 echo '</h3>';
 
-                //Count number of columns
+                // Count number of columns
 
-                    $result = $container->get(InternalAssessmentColumnGateway::class)->selectColumnsByClass($gibbonCourseClassID);
+                $result = $container->get(InternalAssessmentColumnGateway::class)->selectColumnsByClass($gibbonCourseClassID);
                     
                 $columns = $result->rowCount();
                 if ($columns < 1) {
@@ -149,15 +147,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         if ($columns < 3) {
                             $columnsThisPage = $columns;
                         }
+
                         if ($columns - ($x * $columnsPerPage) < 3) {
                             $columnsThisPage = $columns - ($x * $columnsPerPage);
                         }
-
+                        
                         $limit = intval($x * $columnsPerPage);
 
-                            $result = $container->get(InternalAssessmentColumnGateway::class)->selectLimitedColumns($gibbonCourseClassID, $limit, $columnsPerPage);
+                        $result = $container->get(InternalAssessmentColumnGateway::class)->selectColumnsByClass($gibbonCourseClassID, $limit, $columnsPerPage);
 
-                        //Work out details for external assessment display
+                        // Work out details for external assessment display
                         $externalAssessment = false;
                         if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/externalAssessment_details.php')) {
                             $gibbonYearGroupIDListArray = (explode(',', $gibbonYearGroupIDList));
@@ -210,7 +209,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                             }
                         }
 
-                        //Print table header
+                        // Print table header
                         echo '<p>';
                         echo __('To see more detail on an item (such as a comment or a grade), hover your mouse over it.');
                         if ($externalAssessment == true) {
@@ -240,7 +239,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         echo __('Student');
                         echo '</th>';
 
-						//Show Baseline data header
+						// Show Baseline data header
 						if ($externalAssessment == true) {
 							echo "<th rowspan=2 style='width: 20px'>";
 							$title = __($externalAssessmentFields[2]).' | ';
@@ -254,9 +253,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 							echo '</th>';
                         }
 
-                        $columnID = array();
-                        $attainmentID = array();
-                        $effortID = array();
+                        $columnID = [];
+                        $attainmentID = [];
+                        $effortID = [];
                         for ($i = 0; $i < $columnsThisPage; ++$i) {
                             $row = $result->fetch();
                             if ($row === false) {
@@ -272,7 +271,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                                 $submission[$i] = false;
                             }
 
-                            //Column count
+                            // Column count
                             $span = 0;
                             $contents = true;
                             if ($attainmentOn[$i] == 'Y' and $attainmentID[$i] != '') {
@@ -411,7 +410,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                                 }
                                 ++$count;
 
-                                //COLOR ROW BY STATUS!
+                                // COLOR ROW BY STATUS!
                                 echo "<tr class=$rowNum>";
                                 echo '<td>';
                                 echo "<div style='padding: 2px 0px'><b><a href='index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=".$rowStudents['gibbonPersonID'].'&subpage=Internal Assessment#'.$gibbonCourseClassID."'>".Format::name('', $rowStudents['preferredName'], $rowStudents['surname'], 'Student', true).'</a><br/></div>';
@@ -598,7 +597,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             }
         }
 
-        //Print sidebar
+        // Print sidebar
         $session->set('sidebarExtra', sidebarExtra($guid, $connection2, $gibbonCourseClassID, 'write'));
     }
 }

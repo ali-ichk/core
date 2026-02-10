@@ -19,9 +19,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 use Gibbon\Forms\Prefab\DeleteForm;
-use Gibbon\Domain\Timetable\CourseClassGateway;
+use Gibbon\Domain\Timetable\CourseGateway;
+use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -37,18 +37,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
 
-            $result = $container->get(CourseClassGateway::class)->getCourseClass($gibbonCourseClassID);
+        $result = $container->get(CourseGateway::class)->getCourseClassDetails($gibbonCourseClassID);
 
         if (empty($result)) {
             $page->addError(__('The selected record does not exist, or you do not have access to it.'));
         } else {
-
-                $result2 = $container->get(InternalAssessmentColumnGateway::class)->getByID($gibbonInternalAssessmentColumnID);
+            $result2 = $container->get(InternalAssessmentColumnGateway::class)->getByID($gibbonInternalAssessmentColumnID);
 
             if (empty($result2)) {
                 $page->addError(__('The selected record does not exist, or you do not have access to it.'));
             } else {
-                //Let's go!
+                // Let's go!
                 $values = $result;
                 $values2 = $result2;
 

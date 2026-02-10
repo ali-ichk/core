@@ -19,13 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
-use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\Timetable\CourseClassGateway;
-use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Forms\Form;
-use Gibbon\Module\Reports\Sources\InternalAssessmentByCourse;
 use Gibbon\Services\Format;
+use Gibbon\Forms\DatabaseFormFactory;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\Timetable\CourseGateway;
+use Gibbon\Domain\Timetable\CourseClassGateway;
+use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -54,34 +54,29 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
     if ($highestAction == false) {
         $page->addError(__('The highest grouped action cannot be determined.'));
     } else {
-        //Check if gibbonCourseClassID and gibbonInternalAssessmentColumnID specified
+        // Check if gibbonCourseClassID and gibbonInternalAssessmentColumnID specified
         $gibbonCourseClassID = $_GET['gibbonCourseClassID'] ?? '';
         $gibbonInternalAssessmentColumnID = $_GET['gibbonInternalAssessmentColumnID'] ?? '';
+
         if ($gibbonCourseClassID == '' or $gibbonInternalAssessmentColumnID == '') {
             $page->addError(__('You have not specified one or more required parameters.'));
         } else {
-            try {
-                if ($highestAction == 'Write Internal Assessments_all') {
 
-                    $result = $container->get(CourseClassGateway::class)->getCourseClass($gibbonCourseClassID);
-
-                } else {
-                    $result = $container->get(CourseClassGateway::class)->getCourseClassByPerson($gibbonCourseClassID, $session->get('gibbonPersonID'));
-                }
-
-            } catch (PDOException $e) {
+            if ($highestAction == 'Write Internal Assessments_all') {
+                $result = $container->get(CourseGateway::class)->getCourseClassDetails($gibbonCourseClassID);
+            } else {
+                $result = $container->get(CourseClassGateway::class)->getCourseClassByPerson($gibbonCourseClassID, $session->get('gibbonPersonID'));
             }
 
             if (empty($result)) {
                 $page->addError(__('The selected record does not exist, or you do not have access to it.'));
             } else {
-
-                    $result2 = $container->get(InternalAssessmentColumnGateway::class)->getScaleByInternalAssessmentColumn($gibbonInternalAssessmentColumnID);
+                $result2 = $container->get(InternalAssessmentColumnGateway::class)->getScaleByInternalAssessmentColumn($gibbonInternalAssessmentColumnID);
 
                 if (empty($result2)) {
                     $page->addError(__('The selected column does not exist, or you do not have access to it.'));
                 } else {
-                    //Let's go!
+                    // Let's go!
                     $class = $result;
                     $values = $result2;
 
@@ -221,7 +216,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             }
         }
 
-        //Print sidebar
+        // Print sidebar
         $session->set('sidebarExtra', sidebarExtra($guid, $connection2, $gibbonCourseClassID, 'write'));
     }
 }

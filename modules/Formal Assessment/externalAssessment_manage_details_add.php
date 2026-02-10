@@ -52,16 +52,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
     if ($gibbonPersonID == '') {
         $page->addError(__('You have not specified one or more required parameters.'));
     } else {
-        try {
-            if ($allStudents != 'on') {
-                $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
-
-            } else {
-                $result = $container->get(UserGateway::class)->getUserByPersonID($gibbonPersonID);
-            }
-          
-        } catch (PDOException $e) {
-        }
+        $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
 
         if (empty($result)) {
             echo $page->getBlankSlate();
@@ -91,7 +82,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
                 $step = 1;
             }
 
-            //Step 1
+            // Step 1
             if ($step == 1) {
                 $form = Form::create('addAssessment', $session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module').'/externalAssessment_manage_details_add.php', 'get');
 
