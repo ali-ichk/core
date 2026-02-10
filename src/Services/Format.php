@@ -379,20 +379,20 @@ class Format
             case ($seconds <= 60):
                 $time = __('Less than 1 min');
                 break;
-            case ($seconds > 60 && $seconds < 3600):
+            case ($seconds > 60 && $seconds < 5400):
                 $minutes = floor($seconds / 60);
                 $time = __n('{count} min', '{count} mins', $minutes);
                 break;
-            case ($seconds >= 3600 && $seconds < 172800):
-                $hours = floor($seconds / 3600);
+            case ($seconds >= 5400 && $seconds < 172800):
+                $hours = round($seconds / 3600);
                 $time = __n('{count} hr', '{count} hrs', $hours);
                 break;
             case ($seconds >= 172800 && $seconds < 1209600):
-                $days = floor($seconds / 86400);
+                $days = round($seconds / 86400);
                 $time = __n('{count} day', '{count} days', $days);
                 break;
             case ($seconds >= 1209600 && $seconds < 4838400):
-                $days = floor($seconds / 604800);
+                $days = round($seconds / 604800);
                 $time = __n('{count} week', '{count} weeks', $days);
                 break;
             default:

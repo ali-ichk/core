@@ -64,6 +64,20 @@ class UnitGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
     }
 
-    
+    public function selectActiveUnitsByCourse($gibbonCourseID)
+    {
+        $data = ['gibbonCourseID' => $gibbonCourseID];
+        $sql = 'SELECT gibbonUnitID, gibbonUnit.name, gibbonUnit.description, attachment FROM gibbonUnit JOIN gibbonCourse ON (gibbonUnit.gibbonCourseID=gibbonCourse.gibbonCourseID) WHERE gibbonUnit.gibbonCourseID=:gibbonCourseID AND active=\'Y\' ORDER BY ordering, name';
+       
+        return $this->db()->select($sql, $data);
+    }
+  
+    public function getUnitClassIDByUnit($gibbonUnitID, $gibbonCourseClassID)
+    {
+        $data = ['gibbonUnitID' => $gibbonUnitID, 'gibbonCourseClassID' => $gibbonCourseClassID];
+        $sql = "SELECT gibbonUnitClassID FROM gibbonUnitClass WHERE gibbonUnitID=:gibbonUnitID AND gibbonCourseClassID=:gibbonCourseClassID";
+
+        return $this->db()->selectOne($sql, $data);
+    }
 
 }

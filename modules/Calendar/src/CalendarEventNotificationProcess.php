@@ -87,7 +87,7 @@ class CalendarEventNotificationProcess extends BackgroundProcess
 
         // Get all Attendees 
         $criteria = $this->calendarEventPersonGateway->newQueryCriteria()
-            ->sortBy(['gibbonYearGroup.sequenceNumber', 'formGroup', 'surname', 'preferredName', 'category']);
+            ->sortBy(['yearGroupSequence', 'formGroup', 'surname', 'preferredName', 'category']);
         $students = $this->calendarEventPersonGateway->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
 
         // Query all attendance logs for future absence records on the event date and time
