@@ -13,13 +13,13 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
     {% set percent = ((progressCount / totalCount) * 100)|round %}
     {% set colour = progressColour|default('purple') %}
 
-    <div class="{{ width|default('flex-1') }} h-6 border bg-gray-100 border-{{ colour }}-600 flex" x-tooltip="{{ title }}">
-        <div class="bg-{{ colour }}-{{ colour == 'purple' ? '400' : '300' }} h-full" style="width: {{ percent }}%" title="{{ percent }}% {{ __('Complete')}}"></div>
+    <div class="{{ width|default('flex-1') }} h-6 border bg-gray-100 border-{{ colour }}-600 flex rounded-md overflow-hidden" x-tooltip="{{ title }}">
+        <div class="bg-{{ colour }}-{{ colour == 'purple' ? '400' : '300' }} h-full" style="width: {{ percent }}%" title="{{ percent }}% {{ progressLabel ?? __('Complete')}}"></div>
 
         {% if partialCount > 0 %}
             {% set percent = ((partialCount / totalCount) * 100)|round %}
             {% set colour = partialColour|default('gray') %}
-            <div class="bg-{{ colour }}-300 h-full" style="width: {{ percent }}%" title="{{ percent }}% {{ __('Pending')}}"></div>
+            <div class="bg-{{ colour }}-300 h-full" style="width: {{ percent }}%" title="{{ percent }}% {{ partialLabel ?? __('Pending')}}"></div>
         {% endif %}
     </div>
 

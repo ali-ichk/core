@@ -352,7 +352,7 @@ class StudentGateway extends QueryableGateway
             )
             UNION
             (
-                SELECT 'Form Tutor' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, gibbonFormGroup.name as context, image_240, 0 as listOrder
+                SELECT 'Form Tutor' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, gibbonFormGroup.name as context, 0 as listOrder
                 FROM gibbonFormGroup
                 JOIN gibbonPerson ON (gibbonFormGroup.gibbonPersonIDTutor=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDTutor2=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDTutor3=gibbonPerson.gibbonPersonID)
                 WHERE gibbonFormGroupID=:gibbonFormGroupID AND gibbonPerson.status='Full'
