@@ -50,13 +50,13 @@ class CourseClassPersonGateway extends QueryableGateway
         $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'today' => $today];
         $sql = "SELECT gibbonCourseClassPerson.role, gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.image_240, gibbonPerson.dob, gibbonPerson.email, gibbonPerson.studentID, gibbonFormGroup.nameShort as formGroup FROM gibbonCourseClassPerson JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID)";
 
-        if ($date !== null) {
+        if (!empty($date)) {
             $sql .= " LEFT JOIN (SELECT gibbonTTDayRowClass.gibbonCourseClassID, gibbonTTDayRowClass.gibbonTTDayRowClassID FROM gibbonTTDayDate JOIN gibbonTTDayRowClass ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE gibbonTTDayDate.date=:today) AS gibbonTTDayRowClassSubset ON (gibbonTTDayRowClassSubset.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID) LEFT JOIN gibbonTTDayRowClassException ON (gibbonTTDayRowClassException.gibbonTTDayRowClassID=gibbonTTDayRowClassSubset.gibbonTTDayRowClassID AND gibbonTTDayRowClassException.gibbonPersonID=gibbonCourseClassPerson.gibbonPersonID)";
         }
 
         $sql .= " WHERE gibbonCourseClassPerson.gibbonCourseClassID=:gibbonCourseClassID AND status='Full' AND gibbonCourseClassPerson.role='Student' AND (dateStart IS NULL OR dateStart<=:today) AND (dateEnd IS NULL OR dateEnd>=:today)";
 
-        if ($date !== null) {
+        if (!empty($date)) {
             $sql .= " GROUP BY gibbonCourseClassPerson.gibbonPersonID HAVING COUNT(gibbonTTDayRowClassExceptionID) = 0";
         }
 
