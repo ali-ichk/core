@@ -100,7 +100,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             echo __('Internal Assessment Columns');
             echo '</h3>';
             
-                $result = $container->get(InternalAssessmentColumnGateway::class)->selectColumnsByClass($gibbonCourseClassID);
+            $result = $container->get(InternalAssessmentColumnGateway::class)->selectColumnsByClass($gibbonCourseClassID);
 
             if ($result->rowCount() < 1) {
                 echo $page->getBlankSlate();

@@ -120,7 +120,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                 echo '</h3>';
 
                 // Count number of columns
-
                 $result = $container->get(InternalAssessmentColumnGateway::class)->selectColumnsByClass($gibbonCourseClassID);
                     
                 $columns = $result->rowCount();

@@ -37,18 +37,22 @@ class InternalAssessmentColumnGateway extends QueryableGateway
     private static $primaryKey = 'gibbonInternalAssessmentColumnID';
 
     private static $searchableColumns = [];
- 
-
+    
     public function selectColumnsByClass($gibbonCourseClassID, $limit = null, $columnsPerPage = null)
     {
-        $data = ['gibbonCourseClassID' => $gibbonCourseClassID];
-        $sql = 'SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID ORDER BY complete, completeDate DESC, name';
+        $query = $this
+            ->newQuery()
+            ->cols(['*'])
+            ->from($this->getTableName())
+            ->where('gibbonCourseClassID = :gibbonCourseClassID')
+            ->bindValue('gibbonCourseClassID', $gibbonCourseClassID)
+            ->orderBy(['complete', 'completeDate DESC', 'name']);
 
         if ($columnsPerPage !== null && $limit !== null) { 
-            $sql .= ' LIMIT '.$limit.', '.$columnsPerPage;
+            $query->limit($limit)->offset($columnsPerPage);
         }
 
-        return $this->db()->select($sql, $data);
+        return $this->runSelect($query);
     }
     
     public function getScaleByInternalAssessmentColumn($gibbonInternalAssessmentColumnID)
