@@ -56,7 +56,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
     $gibbonTTDayRowClassID = $_GET['gibbonTTDayRowClassID'] ?? '';
 
     if (empty($gibbonCourseClassID)) {
-        $result = $container->get(CourseClassGateway::class)->selectAttendanceClassesByStudent($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'), );
+        $result = $container->get(CourseClassGateway::class)->selectAttendanceClassesByStudent($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'));
 
         if ($result->rowCount() > 0) {
             $gibbonCourseClassID = $result->fetchColumn(0);
