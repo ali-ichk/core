@@ -23,9 +23,11 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\Timetable\CourseGateway;
 use Gibbon\Module\Attendance\AttendanceView;
 use Gibbon\Domain\Timetable\CourseClassGateway;
 use Gibbon\Domain\Timetable\TimetableDayDateGateway;
+use Gibbon\Domain\Timetable\CourseClassPersonGateway;
 use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
 use Gibbon\Domain\Attendance\AttendanceLogCourseClassGateway;
 
@@ -114,7 +116,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
                 $defaultAttendanceType = $settingGateway->getSettingByScope('Attendance', 'defaultClassAttendanceType');
                 $crossFillClasses = $settingGateway->getSettingByScope('Attendance', 'crossFillClasses');
 
-                $result = $container->get(CourseClassGateway::class)->getClassByIDandYear($gibbonCourseClassID, $session->get('gibbonSchoolYearID'));
+                $result = $container->get(CourseGateway::class)->getCourseClassDetails($gibbonCourseClassID);
 
                 if (empty($result)) {
                     echo $page->getBlankSlate();
@@ -156,7 +158,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
                     if (!empty($gibbonTTDayRowClassID)) {
                         $resultCourseClass = $container->get(CourseClassGateway::class)->selectStudentsByClassAndPeriod($gibbonCourseClassID, $currentDate, $gibbonTTDayRowClassID);
                     } else {
-                        $resultCourseClass = $container->get(CourseClassGateway::class)->selectStudentsByClassID($gibbonCourseClassID, $currentDate);
+                        $resultCourseClass = $container->get(CourseClassPersonGateway::class)->selectStudentsByClass($gibbonCourseClassID, $currentDate);
                     }
 
                     if ($resultCourseClass->rowCount() < 1) {
@@ -166,7 +168,7 @@ if (isActionAccessible($guid, $connection2, "/modules/Attendance/attendance_take
                         $countPresent = 0;
                         $columns = 4;
 
-                        $defaults = array('type' => $defaultAttendanceType, 'reason' => '', 'comment' => '', 'context' => '', 'direction' => '', 'prefill' => 'Y');
+                        $defaults = ['type' => $defaultAttendanceType, 'reason' => '', 'comment' => '', 'context' => '', 'direction' => '', 'prefill' => 'Y'];
                         $students = $resultCourseClass->fetchAll();
 
                         // Build the attendance log data per student

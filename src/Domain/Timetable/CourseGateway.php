@@ -207,7 +207,7 @@ class CourseGateway extends QueryableGateway
     public function getCourseClassDetails($gibbonCourseClassID)
     {
         $data = ['gibbonCourseClassID' => $gibbonCourseClassID];
-        $sql = "SELECT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonSchoolYearID, gibbonDepartment.name AS department, gibbonCourse.name AS courseLong, gibbonCourse.nameShort AS course, gibbonCourseClass.name AS classLong, gibbonCourseClass.nameShort AS class, gibbonCourse.gibbonCourseID, gibbonSchoolYear.name AS year, gibbonCourseClass.attendance, gibbonCourseClass.fields
+        $sql = "SELECT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonSchoolYearID, gibbonDepartment.name AS department, gibbonCourse.name AS courseLong, gibbonCourse.nameShort AS course, gibbonCourseClass.name AS classLong, gibbonCourseClass.nameShort AS class, gibbonCourse.gibbonCourseID, gibbonSchoolYear.name AS year, gibbonCourseClass.attendance, gibbonCourseClass.fields, gibbonSchoolYear.firstDay, gibbonSchoolYear.lastDay
                 FROM gibbonCourse
                 JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
                 JOIN gibbonSchoolYear ON (gibbonCourse.gibbonSchoolYearID=gibbonSchoolYear.gibbonSchoolYearID)
@@ -216,6 +216,8 @@ class CourseGateway extends QueryableGateway
         
         return $this->db()->selectOne($sql, $data);
     }
+
+    // SELECT gibbonCourseClass.*, firstDay, lastDay,
 
     public function getCourseClassInfoByID($gibbonCourseClassID)
     {
