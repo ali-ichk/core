@@ -202,12 +202,12 @@ class CourseGateway extends QueryableGateway
                 ORDER BY gibbonCourse.nameShort";
 
         return $this->db()->select($sql, $data);
-    }
+    }    
 
     public function getCourseClassDetails($gibbonCourseClassID)
     {
         $data = ['gibbonCourseClassID' => $gibbonCourseClassID];
-        $sql = "SELECT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonSchoolYearID, gibbonDepartment.name AS department, gibbonCourse.name AS courseLong, gibbonCourse.nameShort AS course, gibbonCourseClass.name AS classLong, gibbonCourseClass.nameShort AS class, gibbonCourse.gibbonCourseID, gibbonSchoolYear.name AS year, gibbonCourseClass.attendance, gibbonCourseClass.fields
+        $sql = "SELECT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonSchoolYearID, gibbonDepartment.name AS department, gibbonCourse.name AS courseLong, gibbonCourse.nameShort AS course, gibbonCourseClass.name AS classLong, gibbonCourseClass.nameShort AS class, gibbonCourse.gibbonCourseID, gibbonSchoolYear.name AS year, gibbonCourseClass.attendance, gibbonCourseClass.fields, gibbonSchoolYear.firstDay, gibbonSchoolYear.lastDay
                 FROM gibbonCourse
                 JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
                 JOIN gibbonSchoolYear ON (gibbonCourse.gibbonSchoolYearID=gibbonSchoolYear.gibbonSchoolYearID)
@@ -216,6 +216,8 @@ class CourseGateway extends QueryableGateway
         
         return $this->db()->selectOne($sql, $data);
     }
+
+    // SELECT gibbonCourseClass.*, firstDay, lastDay,
 
     public function getCourseClassInfoByID($gibbonCourseClassID)
     {
@@ -255,7 +257,7 @@ class CourseGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
-
+      
     public function selectCourseListBySchoolYearAndPerson($gibbonSchoolYearID, $gibbonPersonID )
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID];
@@ -326,7 +328,7 @@ class CourseGateway extends QueryableGateway
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID];
         $sql = "SELECT gibbonCourseClass.gibbonCourseClassID as value, CONCAT(gibbonCourse.nameShort, '.', gibbonCourseClass.nameShort) as name FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseID=gibbonCourse.gibbonCourseID) JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) WHERE gibbonPersonID=:gibbonPersonID AND gibbonSchoolYearID=:gibbonSchoolYearID AND NOT role LIKE '%- Left' ORDER BY gibbonCourseClass.name";
-
+        
         return $this->db()->select($sql, $data);
     }
 }

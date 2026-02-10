@@ -139,11 +139,11 @@ class FormGroupGateway extends QueryableGateway
     public function selectTutorsByStudent($gibbonSchoolYearID, $gibbonPersonID)
     {
         $data = ['gibbonPersonID' => $gibbonPersonID, 'gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $sql = "SELECT gibbonPerson.gibbonPersonID
-            FROM gibbonStudentEnrolment
-            JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID)
-            LEFT JOIN gibbonPerson ON ((gibbonPerson.gibbonPersonID=gibbonFormGroup.gibbonPersonIDTutor AND gibbonPerson.status='Full') OR (gibbonPerson.gibbonPersonID=gibbonFormGroup.gibbonPersonIDTutor2 AND gibbonPerson.status='Full') OR (gibbonPerson.gibbonPersonID=gibbonFormGroup.gibbonPersonIDTutor3 AND gibbonPerson.status='Full'))
-            WHERE gibbonStudentEnrolment.gibbonPersonID=:gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID";
+        $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonFormGroup.gibbonPersonIDTutor, gibbonFormGroup.gibbonPersonIDTutor2, gibbonFormGroup.gibbonPersonIDTutor3, gibbonPerson.surname, gibbonPerson.preferredName, gibbonStudentEnrolment.gibbonYearGroupID
+        FROM gibbonStudentEnrolment
+        JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID)
+        LEFT JOIN gibbonPerson ON ((gibbonPerson.gibbonPersonID=gibbonFormGroup.gibbonPersonIDTutor AND gibbonPerson.status='Full') OR (gibbonPerson.gibbonPersonID=gibbonFormGroup.gibbonPersonIDTutor2 AND gibbonPerson.status='Full') OR (gibbonPerson.gibbonPersonID=gibbonFormGroup.gibbonPersonIDTutor3 AND gibbonPerson.status='Full'))
+        WHERE gibbonStudentEnrolment.gibbonPersonID=:gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID";
 
         return $this->db()->select($sql, $data);
     }
@@ -181,7 +181,7 @@ class FormGroupGateway extends QueryableGateway
         return $this->db()->selectOne($sql, [
             'gibbonFormGroupID' => $gibbonFormGroupID,
         ]);
-    }
+    }          
   
     public function getFormGroupDetailsByID($gibbonFormGroupID)
     {

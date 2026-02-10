@@ -525,6 +525,22 @@ class AttendanceLogPersonGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
+    
+    public function selectAttendanceLogByStudentAndClassID($gibbonPersonID, $date, $gibbonCourseClassID, $gibbonTTDayRowClassID, $crossFillClasses)
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID, 'date' => $date . '%', 'gibbonCourseClassID' => $gibbonCourseClassID, 'gibbonTTDayRowClassID' => $gibbonTTDayRowClassID];
+        $sql = "SELECT gibbonAttendanceLogPerson.type, gibbonAttendanceLogPerson.reason, gibbonAttendanceLogPerson.comment, gibbonAttendanceLogPerson.direction, gibbonAttendanceLogPerson.context, timestampTaken FROM gibbonAttendanceLogPerson JOIN gibbonAttendanceCode ON (gibbonAttendanceCode.gibbonAttendanceCodeID=gibbonAttendanceLogPerson.gibbonAttendanceCodeID) JOIN gibbonPerson ON (gibbonAttendanceLogPerson.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonAttendanceLogPerson.gibbonPersonID=:gibbonPersonID AND date LIKE :date AND gibbonAttendanceLogPerson.context='Class' AND gibbonCourseClassID=:gibbonCourseClassID";
+        
+        if ($crossFillClasses == "N") {
+            $sql .= " AND (gibbonTTDayRowClassID=:gibbonTTDayRowClassID OR gibbonTTDayRowClassID IS NULL)";
+        } else {
+            $sql .= " AND (gibbonTTDayRowClassID=:gibbonTTDayRowClassID OR gibbonAttendanceCode.prefill='Y')";
+        }
+        
+        $sql .= " ORDER BY timestampTaken DESC";
+        
+        return $this->db()->select($sql, $data);
+    }
 
     public function selectConsecutiveAbsencesByDates($datesList, $gibbonSchoolYearID, $threshold)
     {
