@@ -268,7 +268,7 @@ class Page extends View
      */
     public function getBlankSlate(string $text = null)
     {
-        return Format::alert($text ?? __('There are no records to display.'), 'message');
+        return Format::alert($text ?? __('There are no records to display.'), 'empty');
     }
 
     /**
@@ -444,7 +444,7 @@ class Page extends View
      */
     public function isAddressValid($address, bool $strictPHP = true) : bool
     {
-        if ($strictPHP && stripos($address, '.php') === false) {
+        if ($strictPHP && strtolower(substr($address, -4)) !== '.php') {
             return false;
         }
 

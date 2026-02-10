@@ -61,10 +61,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_add.php') 
             $viewBy = 'date';
         }
         $gibbonCourseClassID = null;
-        $date = null;
+        $date = $_GET['date'] ?? null;
         $dateStamp = null;
         if ($viewBy == 'date') {
-            $date = $_GET['date'] ?? '';
             if (isset($_GET['dateHuman']) == true) {
                 $date = Format::dateConvert($_GET['dateHuman']);
             }
@@ -85,7 +84,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_add.php') 
             $gibbonCourseClassID = $_GET['gibbonCourseClassID'] ?? '';
             $params += [
                 'viewBy' => 'class',
-                'date' => $class,
+                'date' => $date,
                 'gibbonCourseClassID' => $gibbonCourseClassID,
                 'subView' => $subView,
             ];
@@ -200,10 +199,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_add.php') 
                 $row->addTextField('summary')->setValue()->maxLength(255);
 
             // Try and find the next unplanned slot for this class.
+            $nextTimeStart = $_GET['timeStart'] ?? null;
+            $nextTimeEnd = $_GET['timeEnd'] ?? null;
             if ($viewBy == 'class') {
                 $nextDate = $_GET['date'] ?? null;
-                $nextTimeStart = $_GET['timeStart'] ?? null;
-                $nextTimeEnd = $_GET['timeEnd'] ?? null;
 
                 if (empty($nextDate)) {
                     // Select upcoming lessons based on the latest lesson date, if it exists, fallback to the current date
@@ -221,6 +220,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_add.php') 
                         }
                     }
                 }
+            }
+
+            // Try and find the gibbonTTDayRowClassID for this lesson
+            $gibbonTTDayRowClassID = $GET['gibbonTTDayRowClassID'] ?? null;
+            if (empty($gibbonTTDayRowClassID) && !empty($date) && !empty($nextTimeStart) && !empty($nextTimeEnd)) {
+                $lesson = $container->get(PlannerEntryGateway::class)->getPlannerTTByClassTimes($gibbonCourseClassID, $date, $nextTimeStart, $nextTimeEnd);
+                $gibbonTTDayRowClassID =  $lesson['gibbonTTDayRowClassID'] ?? '';
+                $form->addHiddenValue('gibbonTTDayRowClassID', $gibbonTTDayRowClassID);
             }
 
             if ($viewBy == 'date') {
@@ -244,19 +251,26 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_add.php') 
                 $row->addLabel('timeEnd', __('End Time'))->description(__("Format: hh:mm (24hr)"));
                 $row->addTime('timeEnd')->setValue($nextTimeEnd)->required();
 
+            if (empty($gibbonTTDayRowClassID)) {
+                $row = $form->addRow();
+                    $row->addLabel('gibbonSpaceID', __('Location'));
+                    $row->addSelectSpace('gibbonSpaceID')
+                        ->placeholder();
+            }
+
             $form->addRow()->addHeading('Lesson Content', __('Lesson Content'));
 
             $description = $settingGateway->getSettingByScope('Planner', 'lessonDetailsTemplate') ;
             $row = $form->addRow();
                 $column = $row->addColumn();
                 $column->addLabel('description', __('Lesson Details'));
-                $column->addEditor('description', $guid)->setRows(25)->showMedia()->setValue($description)->enableAutoSave($autoSaveUrl, $formId);
+                $column->addEditor('description', $guid)->setRows(20)->showMedia()->setValue($description)->enableAutoSave($autoSaveUrl, $formId);
 
             $teachersNotes = $settingGateway->getSettingByScope('Planner', 'teachersNotesTemplate');
             $row = $form->addRow();
                 $column = $row->addColumn();
                 $column->addLabel('teachersNotes', __('Teacher\'s Notes'));
-                $column->addEditor('teachersNotes', $guid)->setRows(25)->showMedia()->setValue($teachersNotes)->enableAutoSave($autoSaveUrl, $formId);
+                $column->addEditor('teachersNotes', $guid)->setRows(5)->showMedia()->setValue($teachersNotes)->enableAutoSave($autoSaveUrl, $formId);
 
             //HOMEWORK
             $form->addRow()->addHeading('Homework', __($homeworkNameSingular));
