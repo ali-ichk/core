@@ -314,3 +314,4 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
         ]);
     }
 }
+

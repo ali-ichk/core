@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Domain\Behaviour\BehaviourGateway;
 use Gibbon\UI\Components\Alert;
 
 include '../../gibbon.php';
@@ -46,26 +47,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
             $URL .= '&return=error1';
             header("Location: {$URL}");
         } else {
-            try {
-                $data = array('gibbonBehaviourID' => $gibbonBehaviourID);
-                $sql = 'SELECT * FROM gibbonBehaviour WHERE gibbonBehaviourID=:gibbonBehaviourID';
-                $result = $connection2->prepare($sql);
-                $result->execute($data);
-            } catch (PDOException $e) {
-                $URL .= '&return=error2';
-                header("Location: {$URL}");
-                exit();
-            }
+            $result = $container->get(BehaviourGateway::class)->getByID($gibbonBehaviourID);
 
-            if ($result->rowCount() != 1) {
+            if (!empty($result)) {
                 $URL .= '&return=error2';
                 header("Location: {$URL}");
             } else {
-                $row = $result->fetch();
+                $row = $result;
 
-                //Write to database
+                // Write to database
                 try {
-                    $data = array('gibbonBehaviourID' => $gibbonBehaviourID);
+                    $data = ['gibbonBehaviourID' => $gibbonBehaviourID];
                     $sql = 'DELETE FROM gibbonBehaviour WHERE gibbonBehaviourID=:gibbonBehaviourID';
                     $result = $connection2->prepare($sql);
                     $result->execute($data);
