@@ -37,7 +37,7 @@ class Component
     /**
      * @var array
      */
-    private static $environment = [];
+    private static $environment = ['rtl' => false];
 
     /**
      * Load a set of globals into the environment for component templates to use.
@@ -61,7 +61,9 @@ class Component
         $i18n = $session->get('i18n');
 
         static::setup([
-            'rtl' => $i18n['rtl'] == 'Y',
+            'absolutePath' => $session->get('absolutePath'),
+            'absoluteURL'  => $session->get('absoluteURL'),
+            'rtl'          => $i18n['rtl'] == 'Y',
         ]);
     }
 

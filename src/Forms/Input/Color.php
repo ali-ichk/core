@@ -52,7 +52,7 @@ class Color extends Input
     }
 
     /**
-     * Set a named color palette for this field to use.
+     * Set a named color palette for this field to use. Options are: default, background
      *
      * @param string $palette
      * @return self
@@ -81,9 +81,10 @@ class Color extends Input
     protected function getElement()
     {
         return Component::render(Color::class, $this->getAttributeArray() + [
-            'color'     => !empty($this->getValue()) ? $this->getValue() : '#ffffff',
-            'showField' => $this->showField,
-            'palette'   => $this->palette,
+            'outerClass' => $this->getOuterClass(),
+            'color'      => !empty($this->getValue()) ? $this->getValue() : '',
+            'showField'  => $this->showField,
+            'palette'    => $this->palette,
         ]);
     }
 }

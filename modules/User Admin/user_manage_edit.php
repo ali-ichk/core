@@ -86,6 +86,12 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                 ->setURL('/modules/User Admin/user_manage_view_status_log.php')
                 ->modalWindow(750, 500);
 
+            $page->navigator->addHeaderAction('previousPhoto', __('View Previous Photos'))
+                ->displayLabel()
+                ->addParam('gibbonPersonID', $gibbonPersonID)
+                ->setURL('/modules/User Admin/user_manage_view_previousPhotos.php')
+                ->modalWindow(850, 600);
+                
             $scrubbed = $container->get(DataRetentionGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID])->fetch();
             if (!empty($scrubbed)) {
                 echo Format::alert(__("This user's personal data was cleared on {date} as part of a data retention action. The following database tables were cleared: {tables}", ['date' => Format::date($scrubbed['timestamp']), 'tables' => Format::list(json_decode($scrubbed['tables']), 'ul', 'text-xs mb-0')] ), 'warning');
@@ -253,7 +259,7 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                 $row->addLabel('emailAlternate', __('Alternate Email'));
                 $row->addEmail('emailAlternate');
 
-            $addressSet = ($values['address1'] != '' or $values['address1District'] != '' or $values['address1Country'] != '' or $values['address2'] != '' or $values['address2District'] != '' or $values['address2Country'] != '')? 'Yes' : '';
+            $addressSet = ($values['address1'] != '' or $values['address1District'] != '' or $values['address1Country'] != '' or $values['address2'] != '' or $values['address2District'] != '' or $values['address2Country'] != '') ? 'Y' : '';
 
             $row = $form->addRow();
                 $row->addLabel('showAddresses', __('Enter Personal Address?'));
@@ -494,10 +500,9 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
             // MISCELLANEOUS
             $form->addRow()->addHeading('Miscellaneous', __('Miscellaneous'));
 
-            $sql = "SELECT gibbonHouseID as value, name FROM gibbonHouse ORDER BY name";
             $row = $form->addRow();
                 $row->addLabel('gibbonHouseID', __('House'));
-                $row->addSelect('gibbonHouseID')->fromQuery($pdo, $sql)->placeholder();
+                $row->addSelectHouse('gibbonHouseID')->placeholder();
 
             if ($student) {
                 $row = $form->addRow();

@@ -24,6 +24,7 @@ use Gibbon\Domain\Planner\UnitGateway;
 use Gibbon\Forms\Prefab\BulkActionForm;
 use Gibbon\Domain\Timetable\CourseGateway;
 use Gibbon\Domain\School\SchoolYearGateway;
+use Gibbon\Support\Facades\Access;
 
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -48,6 +49,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units.php') == fal
 
     // School Year Info
     $gibbonSchoolYearID = $_GET['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
+    $gibbonCourseClassID = $_GET['gibbonCourseClassID'] ?? null;
     $gibbonCourseID = $_GET['gibbonCourseID'] ?? null;
 
     if (empty($gibbonSchoolYearID)) {
@@ -160,6 +162,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units.php') == fal
     // DATA TABLE
     $table = $form->addRow()->addDataTable('unitList', $criteria)->withData($units);
 
+    if (!empty($gibbonCourseClassID) && Access::allows('Planner', 'planner')) {
+        $table->addHeaderAction('lesson', __('Lesson Planner'))
+            ->setURL('/modules/Planner/planner.php')
+            ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
+            ->addParam('gibbonCourseClassID', $gibbonCourseClassID)
+            ->addParam('viewBy', 'class')
+            ->addParam('subView', 'lesson')
+            ->setIcon('book-open')
+            ->displayLabel();
+    }
+
     $table->addHeaderAction('add', __('Add'))
         ->setURL('/modules/Planner/units_add.php')
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
@@ -185,6 +198,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units.php') == fal
     $table->addActionColumn()
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->addParam('gibbonCourseID', $gibbonCourseID)
+        ->addParam('gibbonCourseClassID', $gibbonCourseClassID)
         ->addParam('gibbonUnitID')
         ->format(function ($unit, $actions) {
             $actions->addAction('edit', __('Edit'))

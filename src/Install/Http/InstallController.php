@@ -256,6 +256,12 @@ class InstallController
             $row->addTextField('pdoSupport')->setValue((@extension_loaded('pdo_mysql'))? __('Installed') : __('Not Installed'))->readonly();
             $row->addContent((@extension_loaded('pdo') && extension_loaded('pdo_mysql'))? $trueIcon : $falseIcon);
 
+        $sessionSecure = isset($_SERVER['HTTPS']);
+        $row = $form->addRow();
+            $row->addLabel('sessionSecureLabel', __('Secure HTTPS Connection'))->description(__('Requires a valid SSL Certificate'));
+            $row->addTextField('sessionSecure')->setValue($sessionSecure ? __('Enabled') : __('Not Available'))->readonly();
+            $row->addContent($sessionSecure? $trueIcon : $falseIcon);
+
         if ($apacheVersion !== false) {
             /**
              * @var mixed $apacheRequirement
@@ -265,7 +271,7 @@ class InstallController
                 $readyToInstall = $readyToInstall && $active;
                 $row = $form->addRow();
                     $row->addLabel('moduleLabel', 'Apache '.__('Module').' '.$moduleName);
-                    $row->addTextField('module')->setValue(($active)? __('Enabled') : __('N/A'))->readonly();
+                    $row->addTextField('module')->setValue(($active)? __('Enabled') : __('Not Available'))->readonly();
                     $row->addContent(($active)? $trueIcon : $falseIcon);
             }
         }
@@ -636,14 +642,10 @@ class InstallController
             $row->addLabel($setting['name'], __($setting['nameDisplay']))->description(__($setting['description']));
             $row->addSelectCurrency($setting['name'])->selected($data[$setting['name']] ?? '')->required();
 
-        $tzlist = array_reduce(\DateTimeZone::listIdentifiers(\DateTimeZone::ALL), function($group, $item) {
-            $group[$item] = __($item);
-            return $group;
-        }, array());
         $setting = $installer->getSetting('timezone', 'System', true);
         $row = $form->addRow();
             $row->addLabel($setting['name'], __($setting['nameDisplay']))->description(__($setting['description']));
-            $row->addSelect($setting['name'])->fromArray($tzlist)->selected($data[$setting['name']] ?? '')->required()->placeholder();
+            $row->addSelectTimezone($setting['name'])->selected($data[$setting['name']] ?? '')->required()->placeholder();
 
         $row = $form->addRow();
             $row->addFooter();

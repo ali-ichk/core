@@ -28,7 +28,6 @@ require_once '../../gibbon.php';
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 
-
 $URL = $session->get('absoluteURL').'/index.php?q=/modules/Library/library_manage_shelves_add.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_shelves_add.php') == false) {
@@ -38,16 +37,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_she
 } else {
     // Proceed!
     $libraryGateway = $container->get(LibraryGateway::class);
-    $shelfGateway = $container->get(LibraryShelfGateway::class);
-    $itemGateway = $container->get(LibraryShelfItemGateway::class);
+    $libraryShelfGateway = $container->get(LibraryShelfGateway::class);
+    $libraryShelfItemGateway = $container->get(LibraryShelfItemGateway::class);
 
     $data = [
-        'name' => $_POST['shelfName'] ?? '',
-        'active'         => $_POST['active'] ?? '',
-        'type'           => $_POST['type'] ?? '',
-        'field'        => $_POST['field'] ?? '',
-        'fieldValue'       => $_POST['fieldValue'] ?? '',
-        'shuffle'       => $_POST['shuffle'] ?? '',
+        'name'       => $_POST['shelfName'] ?? '',
+        'active'     => $_POST['active'] ?? '',
+        'shuffle'    => $_POST['shuffle'] ?? '',
+        'type'       => $_POST['type'] ?? '',
+        'field'     => $_POST['field'] ?? 'Custom',
+        'fieldValue' => $_POST['fieldValue'] ?? 'Custom',
+        'gibbonLibraryTypeID' => $_POST['gibbonLibraryTypeID'] ?? NULL,
     ];
 
     // Validate the required values are present
@@ -57,33 +57,28 @@ if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_she
         exit;
     }
     
-    // Validate that this person doesn't already have a record
-    if (!$shelfGateway->unique($data, ['name'])) {
+    // Validate that this shelf doesn't already exist
+    if (!$libraryShelfGateway->unique($data, ['name'])) {
         $URL .= '&return=error7';
         header("Location: {$URL}");
         exit;
     }
 
-    // Create the substitute
-    $gibbonLibraryShelfID = $shelfGateway->insert($data);
+    // Insert the data
+    $gibbonLibraryShelfID = $libraryShelfGateway->insert($data);
 
-    $shelfItems = isset($_POST['addItems'])? explode(',', $_POST['addItems']) : [];
-    //$gibbonLibraryTypeID = isset($_POST['gibbonLibraryTypeID'])? $_POST['gibbonLibraryTypeID'] : '';
-    $gibbonLibraryTypeID = $_POST['gibbonLibraryTypeID'];
+    $shelfItems = isset($_POST['addItems']) ? explode(',', $_POST['addItems']) : [];
     
-    if(!empty($shelfItems) && $data['type'] == 'Manual') {
+    if (!empty($shelfItems) && $data['type'] == 'Manual') {
         foreach($shelfItems as $item) {
-            $itemGateway->insertShelfItem($item, $gibbonLibraryShelfID);
+            $inserted = $libraryShelfItemGateway->insertShelfItem($item, $gibbonLibraryShelfID);
+
+            if (!$inserted) {
+                $URL .= '&return=error2';
+                header("Location: {$URL}");
+                exit;
+            }
         }
-    } else if(!empty($gibbonLibraryTypeID) && $data['type'] == 'Automatic') {
-        $autoItems = $libraryGateway->selectItemsByTypeFields($gibbonLibraryTypeID, $data['field'], $data['fieldValue'])->fetchAll();
-        foreach($autoItems as $item) {
-            $itemGateway->insertShelfItem($item['gibbonLibraryItemID'], $gibbonLibraryShelfID);
-        }
-    } else {
-        $URL .= '&return=error1';
-        header("Location: {$URL}");
-        exit;
     }
 
     $URL .= !$gibbonLibraryShelfID

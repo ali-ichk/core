@@ -19,12 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Forms\Form;
-use Gibbon\Contracts\Comms\SMS;
-use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\User\RoleGateway;
-use Gibbon\Domain\Messenger\MessengerGateway;
 use Gibbon\Module\Messenger\Forms\MessageForm;
 
 require_once __DIR__ . '/moduleFunctions.php';
@@ -48,6 +43,8 @@ else {
     $page->breadcrumbs->add(__('New Message'));
 
     $page->return->addReturns([
+        'warning3' => __('Your request was successful but the emojis and symbols in your text have been removed due to compatibility constraints.'),
+        'warning4' => __('You have selected more than 50 individuals. Please select a target of less than 50 individuals and click Send.'),
         'error5' => __('Your request failed due to an attachment error.'),
     ]);
 

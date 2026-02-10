@@ -121,7 +121,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/file_upload.p
                 $fields = $customFieldGateway->getCustomFieldDataByUser($gibbonCustomFieldID, $userData['gibbonPersonID']);
                 $userData['exists'] = !empty($fields[$gibbonCustomFieldID]);
             } elseif ($type == 'personalDocuments') {
-                $document = $personalDocumentGateway->getPersonalDocumentDataByUser($gibbonPersonalDocumentTypeID, $userData['gibbonPersonID']);
+                $document = $personalDocumentGateway->getPersonalDocumentDataByID($gibbonPersonalDocumentTypeID, 'gibbonPerson', $userData['gibbonPersonID']);
                 $userData['exists'] = !empty($document['filePath']);
             } else {
                 $userData['exists'] = !empty($userData['image_240']);

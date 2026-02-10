@@ -1,4 +1,4 @@
-<?php
+ <?php
 /*
 Gibbon: the flexible, open school platform
 Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
@@ -173,15 +173,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
             $row = $blockTemplate->addRow()->addClass('w-full flex justify-between items-center mt-1 ml-2');
                 $row->addFileUpload('fileUpload')->accepts('.jpg,.jpeg,.gif,.png')
                     ->setAttachment('filePath', $session->get('absoluteURL'), '')
-                    ->setMaxUpload(false)
-                    ->append("<input type='hidden' id='gibbonActivityPhotoID' name='gibbonActivityPhotoID' value=''/>");
+                    ->setMaxUpload(false);
                 $row->addTextField('caption')->setClass('w-4/5 ml-6 mr-6')->placeholder(__('Caption (optional)'));
 
             // Custom Blocks
             $row = $form->addRow();
             $customBlocks = $row->addCustomBlocks('photos', $session, true)
                 ->fromTemplate($blockTemplate)
-                ->settings(['inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true, 'orderName' => 'photoOrder',])
+                ->settings(['inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true, 'orderName' => 'photoOrder', 'uniqueID' => 'gibbonActivityPhotoID' ])
                 ->placeholder(__('Photos will be listed here...'))
                 ->addToolInput($addBlockButton);
 
@@ -224,6 +223,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                             'Finalised' => __('Finalised'),
                             'Estimated' => __('Estimated')
                         ]);
+
+                $row = $form->addRow();
+                    $row->addLabel('paymentDescription', __('Payment Description'));
+                    $row->addTextArea('paymentDescription')->setRows(2);
             }
 
             $form->addRow()->addHeading('Time Slots', __('Time Slots'));
@@ -237,8 +240,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                     $row->addSelect('gibbonDaysOfWeekID')
                         ->fromQuery($pdo, $sqlWeekdays)
                         ->placeholder()
-                        ->addClass('floatLeft')
-                        ->append('<input type="hidden" id="gibbonActivitySlotID" name="gibbonActivitySlotID" value="">');
+                        ->addClass('floatLeft');
 
                 $row = $slotBlock->addRow();
                     $row->addLabel('timeStart', __('Slot Start Time'));
@@ -280,6 +282,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                     ->settings([
                         'placeholder' => __('Time Slots will appear here...'),
                         'sortable' => true,
+                        'uniqueID' => 'gibbonActivitySlotID',
                     ])
                     ->addToolInput($addBlockButton);
 
@@ -351,8 +354,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                 $(document).ready(function () {
 
                     $('input[id^=fileUpload][name^=photos]').each(function() {
-                        
-                        var filePath = $('input[id^=filePath]', $(this).parent());
+                        var inputName = this.name.replace('fileUpload', 'filePath');
+                        var filePath = $('input[name="'+inputName+'"]');
                         if (filePath != undefined) {
                             var img = document.createElement("img");
                             img.src = "<?php echo $session->get('absoluteURL'); ?>/"+filePath.val();

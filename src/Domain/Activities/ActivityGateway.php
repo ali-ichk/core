@@ -339,6 +339,7 @@ class ActivityGateway extends QueryableGateway
                 WHERE gibbonActivity.gibbonActivityCategoryID=:gibbonActivityCategoryID 
                 AND gibbonStudentEnrolment.gibbonPersonID=:gibbonPersonID
                 AND gibbonActivity.active='Y'
+                AND gibbonActivity.registration='Y'
                 ORDER BY gibbonActivity.name, gibbonActivity.programStart";
 
         return $this->db()->select($sql, $data);
@@ -351,10 +352,12 @@ class ActivityGateway extends QueryableGateway
                 gibbonActivity.payment as cost,
                 gibbonActivity.paymentType as costType,
                 gibbonActivity.paymentFirmness as costStatus,
+                gibbonActivity.paymentDescription as costDescription,
                 gibbonActivityType.access,
                 gibbonActivityType.maxPerStudent,
                 gibbonActivityType.enrolmentType,
                 gibbonActivityType.backupChoice,
+                gibbonActivity.registration,
                 gibbonSpace.gibbonSpaceID,
                 gibbonActivitySlot.timeStart,
                 gibbonActivitySlot.timeEnd,

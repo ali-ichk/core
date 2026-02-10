@@ -34,6 +34,7 @@ class Element implements OutputableInterface
 {
     use BasicAttributesTrait;
 
+    protected $class;
     protected $content;
     protected $appended;
     protected $prepended;
@@ -67,6 +68,45 @@ class Element implements OutputableInterface
     }
 
     /**
+     * Set the class of the outer container when rendering.
+     * @param  string  $value
+     * @return self
+     */
+    public function setOuterClass($value)
+    {
+        $this->class = $value;
+        return $this;
+    }
+
+    /**
+     * Get the class of the outer container when rendering.
+     * @param  string  $value
+     * @return self
+     */
+    public function getOuterClass()
+    {
+        return $this->class;
+    }
+
+    /**
+     * Set the element's width width breakpoints.
+     * @param  string  $width
+     * @return $this
+     */
+    public function width($width = '')
+    {
+        switch ($width) {
+            case '1/2':
+                $this->setOuterClass('w-full sm:w-1/2');
+                break;
+            case '1/3':
+                $this->setOuterClass('w-full md:w-1/3');
+                break;
+        }
+        return $this;
+    }
+
+    /**
      * Add a string to the beginning of the current content.
      * @param  string  $value
      * @return self
@@ -74,6 +114,18 @@ class Element implements OutputableInterface
     public function prepend($value)
     {
         $this->prepended = $value . $this->prepended;
+        return $this;
+    }
+
+    /**
+     * Set the currently appended string.
+     *
+     * @param string $value
+     * @return self
+     */
+    public function setPrepended(string $value)
+    {
+        $this->prepended = $value;
         return $this;
     }
 
@@ -95,6 +147,18 @@ class Element implements OutputableInterface
     public function append($value)
     {
         $this->appended .= $value;
+        return $this;
+    }
+
+    /**
+     * Set the currently appended string.
+     *
+     * @param string $value
+     * @return self
+     */
+    public function setAppended(string $value)
+    {
+        $this->appended = $value;
         return $this;
     }
 

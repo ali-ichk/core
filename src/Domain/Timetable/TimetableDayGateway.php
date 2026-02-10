@@ -127,7 +127,7 @@ class TimetableDayGateway extends QueryableGateway
 
     public function selectTTDayRowClassesByClass($gibbonTTID, $gibbonCourseClassID) {
         $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'gibbonTTID' => $gibbonTTID];
-        $sql = "SELECT gibbonTTDayRowClassID, gibbonTTDayRowClass.gibbonTTDayID, gibbonTTDayRowClass.gibbonTTColumnRowID, gibbonTTDayRowClass.gibbonSpaceID
+        $sql = "SELECT gibbonTTDayRowClassID, gibbonTTDayRowClass.gibbonTTDayID, gibbonTTDayRowClass.gibbonTTColumnRowID, gibbonTTDayRowClass.gibbonSpaceID, gibbonTTDay.name as dayName, gibbonTTColumnRow.name as periodName
                 FROM gibbonTTDayRowClass
                 JOIN gibbonTTColumnRow ON (gibbonTTColumnRow.gibbonTTColumnRowID=gibbonTTDayRowClass.gibbonTTColumnRowID)
                 JOIN gibbonTTDay ON (gibbonTTDay.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID)
@@ -171,6 +171,25 @@ class TimetableDayGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
+
+    public function selectTTDayRowClassExceptionsByPersonAndRange($gibbonPersonID, $dateStart, $dateEnd) {
+        $data =['gibbonPersonID' => $gibbonPersonID, 'dateStart' => $dateStart, 'dateEnd' => $dateEnd];
+        $sql = "SELECT gibbonTTDayDate.date, gibbonTTDayRowClassExceptionID, gibbonPerson.gibbonPersonID, gibbonCourseClass.gibbonCourseClassID, gibbonCourse.nameShort AS courseName, gibbonCourseClass.nameShort AS className, gibbonTTColumnRow.timeStart, gibbonTTColumnRow.timeEnd, gibbonTTColumnRow.name as period, gibbonTTDay.gibbonTTID, gibbonTTDay.gibbonTTDayID, gibbonTTDayRowClass.gibbonTTDayRowClassID, gibbonTTDayRowClass.gibbonTTColumnRowID
+                FROM gibbonTTDayRowClassException
+                JOIN gibbonPerson ON (gibbonTTDayRowClassException.gibbonPersonID=gibbonPerson.gibbonPersonID)
+                JOIN gibbonTTDayRowClass ON (gibbonTTDayRowClass.gibbonTTDayRowClassID=gibbonTTDayRowClassException.gibbonTTDayRowClassID)
+                JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID=gibbonTTDayRowClass.gibbonCourseClassID)
+                JOIN gibbonCourse ON (gibbonCourseClass.gibbonCourseID=gibbonCourse.gibbonCourseID)
+                JOIN gibbonTTDay ON (gibbonTTDay.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID)
+                JOIN gibbonTTDayDate ON (gibbonTTDay.gibbonTTDayID=gibbonTTDayDate.gibbonTTDayID)
+                JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID=gibbonTTColumnRow.gibbonTTColumnRowID)
+                WHERE gibbonTTDayRowClassException.gibbonPersonID=:gibbonPersonID
+                AND gibbonTTDayDate.date BETWEEN :dateStart AND :dateEnd
+                ORDER BY surname, preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
 
     public function getTTDayByID($gibbonTTDayID)
     {
@@ -279,10 +298,11 @@ class TimetableDayGateway extends QueryableGateway
         $gibbonTTDayRowClassIDList = is_array($gibbonTTDayRowClassIDList)? implode(',', $gibbonTTDayRowClassIDList) : $gibbonTTDayRowClassIDList;
 
         $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'gibbonTTID' => $gibbonTTID, 'gibbonTTDayRowClassIDList' => $gibbonTTDayRowClassIDList];
-        $sql = "DELETE gibbonTTDayRowClass
+        $sql = "DELETE gibbonTTDayRowClass, gibbonTTDayRowClassException
                 FROM gibbonTTDayRowClass
                 INNER JOIN gibbonTTDay ON (gibbonTTDay.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID)
                 INNER JOIN gibbonTT ON (gibbonTT.gibbonTTID=gibbonTTDay.gibbonTTID)
+                LEFT JOIN gibbonTTDayRowClassException ON (gibbonTTDayRowClassException.gibbonTTDayRowClassID=gibbonTTDayRowClass.gibbonTTDayRowClassID)
                 WHERE gibbonTT.gibbonTTID=:gibbonTTID
                 AND gibbonTTDayRowClass.gibbonCourseClassID=:gibbonCourseClassID
                 AND NOT FIND_IN_SET(gibbonTTDayRowClass.gibbonTTDayRowClassID, :gibbonTTDayRowClassIDList)";

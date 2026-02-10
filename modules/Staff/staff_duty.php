@@ -92,7 +92,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/staff_duty.php') == 
         ];
     }
 
+    $defaultTab = $_GET['tab'] ?? 1;
+
     $page->writeFromTemplate('ui/tabs.twig.html', [
+        'id'       => 'dutyOuter',
         'selected' => $defaultTab ?? 1,
         'tabs'     => $tabs,
         'outset'   => false,
