@@ -85,15 +85,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
                 $showParentEffortWarning = $settingGateway->getSettingByScope('Markbook', 'showParentEffortWarning');
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
+                    
                     // Confirm access to this student
-                    $resultChild = $container->get(FamilyChildGateway::class)->selectChildByFamilyAdultID($gibbonPersonID, $session->get('gibbonPersonID'));
-
-                    if ($resultChild->rowCount() < 1) {
-                        $page->addError(__('The selected record does not exist, or you do not have access to it.'));
-                    } else {
-                        $rowChild = $resultChild->fetch();
-                        externalAssessmentDetails($guid, $gibbonPersonID, $connection2, null, false);
+                    if (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
                     }
+                    
+                    externalAssessmentDetails($guid, $gibbonPersonID, $connection2, null, false);
                 }
             }
         } else { // My External Assessments

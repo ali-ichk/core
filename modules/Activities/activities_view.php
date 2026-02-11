@@ -104,15 +104,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                     if ($countChild == 0) {
                         echo $page->getBlankSlate();
                         $canAccessRegistration = false;
-if ($countChild == 0) {
-echo $page->getBlankSlate();
-$canAccessRegistration = false;
-}
+                    }
 
-if (empty($children[$gibbonPersonID])) {
-    $page->addError(__('You do not have access to this action.'));
-    return;
-}
+                    if (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
+                    }
                 }
             }
 

@@ -130,6 +130,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
                 	// Confirm access to this student
+					if (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
+                    }
+					
 					echo getInternalAssessmentRecord($guid, $connection2, $gibbonPersonID, 'parent');
                 }
             }

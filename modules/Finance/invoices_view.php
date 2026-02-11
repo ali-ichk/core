@@ -71,8 +71,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Finance/invoices_view.php'
                     ++$count;
                 }
 
-                $options[$rowChild['gibbonPersonID']]=Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
-
                 if (count($options) == 0) {
                     echo $page->getBlankSlate();
                 } elseif (count($options) == 1) {
@@ -103,6 +101,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Finance/invoices_view.php'
                     echo $form->getOutput();
 
                     $gibbonPersonID = $search;
+
+                    if  (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
+                    }
+                    
                     $student = $children[$gibbonPersonID] ?? '';
                 }
             }

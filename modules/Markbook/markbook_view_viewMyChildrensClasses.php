@@ -88,6 +88,11 @@ if (empty($children)) {
 
     if (!empty($gibbonPersonID) and count($options) > 0) {
         // Confirm access to this student
+        if (empty($children[$gibbonPersonID])) {
+            $page->addError(__('You do not have access to this action.'));
+            return;
+        }
+
         if ($count($options) > 1) {
             echo '<h2>';
             echo 'Filter & Options';

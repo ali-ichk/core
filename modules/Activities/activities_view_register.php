@@ -106,6 +106,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                         if (empty($children)) {
                             echo $page->getBlankSlate();
                         } else {
+
+                            if (empty($children[$gibbonPersonID])) {
+                                $page->addError(__('You do not have access to this action.'));
+                                return;
+                            }
+                            
                             $countChild = 0;
 
                             foreach($children as $child) {

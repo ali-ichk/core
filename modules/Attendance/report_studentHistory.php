@@ -161,6 +161,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
                 if ($gibbonPersonID != '') {
                     $output = '';
 
+                    if (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
+                    }
+
                     $data = ['gibbonPersonID' => $gibbonPersonID];
                     $sql = 'SELECT * FROM gibbonPerson WHERE gibbonPerson.gibbonPersonID=:gibbonPersonID ORDER BY surname, preferredName';
                     $result = $connection2->prepare($sql);

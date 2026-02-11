@@ -75,7 +75,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
         }
 
         if ($gibbonPersonID != '' && count($options) > 0) {
-            $rowChild = $resultChild->fetch();
+            
+            if (empty($children[$gibbonPersonID])) {
+                $page->addError(__('You do not have access to this action.'));
+                return;
+            }
 
             $result = $container->get(INGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID]);
 
