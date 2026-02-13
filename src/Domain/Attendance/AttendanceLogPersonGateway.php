@@ -444,15 +444,17 @@ class AttendanceLogPersonGateway extends QueryableGateway
     function selectAttendanceLogsByPersonAndDate($gibbonPersonID, $date, $crossFillClasses)
     {
         $data = ['gibbonPersonID' => $gibbonPersonID, 'date' => $date];
-        $sql = "SELECT gibbonAttendanceLogPerson.gibbonAttendanceLogPersonID, gibbonAttendanceLogPerson.type, reason, comment, gibbonAttendanceLogPerson.direction, context, timestampTaken, gibbonAttendanceCode.prefill, gibbonAttendanceCode.scope, gibbonAttendanceLogPerson.gibbonTTDayRowClassID
+        $sql = "SELECT gibbonAttendanceLogPerson.gibbonAttendanceLogPersonID, gibbonAttendanceLogPerson.type, reason, comment, gibbonAttendanceLogPerson.direction, context, timestampTaken, gibbonAttendanceLogPerson.gibbonFormGroupID, gibbonAttendanceLogPerson.gibbonCourseClassID, gibbonAttendanceCode.prefill, gibbonAttendanceCode.scope, gibbonAttendanceLogPerson.gibbonTTDayRowClassID
                 FROM gibbonAttendanceLogPerson
                 JOIN gibbonPerson ON (gibbonAttendanceLogPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
                 JOIN gibbonAttendanceCode ON (gibbonAttendanceCode.gibbonAttendanceCodeID=gibbonAttendanceLogPerson.gibbonAttendanceCodeID)
                 WHERE gibbonAttendanceLogPerson.gibbonPersonID=:gibbonPersonID
                 AND date=:date";
+
         if ($crossFillClasses == "N") {
             $sql .= " AND NOT context='Class'";
         }
+
         $sql .= " ORDER BY timestampTaken DESC";
 
         return $this->db()->select($sql, $data);
@@ -596,5 +598,13 @@ class AttendanceLogPersonGateway extends QueryableGateway
         
 
         return $this->runSelect($query);
+    }
+
+    public function getStudentAttendanceLogDetailsByID($gibbonAttendanceLogPersonID, $gibbonPersonID)
+    {
+    	$data = ['gibbonPersonID' => $gibbonPersonID, 'gibbonAttendanceLogPersonID' => $gibbonAttendanceLogPersonID];
+		$sql = "SELECT student.preferredName, student.surname, type, reason, comment, date, context, timestampTaken, gibbonAttendanceLogPerson.gibbonCourseClassID, teacher.preferredName as teacherPreferredName, teacher.surname as teacherSurname, gibbonCourseClass.nameShort as className, gibbonCourse.nameShort as courseName FROM gibbonAttendanceLogPerson JOIN gibbonPerson student ON (gibbonAttendanceLogPerson.gibbonPersonID=student.gibbonPersonID) JOIN gibbonPerson teacher ON (gibbonAttendanceLogPerson.gibbonPersonIDTaker=teacher.gibbonPersonID) LEFT JOIN gibbonCourseClass ON (gibbonAttendanceLogPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) LEFT JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) WHERE gibbonAttendanceLogPerson.gibbonPersonID=:gibbonPersonID AND gibbonAttendanceLogPersonID=:gibbonAttendanceLogPersonID";
+
+        return $this->db()->selectOne($sql, $data);
     }
 }

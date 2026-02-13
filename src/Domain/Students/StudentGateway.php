@@ -226,7 +226,7 @@ class StudentGateway extends QueryableGateway
     public function selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $gibbonPersonID)
     {
         $data = array('gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID, 'today' => date('Y-m-d'));
-        $sql = "SELECT gibbonPerson.gibbonPersonID as groupBy, gibbonPerson.gibbonPersonID, title, surname, preferredName, image_240, gibbonYearGroup.nameShort AS yearGroup,  gibbonFormGroup.nameShort AS formGroup, 'Student' as roleCategory, gibbonYearGroup.gibbonYearGroupID, gibbonFormGroup.gibbonFormGroupID 
+        $sql = "SELECT gibbonPerson.gibbonPersonID as groupBy, gibbonPerson.gibbonPersonID, title, surname, preferredName, image_240, gibbonYearGroup.nameShort AS yearGroup, gibbonFormGroup.nameShort AS formGroup, 'Student' as roleCategory, gibbonYearGroup.gibbonYearGroupID, gibbonFormGroup.gibbonFormGroupID 
                 FROM gibbonFamilyAdult
                 JOIN gibbonFamilyChild ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamilyAdult.gibbonFamilyID)
                 JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID)
@@ -436,5 +436,13 @@ class StudentGateway extends QueryableGateway
             ORDER BY gibbonStudentEnrolment.gibbonSchoolYearID";
           
           return $this->db()->select($sql, $data);
+    }
+
+    public function selectActiveStudentsByFormGroup($gibbonFormGroupID, $date)
+    {
+        $data = ['gibbonFormGroupID' => $gibbonFormGroupID, 'date' => $date];
+        $sql = "SELECT gibbonPerson.image_240, gibbonPerson.dob, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID FROM gibbonStudentEnrolment INNER JOIN gibbonPerson ON gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID WHERE gibbonFormGroupID=:gibbonFormGroupID AND status='Full' AND (dateStart IS NULL OR dateStart<=:date) AND (dateEnd IS NULL  OR dateEnd>=:date) ORDER BY rollOrder, surname, preferredName";
+
+        return $this->db()->select($sql, $data);
     }
 }
