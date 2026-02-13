@@ -19,10 +19,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Domain\School\DaysOfWeekGateway;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Forms\DatabaseFormFactory;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -221,8 +222,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_summary_
         } else {
 
             if (empty($daysOfWeek)) {
-                $sql = "SELECT nameShort, name FROM gibbonDaysOfWeek where schoolDay='Y'";
-                $daysOfWeek = $pdo->select($sql)->fetchKeyPair();
+                $result = $container->get(DaysOfWeekGateway::class)->selectBy(['schoolDay' => 'Y'], ['nameShort', 'name']);
+                $daysOfWeek = $result->fetchKeyPair();
             }
     
             if (empty($schoolClosures)) {

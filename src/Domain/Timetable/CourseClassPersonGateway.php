@@ -64,4 +64,13 @@ class CourseClassPersonGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
+
+    public function selectActiveTeachersByClass($gibbonCourseClassID)
+    {
+
+        $data = ['gibbonCourseClassID' => $gibbonCourseClassID];
+        $sql = 'SELECT gibbonPerson.gibbonPersonID, surname, preferredName FROM gibbonPerson JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonCourseClassID=:gibbonCourseClassID AND gibbonCourseClassPerson.role = "Teacher" AND gibbonPerson.status="Full"';
+
+        return $this->db()->select($sql, $data);
+    }
 }
