@@ -91,11 +91,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical_
                 'attachment'           => __('Attachment'),
             );
 
-            $result = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditions();
-            $conditions = ($result->rowCount() > 0) ? $result->fetchAll(\PDO::FETCH_KEY_PAIR) : [];
-
-            $result = $container->get(AlertLevelGateway::class)->selectAllAlertLevels();
-            $alerts = ($result->rowCount() > 0) ? $result->fetchAll(\PDO::FETCH_KEY_PAIR) : [];
+            $conditions = $container->get(MedicalConditionGateway::class)->selectAllMedicalConditions()->fetchKeyPair();
+            $alerts = $container->get(AlertLevelGateway::class)->selectAlertLevels()->fetchKeyPair();
 
             $form = Form::createTable('updateMedical', $session->get('absoluteURL').'/modules/'.$session->get('module').'/data_medical_manage_editProcess.php?gibbonPersonMedicalUpdateID='.$gibbonPersonMedicalUpdateID);
 
