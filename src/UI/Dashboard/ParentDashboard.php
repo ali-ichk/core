@@ -25,6 +25,7 @@ use Gibbon\Http\Url;
 use Gibbon\View\View;
 use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
+use Gibbon\Services\ModuleLoader;
 use Gibbon\Domain\System\HookGateway;
 use Gibbon\Forms\OutputableInterface;
 use Gibbon\Contracts\Services\Session;
@@ -34,16 +35,10 @@ use League\Container\ContainerAwareTrait;
 use Gibbon\Domain\System\AlertLevelGateway;
 use League\Container\ContainerAwareInterface;
 use Gibbon\Domain\Planner\PlannerEntryGateway;
-use Gibbon\Domain\School\SchoolYearTermGateway;
 use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\System\AlertLevelGateway;
 use Gibbon\Tables\Prefab\TodaysLessonsTable;
-use League\Container\ContainerAwareInterface;
-use Gibbon\Domain\Planner\PlannerEntryGateway;
-use Gibbon\Domain\School\SchoolYearTermGateway;
 use Gibbon\Module\Activities\Tables\ActivitiesViewParent;
-use Gibbon\Services\ModuleLoader;
 
 /**
  * Parent Dashboard View Composer
