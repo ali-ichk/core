@@ -21,6 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
+use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\IndividualNeeds\INGateway;
 
 if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_myChildren.php') == false) {
     // Access denied
@@ -33,32 +35,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
     echo __('This section allows you to view individual education plans, where they exist, for children within your family.').'<br/>';
     echo '</p>';
 
-    //Test data access field for permission
+    // Test data access field for permission
+    $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
 
-        $data = array('gibbonPersonID' => $session->get('gibbonPersonID'));
-        $sql = "SELECT * FROM gibbonFamilyAdult WHERE gibbonPersonID=:gibbonPersonID AND childDataAccess='Y'";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-
-    if ($result->rowCount() < 1) {
+    if (empty($children)) {
         echo $page->getBlankSlate();
     } else {
-        //Get child list
-        $count = 0;
-        $options = array();
-
-        while ($row = $result->fetch()) {
-
-                $dataChild = array('gibbonFamilyID' => $row['gibbonFamilyID'], 'gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'));
-                $sqlChild = "SELECT * FROM gibbonFamilyChild JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonFamilyID=:gibbonFamilyID AND gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY surname, preferredName ";
-                $resultChild = $connection2->prepare($sqlChild);
-                $resultChild->execute($dataChild);
-            while ($rowChild = $resultChild->fetch()) {
-                $options[$rowChild['gibbonPersonID']]=Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
-            }
+        // Get child list
+		$options = [];
+        foreach($children as $child) {
+            $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
         }
 
-        $gibbonPersonID = (isset($_GET['gibbonPersonID']))? $_GET['gibbonPersonID'] : null;
+        $gibbonPersonID = (isset($_GET['gibbonPersonID'])) ? $_GET['gibbonPersonID'] : null;
 
         if (count($options) == 0) {
             echo $page->getBlankSlate();
@@ -86,54 +75,44 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
         }
 
         if ($gibbonPersonID != '' && count($options) > 0) {
-            //Confirm access to this student
+            
+            if (empty($children[$gibbonPersonID])) {
+                $page->addError(__('You do not have access to this action.'));
+                return;
+            }
 
-                $dataChild = array('gibbonPersonID' => $gibbonPersonID, 'gibbonPersonID2' => $session->get('gibbonPersonID'));
-                $sqlChild = "SELECT * FROM gibbonFamilyChild JOIN gibbonFamily ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamily.gibbonFamilyID) JOIN gibbonFamilyAdult ON (gibbonFamilyAdult.gibbonFamilyID=gibbonFamily.gibbonFamilyID) JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonFamilyChild.gibbonPersonID=:gibbonPersonID AND gibbonFamilyAdult.gibbonPersonID=:gibbonPersonID2 AND childDataAccess='Y'";
-                $resultChild = $connection2->prepare($sqlChild);
-                $resultChild->execute($dataChild);
-            if ($resultChild->rowCount() < 1) {
-                $page->addError(__('The selected record does not exist, or you do not have access to it.'));
+            $result = $container->get(INGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID]);
+
+            if ($result->rowCount() != 1) {
+                echo '<h3>';
+                echo __('View');
+                echo '</h3>';
+
+                echo $page->getBlankSlate();
             } else {
-                $rowChild = $resultChild->fetch();
+                echo '<h3>';
+                echo __('View');
+                echo '</h3>';
 
+                $row = $result->fetch(); ?>
+                <table class='smallIntBorder w-full' cellspacing='0'>
+                    <tr>
+                        <td colspan=2 style='padding-top: 25px'>
+                            <span style='font-weight: bold; font-size: 135%'><?php echo __('Targets') ?></span><br/>
+                            <?php
+                            echo '<p>'.$row['targets'].'</p>'; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2>
+                            <span style='font-weight: bold; font-size: 135%'><?php echo __('Teaching Strategies') ?></span><br/>
+                            <?php
+                            echo '<p>'.$row['strategies'].'</p>'; ?>
+                        </td>
+                    </tr>
+                </table>
+                <?php
 
-                    $data = array('gibbonPersonID' => $gibbonPersonID);
-                    $sql = 'SELECT * FROM gibbonIN WHERE gibbonPersonID=:gibbonPersonID';
-                    $result = $connection2->prepare($sql);
-                    $result->execute($data);
-
-                if ($result->rowCount() != 1) {
-                    echo '<h3>';
-                    echo __('View');
-                    echo '</h3>';
-
-                    echo $page->getBlankSlate();
-                } else {
-                    echo '<h3>';
-                    echo __('View');
-                    echo '</h3>';
-
-                    $row = $result->fetch(); ?>
-					<table class='smallIntBorder w-full' cellspacing='0'>
-						<tr>
-							<td colspan=2 style='padding-top: 25px'>
-								<span style='font-weight: bold; font-size: 135%'><?php echo __('Targets') ?></span><br/>
-								<?php
-                                echo '<p>'.$row['targets'].'</p>'; ?>
-							</td>
-						</tr>
-						<tr>
-							<td colspan=2>
-								<span style='font-weight: bold; font-size: 135%'><?php echo __('Teaching Strategies') ?></span><br/>
-								<?php
-                                echo '<p>'.$row['strategies'].'</p>'; ?>
-							</td>
-						</tr>
-					</table>
-					<?php
-
-                }
             }
         }
     }

@@ -21,12 +21,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\User\FamilyAdultGateway;
-use Gibbon\Domain\User\FamilyChildGateway;
 
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -93,9 +90,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 				// Get child list
 				$options = [];
 
-				foreach($children as $child) {
-                    $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
-                }
+        foreach($children as $child) {
+            $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
+        }
 
 				$gibbonPersonID = (isset($_GET['search'])) ? $_GET['search'] : null;
 
@@ -122,19 +119,24 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 						$row->addSearchSubmit($session);
 
 					echo $form->getOutput();
-                }
+        }
 
 				$settingGateway = $container->get(SettingGateway::class);
                 $showParentAttainmentWarning = $settingGateway->getSettingByScope('Markbook', 'showParentAttainmentWarning');
                 $showParentEffortWarning = $settingGateway->getSettingByScope('Markbook', 'showParentEffortWarning');
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
-                    // Confirm access to this student
-                    echo getInternalAssessmentRecord($guid, $connection2, $gibbonPersonID, 'parent');
+                	// Confirm access to this student
+					        if (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
+                    }
+					
+					        echo getInternalAssessmentRecord($guid, $connection2, $gibbonPersonID, 'parent');
                 }
             }
         } else { // My Internal Assessments
-            $page->breadcrumbs->add(__('View My Internal Assessments'));
+        	$page->breadcrumbs->add(__('View My Internal Assessments'));
 
             echo '<h3>';
             echo __('Internal Assessments');
