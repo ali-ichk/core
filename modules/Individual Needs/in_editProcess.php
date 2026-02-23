@@ -26,7 +26,6 @@ use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\IndividualNeeds\INGateway;
 use Gibbon\Domain\IndividualNeeds\INAssistantGateway;
-use Gibbon\Data\Validator;
 use Gibbon\UI\Components\Alert;
 
 require_once '../../gibbon.php';

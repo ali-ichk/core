@@ -64,7 +64,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_summar
     $form->addHiddenValue('address', $session->get('address'));
 
     //SELECT FROM ARRAY
-    $result = $container->get(INGateway::class)->selecINDescriptor();
+    $result = $container->get(INGateway::class)->selectINDescriptor();
 
     $row = $form->addRow();
     	$row->addLabel('gibbonINDescriptorID', __('Descriptor'));

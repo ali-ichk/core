@@ -63,14 +63,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_edit.p
       
         $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
 
-
         if (empty($result)) {
-            $data = array('gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'), 'gibbonPersonID' => $gibbonPersonID);
-            $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonStudentEnrolmentID, surname, preferredName, gibbonPerson.status, gibbonYearGroup.name AS yearGroup, gibbonFormGroup.nameShort AS formGroup, dateStart, dateEnd, image_240 FROM gibbonPerson, gibbonStudentEnrolment, gibbonYearGroup, gibbonFormGroup WHERE (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) AND (gibbonStudentEnrolment.gibbonYearGroupID=gibbonYearGroup.gibbonYearGroupID) AND (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) AND gibbonFormGroup.gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPerson.gibbonPersonID=:gibbonPersonID ORDER BY surname, preferredName";
-            $result = $connection2->prepare($sql);
-            $result->execute($data);
-
-        if ($result->rowCount() != 1) {
             $page->addError(__('The selected record does not exist, or you do not have access to it.'));
         } else {
             $student = $result;
