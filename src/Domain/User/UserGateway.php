@@ -116,8 +116,7 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
      */
     public function getSafeUserData($gibbonPersonID)
     {
-        $user = $this->getByID($gibbonPersonID);
-        return array_intersect_key($user, array_flip(self::$safeUserFields));
+        return $this->getByID($gibbonPersonID, self::$safeUserFields);
     }
 
     /**

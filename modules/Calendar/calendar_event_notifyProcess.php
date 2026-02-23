@@ -61,7 +61,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_ed
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID') ?? '';
     $organisationEmail = $session->get('organisationEmail') ?? '';
 
-    if ($allStaff == 'N' && empty($notifyGroups)) {
+    if ($allStaff == 'N' && empty($notifyGroups) && empty($notificationList)) {
         header("Location: {$URL}&return=error1");
         exit;
     }

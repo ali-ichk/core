@@ -255,7 +255,7 @@ class StudentGateway extends QueryableGateway
 
     public function selectActiveStudentByPerson($gibbonSchoolYearID, $gibbonPersonID, $onlyFull = true)
     {
-        $data = array('gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID);
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonID' => $gibbonPersonID];
         $sql = "SELECT gibbonPerson.gibbonPersonID, title, surname, preferredName, email, image_240, gender, dateStart, dateEnd, gibbonPerson.status, gibbonStudentEnrolment.gibbonStudentEnrolmentID, gibbonStudentEnrolment.gibbonSchoolYearID, gibbonYearGroup.gibbonYearGroupID, gibbonYearGroup.nameShort AS yearGroup, gibbonYearGroup.name AS yearGroupName, gibbonFormGroup.gibbonFormGroupID, gibbonFormGroup.nameShort AS formGroup, gibbonFormGroup.name AS formGroupName, 'Student' as roleCategory, gibbonPerson.privacy, gibbonStudentEnrolment.fields
                 FROM gibbonPerson
                 LEFT JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID)
@@ -273,7 +273,7 @@ class StudentGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
-
+    
     public function getStudentByUsername($gibbonSchoolYearID, $username)
     {
         $data = array('gibbonSchoolYearID' => $gibbonSchoolYearID, 'username' => $username);
@@ -352,7 +352,7 @@ class StudentGateway extends QueryableGateway
             )
             UNION
             (
-                SELECT 'Form Tutor' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, gibbonFormGroup.name as context, image_240, 0 as listOrder
+                SELECT 'Form Tutor' as type, '' as classID, gibbonPerson.gibbonPersonID, surname, preferredName, email, image_240, gibbonFormGroup.name as context, 0 as listOrder
                 FROM gibbonFormGroup
                 JOIN gibbonPerson ON (gibbonFormGroup.gibbonPersonIDTutor=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDTutor2=gibbonPerson.gibbonPersonID OR gibbonFormGroup.gibbonPersonIDTutor3=gibbonPerson.gibbonPersonID)
                 WHERE gibbonFormGroupID=:gibbonFormGroupID AND gibbonPerson.status='Full'
