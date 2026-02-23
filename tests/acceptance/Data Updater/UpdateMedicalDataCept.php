@@ -1,4 +1,9 @@
 <?php 
+/**
+ * @covers modules/Data Updater/data_medical.php
+ * @covers modules/Data Updater/data_medical_manage_edit.php
+ * @covers modules/Data Updater/data_medical_manage_delete.php
+ */
 $I = new AcceptanceTester($scenario);
 $I->wantTo('submit and approve a medical data update');
 $I->loginAsAdmin();
@@ -15,7 +20,7 @@ $I->see('Update Data');
 
 $editFormValues = array(
     'longTermMedication'        => 'Y',
-    'longTermMedicationDetails' => 'Test',
+    'longTermMedicationDetails' => 'Test ' . date('Y-m-d'),
 );
 
 $I->submitForm('#content form[method="post"]', $editFormValues, 'Submit');
