@@ -124,12 +124,14 @@ class ActivityStaffGateway extends QueryableGateway
 
     public function selectStaffByActivity($gibbonActivityID) {
         $gibbonActivityID = is_array($gibbonActivityID) ? $gibbonActivityID : [$gibbonActivityID];
-        $data = ['gibbonActivityID' => $gibbonActivityID];
+        $data = ['gibbonActivityID' => $gibbonActivityID, 'today' => date('Y-m-d')];
         $sql = "SELECT gibbonActivity.*, gibbonActivityStaff.gibbonPersonID, gibbonActivityStaff.role 
             FROM gibbonActivity 
             JOIN gibbonActivityStaff ON (gibbonActivity.gibbonActivityID=gibbonActivityStaff.gibbonActivityID) 
+            JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonActivityStaff.gibbonPersonID)
             WHERE gibbonActivity.gibbonActivityID=:gibbonActivityID 
             AND gibbonActivityStaff.role='Organiser' AND active='Y' 
+            AND gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<=:today) AND (dateEnd IS NULL  OR dateEnd>=:today)
             ORDER BY name";
 
         return $this->db()->select($sql, $data);
@@ -143,9 +145,6 @@ class ActivityStaffGateway extends QueryableGateway
         return $this->db()->select($sql, $data);
     }
 
-    public function selectActivityStaffByID($gibbonActivityID, $gibbonPersonID) 
-    {
-    }
     public function getActivityAccessByStaff($gibbonActivityID, $gibbonPersonID) {
         $data = ['gibbonPersonID' => $gibbonPersonID, 'gibbonActivityID' => $gibbonActivityID];
         $sql = "SELECT gibbonActivity.*, NULL as status, gibbonActivityStaff.role FROM gibbonActivity JOIN gibbonActivityStaff ON (gibbonActivity.gibbonActivityID=gibbonActivityStaff.gibbonActivityID) WHERE gibbonActivity.gibbonActivityID=:gibbonActivityID AND gibbonActivityStaff.gibbonPersonID=:gibbonPersonID AND active='Y' ORDER BY name";
@@ -211,13 +210,5 @@ class ActivityStaffGateway extends QueryableGateway
     $sqlCheck = "SELECT role FROM gibbonActivityStaff WHERE gibbonActivityID=:gibbonActivityID AND gibbonPersonID=:gibbonPersonID";
     
     return $this->db()->select($sqlCheck, $dataCheck);
-   }
-
-   public function selectStaffByActivity($gibbonActivityID)
-   {
-    $dataStaff = ['gibbonActivityID' => $gibbonActivityID];
-    $sqlStaff = "SELECT title, preferredName, surname, role FROM gibbonActivityStaff JOIN gibbonPerson ON (gibbonActivityStaff.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonActivityID=:gibbonActivityID AND gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') ORDER BY surname, preferredName";
-
-    return $this->db()->select($sqlStaff, $dataStaff);
    }
 }

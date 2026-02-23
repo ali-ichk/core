@@ -77,7 +77,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_atte
 
         $result = $container->get(UserGateway::class)->selectStudentsByActivity($session->get('gibbonSchoolYearID'), $gibbonActivityID);
 
-        if ($result->rowCount() < 1) {
+        if (empty($result)) {
             echo $page->getBlankSlate();
         } else {
             $form = Form::createBlank('buttons');
