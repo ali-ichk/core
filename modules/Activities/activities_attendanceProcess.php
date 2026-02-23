@@ -90,12 +90,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_atte
 
             $sessionAttendance = (isset($attendance[$i])) ? serialize($attendance[$i]) : '';
 
-            try {
-                $result = $container->get(ActivityAttendanceGateway::class)->selectActivityAttendanceByActivity($gibbonActivityID, $sessionDate);
+            $result = $container->get(ActivityAttendanceGateway::class)->selectActivityAttendanceByActivity($gibbonActivityID, $sessionDate);
                 
-            } catch (PDOException $e) {
-                $partialFail = true;
-            }
 
             // INSERT
             if ($result->rowCount() <= 0) {

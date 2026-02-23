@@ -25,7 +25,6 @@ use Gibbon\Domain\Activities\ActivityGateway;
 use Gibbon\Domain\School\DaysOfWeekGateway;
 use Gibbon\Domain\School\SchoolYearTermGateway;
 use Gibbon\Domain\System\SettingGateway;
-use PhpOffice\PhpSpreadsheet\Calculation\DateTimeExcel\Days360;
 use Gibbon\Domain\Activities\ActivityCategoryGateway;
 
 //Module includes
