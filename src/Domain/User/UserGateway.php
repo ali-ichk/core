@@ -265,5 +265,4 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
             'preferences' => json_encode($preferences),
         ]);
     }
-
 }
