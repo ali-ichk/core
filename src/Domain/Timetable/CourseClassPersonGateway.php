@@ -44,20 +44,24 @@ class CourseClassPersonGateway extends QueryableGateway
      */
 
 
-     public function selectStudentsByClass($gibbonCourseClassID)
+     public function selectStudentsByClass($gibbonCourseClassID, $date = null)
      {
-        $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'today' => date('Y-m-d')];
-        $sql = "SELECT role, surname, preferredName, email, studentID, gibbonFormGroup.nameShort as formGroup
-                FROM gibbonCourseClassPerson
-                JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID
-                JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID)
-                JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID)
-                WHERE gibbonCourseClassID=:gibbonCourseClassID AND status='Full'
-                AND (dateStart IS NULL OR dateStart<=:today)
-                AND (dateEnd IS NULL  OR dateEnd>=:today)
-                AND gibbonCourseClassPerson.role='Student'
-                ORDER BY role DESC, surname, preferredName";
-                
-                return $this->db()->select($sql, $data);
-     }
+        $today = $date ?? date('Y-m-d');
+        $data = ['gibbonCourseClassID' => $gibbonCourseClassID, 'today' => $today];
+        $sql = "SELECT gibbonCourseClassPerson.role, gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName, gibbonPerson.image_240, gibbonPerson.dob, gibbonPerson.email, gibbonPerson.studentID, gibbonFormGroup.nameShort as formGroup FROM gibbonCourseClassPerson JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID)";
+
+        if (!empty($date)) {
+            $sql .= " LEFT JOIN (SELECT gibbonTTDayRowClass.gibbonCourseClassID, gibbonTTDayRowClass.gibbonTTDayRowClassID FROM gibbonTTDayDate JOIN gibbonTTDayRowClass ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE gibbonTTDayDate.date=:today) AS gibbonTTDayRowClassSubset ON (gibbonTTDayRowClassSubset.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID) LEFT JOIN gibbonTTDayRowClassException ON (gibbonTTDayRowClassException.gibbonTTDayRowClassID=gibbonTTDayRowClassSubset.gibbonTTDayRowClassID AND gibbonTTDayRowClassException.gibbonPersonID=gibbonCourseClassPerson.gibbonPersonID)";
+        }
+
+        $sql .= " WHERE gibbonCourseClassPerson.gibbonCourseClassID=:gibbonCourseClassID AND status='Full' AND gibbonCourseClassPerson.role='Student' AND (dateStart IS NULL OR dateStart<=:today) AND (dateEnd IS NULL OR dateEnd>=:today)";
+
+        if (!empty($date)) {
+            $sql .= " GROUP BY gibbonCourseClassPerson.gibbonPersonID HAVING COUNT(gibbonTTDayRowClassExceptionID) = 0";
+        }
+
+        $sql .= " ORDER BY surname, preferredName, role DESC";
+
+        return $this->db()->select($sql, $data);
+    }
 }

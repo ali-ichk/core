@@ -444,7 +444,7 @@ class AttendanceLogPersonGateway extends QueryableGateway
     function selectAttendanceLogsByPersonAndDate($gibbonPersonID, $date, $crossFillClasses)
     {
         $data = ['gibbonPersonID' => $gibbonPersonID, 'date' => $date];
-        $sql = "SELECT gibbonAttendanceLogPerson.type, reason, comment, gibbonAttendanceLogPerson.direction, context, timestampTaken, gibbonAttendanceCode.prefill, gibbonAttendanceCode.scope, gibbonAttendanceLogPerson.gibbonTTDayRowClassID
+        $sql = "SELECT gibbonAttendanceLogPerson.gibbonAttendanceLogPersonID, gibbonAttendanceLogPerson.type, reason, comment, gibbonAttendanceLogPerson.direction, context, timestampTaken, gibbonAttendanceCode.prefill, gibbonAttendanceCode.scope, gibbonAttendanceLogPerson.gibbonTTDayRowClassID
                 FROM gibbonAttendanceLogPerson
                 JOIN gibbonPerson ON (gibbonAttendanceLogPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
                 JOIN gibbonAttendanceCode ON (gibbonAttendanceCode.gibbonAttendanceCodeID=gibbonAttendanceLogPerson.gibbonAttendanceCodeID)
@@ -523,6 +523,22 @@ class AttendanceLogPersonGateway extends QueryableGateway
                 break;
         }
 
+        return $this->db()->select($sql, $data);
+    }
+    
+    public function selectAttendanceLogByStudentAndClassID($gibbonPersonID, $date, $gibbonCourseClassID, $gibbonTTDayRowClassID, $crossFillClasses)
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID, 'date' => $date . '%', 'gibbonCourseClassID' => $gibbonCourseClassID, 'gibbonTTDayRowClassID' => $gibbonTTDayRowClassID];
+        $sql = "SELECT gibbonAttendanceLogPerson.type, gibbonAttendanceLogPerson.reason, gibbonAttendanceLogPerson.comment, gibbonAttendanceLogPerson.direction, gibbonAttendanceLogPerson.context, timestampTaken FROM gibbonAttendanceLogPerson JOIN gibbonAttendanceCode ON (gibbonAttendanceCode.gibbonAttendanceCodeID=gibbonAttendanceLogPerson.gibbonAttendanceCodeID) JOIN gibbonPerson ON (gibbonAttendanceLogPerson.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonAttendanceLogPerson.gibbonPersonID=:gibbonPersonID AND date LIKE :date AND gibbonAttendanceLogPerson.context='Class' AND gibbonCourseClassID=:gibbonCourseClassID";
+        
+        if ($crossFillClasses == "N") {
+            $sql .= " AND (gibbonTTDayRowClassID=:gibbonTTDayRowClassID OR gibbonTTDayRowClassID IS NULL)";
+        } else {
+            $sql .= " AND (gibbonTTDayRowClassID=:gibbonTTDayRowClassID OR gibbonAttendanceCode.prefill='Y')";
+        }
+        
+        $sql .= " ORDER BY timestampTaken DESC";
+        
         return $this->db()->select($sql, $data);
     }
 
