@@ -51,7 +51,6 @@ use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\Attendance\StudentHistoryData;
 use Gibbon\Module\Attendance\StudentHistoryView;
 use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
-use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 use Gibbon\Module\Students\StudentAttendanceStatus;
 use Gibbon\Module\Students\View\LibraryBorrowingView;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;

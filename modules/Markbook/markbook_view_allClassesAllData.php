@@ -27,8 +27,6 @@ use Gibbon\Domain\Planner\PlannerEntryGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Domain\Markbook\MarkbookColumnGateway;
 use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
-use Gibbon\Services\Format;
-use Gibbon\Tables\DataTable;
 use Gibbon\Forms\Form;
 
 
