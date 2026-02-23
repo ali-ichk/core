@@ -64,12 +64,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_summar
     $form->addHiddenValue('address', $session->get('address'));
 
     //SELECT FROM ARRAY
-    $sql = "SELECT gibbonINDescriptorID as value, name FROM gibbonINDescriptor ORDER BY sequenceNumber";
+    $result = $container->get(INGateway::class)->selectINDescriptor();
+
     $row = $form->addRow();
     	$row->addLabel('gibbonINDescriptorID', __('Descriptor'));
-        $row->addSelect('gibbonINDescriptorID')->fromQuery($pdo, $sql)->selected($gibbonINDescriptorID)->placeholder();
-        
-    $result = $container->get(AlertLevelGateway::class)->selectAllAlertLevels();
+      $row->addSelect('gibbonINDescriptorID')->fromResults($result)->selected($gibbonINDescriptorID)->placeholder();
+
+    $result = $container->get(AlertLevelGateway::class)->selectAlertLevels();
+
     $row = $form->addRow();
         $row->addLabel('gibbonAlertLevelID', __('Alert Level'));
         $row->addSelect('gibbonAlertLevelID')->fromResults($result)->selected($gibbonAlertLevelID)->placeholder();

@@ -76,10 +76,11 @@ class AlertLevelGateway extends QueryableGateway
             : $row;
     }
 
-    public function selectAllAlertLevels()
+    public function selectAlertLevels()
     {
-        $sql = "SELECT gibbonAlertLevelID AS value, name FROM gibbonAlertLevel ORDER BY sequenceNumber";
-
-        return $this->db()->select($sql);
+        $data= [];
+        $sql = "SELECT gibbonAlertLevelID as value, name FROM gibbonAlertLevel ORDER BY sequenceNumber";
+        
+        return $this->db()->select($sql, $data);
     }
 }

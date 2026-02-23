@@ -19,9 +19,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\User\FamilyChildGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -35,30 +37,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
     if ($highestAction == false) {
         $page->addError(__('The highest grouped action cannot be determined.'));
     } else {
-        if ($highestAction == 'View External Assessments_myChildrens') { //MY CHILDREN
+        if ($highestAction == 'View External Assessments_myChildrens') { // MY CHILDREN
             $page->breadcrumbs->add(__('View My Childrens\'s External Assessments'));
 
-            //Test data access field for permission
+            // Test data access field for permission
+            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
 
-                $data = array('gibbonPersonID' => $session->get('gibbonPersonID'));
-                $sql = "SELECT * FROM gibbonFamilyAdult WHERE gibbonPersonID=:gibbonPersonID AND childDataAccess='Y'";
-                $result = $connection2->prepare($sql);
-                $result->execute($data);
-
-            if ($result->rowCount() < 1) {
+            if (empty($children)) {
                 echo $page->getBlankSlate();
             } else {
-                //Get child list
-                $count = 0;
-                $options = array();
-                while ($row = $result->fetch()) {
-                        $dataChild = array('gibbonFamilyID' => $row['gibbonFamilyID'], 'gibbonSchoolYearID' => $session->get('gibbonSchoolYearID'), 'date' => date('Y-m-d'));
-                        $sqlChild = "SELECT * FROM gibbonFamilyChild JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) JOIN gibbonFormGroup ON (gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID) WHERE gibbonFamilyID=:gibbonFamilyID AND gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<=:date) AND (dateEnd IS NULL  OR dateEnd>=:date) AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY surname, preferredName ";
-                        $resultChild = $connection2->prepare($sqlChild);
-                        $resultChild->execute($dataChild);
-                    while ($rowChild = $resultChild->fetch()) {
-                        $options[$rowChild['gibbonPersonID']]=Format::name('', $rowChild['preferredName'], $rowChild['surname'], 'Student', true);
-                    }
+                // Get child list
+                $options = [];
+
+                foreach($children as $child) {
+                    $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
                 }
 
                 if (count($options) == 0) {
@@ -70,7 +62,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
                     echo 'Choose Student';
                     echo '</h2>';
 
-                    $gibbonPersonID = (isset($_GET['search']))? $_GET['search'] : null;
+                    $gibbonPersonID = (isset($_GET['search'])) ? $_GET['search'] : null;
 
                     $form = Form::create("filter", $session->get('absoluteURL')."/index.php", "get");
                     $form->setClass('noIntBorder w-full standardForm');
@@ -93,21 +85,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
                 $showParentEffortWarning = $settingGateway->getSettingByScope('Markbook', 'showParentEffortWarning');
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
-                    //Confirm access to this student
-
-                        $dataChild = array('gibbonPersonID' => $gibbonPersonID, 'gibbonPersonID2' => $session->get('gibbonPersonID'));
-                        $sqlChild = "SELECT * FROM gibbonFamilyChild JOIN gibbonFamily ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamily.gibbonFamilyID) JOIN gibbonFamilyAdult ON (gibbonFamilyAdult.gibbonFamilyID=gibbonFamily.gibbonFamilyID) JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonFamilyChild.gibbonPersonID=:gibbonPersonID AND gibbonFamilyAdult.gibbonPersonID=:gibbonPersonID2 AND childDataAccess='Y'";
-                        $resultChild = $connection2->prepare($sqlChild);
-                        $resultChild->execute($dataChild);
-                    if ($resultChild->rowCount() < 1) {
-                        $page->addError(__('The selected record does not exist, or you do not have access to it.'));
-                    } else {
-                        $rowChild = $resultChild->fetch();
-                        externalAssessmentDetails($guid, $gibbonPersonID, $connection2, null, false);
+                    
+                    // Confirm access to this student
+                    if (empty($children[$gibbonPersonID])) {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
                     }
+                    
+                    externalAssessmentDetails($guid, $gibbonPersonID, $connection2, null, false);
                 }
             }
-        } else { //My External Assessments
+        } else { // My External Assessments
             $page->breadcrumbs->add(__('View My External Assessments'));
 
             echo '<h3>';
