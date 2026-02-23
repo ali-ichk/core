@@ -22,7 +22,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Services\Format;
 use Gibbon\Forms\Form;
 use Gibbon\Forms\DatabaseFormFactory;
-use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Activities\ActivityGateway;
 use Gibbon\Domain\Activities\ActivityStaffGateway;
 use Gibbon\Domain\Activities\ActivitySlotGateway;
