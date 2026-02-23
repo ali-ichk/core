@@ -20,14 +20,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Domain\Departments\DepartmentGateway;
-use Gibbon\Domain\Planner\PlannerEntryGateway;
-use Gibbon\Domain\Markbook\MarkbookColumnGateway;
+use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\Markbook\MarkbookView;
-use Gibbon\Services\Format;
-use Gibbon\Tables\DataTable;
+use Gibbon\Domain\Planner\PlannerEntryGateway;
+use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Domain\Markbook\MarkbookColumnGateway;
+use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
 use Gibbon\Forms\Form;
+
 
 // Lock the file so other scripts cannot call it
 if (MARKBOOK_VIEW_LOCK !== sha1( $highestAction . $session->get('gibbonPersonID') ) . date('zWy') ) return;
@@ -902,7 +903,11 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
                     }
 
                     if ($column->displaySubmission()) {
+                        echo "<td class='smallColumn'>";                       
+                            $resultWork = $container->get(PlannerEntryHomeworkGateway::class)->selectHomeworkByStudent($column->getData('gibbonPlannerEntryID'), $rowStudents['gibbonPersonID']);
 
+                        if ($resultWork->rowCount() > 0) {
+                            $rowWork = $resultWork->fetch();
                         echo "<td class='smallColumn'>";
                         
                         if (!empty($rowWork)) {
@@ -1107,3 +1112,4 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
         echo '</div><br/>';
 
     }
+}

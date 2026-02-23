@@ -19,15 +19,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Domain\DataSet;
-use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\User\UserGateway;
-use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Forms\Form;
-use Gibbon\Module\Attendance\StudentHistoryData;
-use Gibbon\Module\Attendance\StudentHistoryView;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
+use Gibbon\Forms\DatabaseFormFactory;
+use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\User\UserGateway;
+use Gibbon\Module\Attendance\StudentHistoryData;
+use Gibbon\Module\Attendance\StudentHistoryView;
 
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -157,20 +156,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
                 }
 
                 if ($gibbonPersonID != '') {
-                    $childPersonIDs = array_column($children, 'gibbonPersonID');
-                    if (!in_array($gibbonPersonID, $childPersonIDs)) {
+                    $output = '';
+
+                    if (empty($children[$gibbonPersonID])) {
                         $page->addError(__('You do not have access to this action.'));
                         return;
                     }
-                    
-                    $output = '';
 
                     $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
 
                     if (empty($result)) {
                         $page->addError(__('The specified record does not exist.'));
                     } else {
-                        $row = $result;
+                        $row = $result->fetch();
 
                         // ATTENDANCE DATA
                         $attendanceData = $container
