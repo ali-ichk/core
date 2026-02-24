@@ -27,8 +27,8 @@ use Gibbon\Domain\QueryableGateway;
 /**
  * File Gateway
  *
- * @version v28
- * @since   v28
+ * @version v31
+ * @since   v31
  */
 class FileGateway extends QueryableGateway
 {
@@ -45,10 +45,10 @@ class FileGateway extends QueryableGateway
      * @param string $fileExtension File extension
      * @param int $fileSize Size in bytes
      * @param string $mimeType MIME type
-     * @param int $uploadedBy gibbonPersonID of uploader
+     * @param int $gibbonPersonIDOwner - gibbonPersonID of uploader
      * @return int|false gibbonFileID on success, false on failure
      */
-    public function recordFileUpload($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $uploadedBy)
+    public function recordFileUpload($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $gibbonPersonIDOwner)
     {
         // Validate file exists at filePath
         if (!file_exists($filePath)) {
@@ -68,7 +68,7 @@ class FileGateway extends QueryableGateway
             'fileExtension' => $fileExtension,
             'fileSize' => $fileSize,
             'mimeType' => $mimeType,
-            'uploadedBy' => $uploadedBy,
+            'gibbonPersonIDOwner' => $gibbonPersonIDOwner,
             'checksum' => $checksum
         ];
 
@@ -77,90 +77,131 @@ class FileGateway extends QueryableGateway
     }
 
     /**
-     * Record a file pointer linking a file to a foreign table record
-     *
-     * @param int $gibbonFileID ID of the file in gibbonFile
-     * @param string $foreignTable Name of the foreign table
-     * @param int $foreignTableID Primary key value in the foreign table
-     * @param string $foreignColumn Column name storing the file path
-     * @return int|false gibbonFilePointerID on success, false on failure
-     */
-    public function recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn)
-    {
-        // Validate gibbonFileID exists in gibbonFile
-        $fileRecord = $this->getByID($gibbonFileID);
-        if (empty($fileRecord)) {
-            return false;
-        }
-
-        // Build data array with all parameters plus current timestamp
-        $data = [
-            'gibbonFileID' => $gibbonFileID,
-            'foreignTable' => $foreignTable,
-            'foreignTableID' => $foreignTableID,
-            'foreignColumn' => $foreignColumn
-        ];
-
-        // Use Gateway insert method to insert into gibbonFilePointer table
-        $query = $this
-            ->newInsert()
-            ->into('gibbonFilePointer')
-            ->cols($data);
-
-        return $this->runInsert($query);
-    }
-
-    /**
      * Record a file upload with pointer in a transaction
      *
+     * @param FilePointerGateway $filePointerGateway Gateway for file pointer operations
      * @param string $filePath Relative path from Gibbon root
      * @param string $fileName Original filename
      * @param string $fileExtension File extension
      * @param int $fileSize Size in bytes
      * @param string $mimeType MIME type
-     * @param int $uploadedBy gibbonPersonID of uploader
+     * @param int $gibbonPersonIDOwner gibbonPersonID of uploader
      * @param string $foreignTable Name of the foreign table
      * @param int $foreignTableID Primary key value in the foreign table
      * @param string $foreignColumn Column name storing the file path
      * @return array|false Array with gibbonFileID and gibbonFilePointerID on success, false on failure
      */
-    public function recordFileUploadWithPointer($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $uploadedBy, $foreignTable, $foreignTableID, $foreignColumn)
+    public function recordFileUploadWithPointer(FilePointerGateway $filePointerGateway, $filePath, $fileName, $fileExtension, $fileSize, $mimeType, $gibbonPersonIDOwner, $foreignTable, $foreignTableID, $foreignColumn)
     {
         // Begin database transaction
         $this->db()->beginTransaction();
 
-        try {
-            // Call recordFileUpload and store gibbonFileID
-            $gibbonFileID = $this->recordFileUpload($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $uploadedBy);
+        // Call recordFileUpload and store gibbonFileID
+        $gibbonFileID = $this->recordFileUpload($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $gibbonPersonIDOwner);
 
-            // If recordFileUpload fails, rollback and return false
-            if ($gibbonFileID === false) {
-                $this->db()->rollBack();
-                return false;
-            }
-
-            // Call recordFilePointer with the gibbonFileID
-            $gibbonFilePointerID = $this->recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn);
-
-            // If recordFilePointer fails, rollback transaction and return false
-            if ($gibbonFilePointerID === false) {
-                $this->db()->rollBack();
-                return false;
-            }
-
-            // Both operations succeeded, commit the transaction
-            $this->db()->commit();
-
-            // Return array with both IDs
-            return [
-                'gibbonFileID' => $gibbonFileID,
-                'gibbonFilePointerID' => $gibbonFilePointerID
-            ];
-
-        } catch (\Exception $e) {
-            // Rollback on any exception
+        // If recordFileUpload fails, rollback and return false
+        if (empty($gibbonFileID)) {
             $this->db()->rollBack();
             return false;
         }
+
+        // Call recordFilePointer with the gibbonFileID
+        $gibbonFilePointerID = $filePointerGateway->recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn);
+
+        // If recordFilePointer fails, rollback transaction and return false
+        if (empty($gibbonFilePointerID)) {
+            $this->db()->rollBack();
+            return false;
+        }
+
+        // Both operations succeeded, commit the transaction
+        $this->db()->commit();
+
+        // Return array with both IDs
+        return [
+            'gibbonFileID' => $gibbonFileID,
+            'gibbonFilePointerID' => $gibbonFilePointerID
+        ];
+    }
+
+    /**
+     * Query all files linked to a specific foreign table record
+     *
+     * @param string $foreignTable Name of the foreign table
+     * @param int $foreignTableID Primary key value in the foreign table
+     * @return Result Result object with all matching file records
+     */
+    public function selectFilesByForeignRecord($foreignTable, $foreignTableID)
+    {
+        $data = [
+            'foreignTable' => $foreignTable,
+            'foreignTableID' => $foreignTableID
+        ];
+
+        $sql = "SELECT gibbonFile.* FROM gibbonFile JOIN gibbonFilePointer ON (gibbonFile.gibbonFileID = gibbonFilePointer.gibbonFileID) WHERE gibbonFilePointer.foreignTable = :foreignTable AND gibbonFilePointer.foreignTableID = :foreignTableID ORDER BY gibbonFile.uploadedAt DESC";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    /**
+     * Query all file records where the file no longer exists on the filesystem
+     *
+     * @return DataSet DataSet object with orphaned file records (gibbonFileID, filePath, fileName, uploadedAt)
+     */
+    public function selectOrphanedFileRecords()
+    {
+        // Query all records from gibbonFile
+        $sql = "SELECT gibbonFileID, filePath, fileName, uploadedAt FROM gibbonFile";
+
+        $result = $this->db()->select($sql)->fetchAll();
+
+        // Filter to records where file does not exist
+        $orphanedRecords = [];
+        foreach ($result as $record) {
+            if (!file_exists($record['filePath'])) {
+                $orphanedRecords[] = $record;
+            }
+        }
+
+        // Return array with filtered records
+        return $orphanedRecords;
+    }
+
+    /**
+     * Verify file integrity by comparing stored checksum with recalculated checksum
+     *
+     * @param int $gibbonFileID The file record ID to verify
+     * @return bool True if checksums match, false if mismatch or file missing
+     */
+    public function verifyFileIntegrity($gibbonFileID)
+    {
+        // Retrieve stored checksum from gibbonFile record
+        $data = ['gibbonFileID' => $gibbonFileID];
+        $sql = "SELECT filePath, checksum FROM gibbonFile WHERE gibbonFileID = :gibbonFileID";
+        
+        $result = $this->db()->select($sql, $data);
+        
+        if (empty($result)) {
+            return false;
+        }
+        
+        $record = $result->fetch();
+        $storedChecksum = $record['checksum'];
+        $filePath = $record['filePath'];
+        
+        // Check if file exists at filePath
+        if (!file_exists($filePath)) {
+            return false;
+        }
+        
+        // Recalculate checksum from file at filePath
+        $calculatedChecksum = hash_file('sha256', $filePath);
+        
+        if (empty($calculatedChecksum)) {
+            return false;
+        }
+        
+        // Compare stored and calculated checksums
+        return $storedChecksum === $calculatedChecksum;
     }
 }
