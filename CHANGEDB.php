@@ -426,8 +426,24 @@ INSERT INTO `gibbonEmailTemplate` (`gibbonEmailTemplateID`, `type`, `templateTyp
 INSERT INTO `gibbonEmailTemplate` (`gibbonEmailTemplateID`, `type`, `templateType`, `moduleName`, `templateName`, `templateSubject`, `templateBody`, `variables`, `timestamp`) VALUES (NULL, 'Core', 'Staff Application Form Confirmation', 'Staff', 'Staff Application Form Confirmation', 'Staff Application Form Confirmation', '<p>Dear {{preferredName}},</p>\r\n<p>Thank you for applying for the position of {{jobTitle}} at {{organisationName}}.</p>\r\n<p>Your application was successfully submitted. Our Human Resources team will review your application and be in touch in due course.</p>\r\n<p>This is an automated message. In the meantime, should you have any questions please contact {{organisationName}} at {{organisationEmail}}. For reference, please quote the following application number(s): {{applicationID}}.</p>', '{\r\n\"email\": [\"safeEmail\"], \r\n\"date\": [\"date\"], \r\n\"applicationID\": [\"randomDigit\"], \r\n\"jobTitle\": [\"jobTitle\"], \r\n\"preferredName\": [\"firstName\"],\r\n\"surname\": [\"lastName\"],\r\n\"organisationEmail\": [\"safeEmail\"],\r\n\"organisationName\": [\"name\"]\r\n}', '2026-02-02 11:30:16');end
 INSERT INTO `gibbonEmailTemplate` (`gibbonEmailTemplateID`, `type`, `templateType`, `moduleName`, `templateName`, `templateSubject`, `templateBody`, `variables`, `timestamp`) VALUES (NULL, 'Core', 'Staff Application Form Reference Request', 'Staff', 'Staff Application Form Reference Request', 'Request For Reference', '<p>To whom it may concern,</p>\r\n<p>This email is being sent in relation to the job application of an individual who has nominated you as a referee: {{preferredName}} {{surname}}.</p>\r\n<p>In assessing their application for the post of {{jobTitle}} at our school, we would like to enlist your help in completing the following reference form: {{applicationRefereeLink}}.</p>\r\n<p>Please feel free to contact me, should you have any questions in regard to this matter.</p>\r\n<p>Regards,</p>\r\n<p>{{organisationHRName}}</p>', '{\r\n\"email\": [\"safeEmail\"], \r\n\"date\": [\"date\"], \r\n\"applicationID\": [\"randomDigit\"], \r\n\"applicationRefereeLink\": \"https://gibbonedu.org\", \r\n\"preferredName\": [\"firstName\"],\r\n\"surname\": [\"lastName\"],\r\n\"jobTitle\": [\"jobTitle\"],\r\n\"organisationHRName\": [\"name\"]\r\n}', '2026-02-02 11:30:16');end
 UPDATE `gibboni18n` SET `code`='ca_ES' WHERE `code`='ca_CA';end
+<<<<<<< Updated upstream
 INSERT INTO `gibbonSetting` (`scope`, `name`, `nameDisplay`, `description`, `value`) 
 VALUES ('System', 'timeFormatPHP', 'Time Format', 'How should the time of day be displayed?', 'H:i');end
 INSERT INTO `gibbonSetting` (`scope`, `name`, `nameDisplay`, `description`, `value`) 
 VALUES ('Attendance', 'showIncompleteAttendance', 'Show Incomplete Attendance', 'Show class periods where attendance has not been taken (Not Available).', 'N');end
 ";
+=======
+INSERT INTO `gibbonSetting` (`scope`, `name`, `nameDisplay`, `description`, `value`) VALUES ('System', 'timeFormatPHP', 'Time Format', 'How should the time of day be displayed?', 'H:i');end
+CREATE TABLE `gibbonFile` (`gibbonFileID` int(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT, `filePath` varchar(255) NOT NULL, `fileName` varchar(255) NOT NULL, `fileExtension` varchar(10) NOT NULL, `fileSize` int(12) UNSIGNED NOT NULL, `mimeType` varchar(100) NOT NULL, `gibbonPersonIDOwner` int(10) UNSIGNED ZEROFILL DEFAULT NULL, `uploadedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, `checksum` varchar(64) NOT NULL, PRIMARY KEY (`gibbonFileID`), KEY `gibbonPersonIDOwner` (`gibbonPersonIDOwner`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+CREATE TABLE `gibbonFilePointer` (
+  `gibbonFilePointerID` int(12) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+  `gibbonFileID` int(12) UNSIGNED ZEROFILL NOT NULL,
+  `foreignTable` varchar(60) NOT NULL,
+  `foreignTableID` int(14) UNSIGNED ZEROFILL NOT NULL,
+  `foreignColumn` varchar(60) DEFAULT NULL,
+  `createdAt` TIMSESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`gibbonFilePointerID`),
+  KEY `gibbonFileID` (`gibbonFileID`),
+  KEY `foreignTable` (`foreignTable`, `foreignTableID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+";
+>>>>>>> Stashed changes
