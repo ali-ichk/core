@@ -180,7 +180,7 @@ class FileUploader
         }
 
         // Pull any existing error code from the PHP upload
-        $this->errorCode = (isset($file['error']))? $file['error'] : UPLOAD_ERR_OK;
+        $this->errorCode = (isset($file['error'])) ? $file['error'] : UPLOAD_ERR_OK;
         if ($this->errorCode != UPLOAD_ERR_OK) {
             return false;
         }
@@ -195,7 +195,39 @@ class FileUploader
             $filename = $filenameChange.mb_strrchr($filename, '.');
         }
 
-        return $this->upload($filename, $sourcePath);
+        $uploadedPath = $this->upload($filename, $sourcePath);
+
+        return $uploadedPath;
+    }
+
+    /**
+     * Record file upload tracking with metadata extraction
+     * @param string $uploadedPath Relative path of the uploaded file
+     * @return array File metadata
+     */
+    public function getFileMetaData($uploadedPath)
+    {
+        $absolutePath = $this->session->get('absolutePath');
+        $fullPath = $absolutePath . '/' . $uploadedPath;
+        $metaData = [];
+
+        // Extract metadata
+        $metaData['filePath'] = $uploadedPath;
+        $metaData['absolutePath'] = $fullPath;
+
+        $pathInfo = pathinfo($uploadedPath);
+        $metaData['fileName'] = $pathInfo['basename'] ?? '';
+        $metaData['fileExtension'] = $pathInfo['extension'] ?? '';
+        $metaData['fileSize'] = filesize($fullPath);
+        $metaData['mimeType'] = mime_content_type($fullPath);
+        $metaData['gibbonPersonIDOwner'] = $this->session->get('gibbonPersonID');
+
+        // Skip if required data is missing
+        if (empty($metaData['fileSize']) || empty($metaData['mimeType']) || empty($metaData['fileName']) || empty($metaData['fileExtension']) || empty($metaData['gibbonPersonIDOwner'] )) {
+            return;
+        }
+
+        return $metaData;
     }
 
     /**

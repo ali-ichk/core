@@ -41,8 +41,8 @@ class FilePointerGateway extends QueryableGateway
      * Record a file pointer linking a file to a foreign table record
      *
      * @param int $gibbonFileID ID of the file in gibbonFile
-     * @param string $foreignTable Name of the foreign table
-     * @param int $foreignTableID Primary key value in the foreign table
+     * @param string|null $foreignTable Name of the foreign table (nullable)
+     * @param int|null $foreignTableID Primary key value in the foreign table (nullable)
      * @param string $foreignColumn Column name storing the file path
      * @return int|false gibbonFilePointerID on success, false on failure
      */

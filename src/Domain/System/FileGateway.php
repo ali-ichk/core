@@ -21,8 +21,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Gibbon\Domain\System;
 
-use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryableGateway;
+use Gibbon\Domain\Traits\TableAware;
+use Gibbon\Contracts\Database\Connection;
+use Gibbon\Contracts\Services\Session;
+use Gibbon\Domain\System\FilePointerGateway;
 
 /**
  * File Gateway
@@ -37,67 +40,61 @@ class FileGateway extends QueryableGateway
     private static $tableName = 'gibbonFile';
     private static $primaryKey = 'gibbonFileID';
 
+    private $session;
+    private $filePointerGateway;
+
     /**
-     * Record a file upload with metadata
-     *
-     * @param string $filePath Relative path from Gibbon root
-     * @param string $fileName Original filename
-     * @param string $fileExtension File extension
-     * @param int $fileSize Size in bytes
-     * @param string $mimeType MIME type
-     * @param int $gibbonPersonIDOwner - gibbonPersonID of uploader
-     * @return int|false gibbonFileID on success, false on failure
+     * Create a new gateway instance using the supplied database connection.
+     * 
+     * @param Connection $db
+     * @param Session $session
+     * @param FilePointerGateway $filePointerGateway
      */
-    public function recordFileUpload($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $gibbonPersonIDOwner)
+    public function __construct(Connection $db, Session $session, FilePointerGateway $filePointerGateway)
     {
+        parent::__construct($db);
+        $this->session = $session;
+        $this->filePointerGateway = $filePointerGateway;
+    }
+
+    /**
+     * Record a file upload with pointer in a transaction
+     * @param array $metaData Array with file metadata
+     * @param int $gibbonPersonIDOwner gibbonPersonID of uploader
+     * @param string|null $foreignTable Name of the foreign table (nullable)
+     * @param int|null $foreignTableID Primary key value in the foreign table (nullable)
+     * @param string $foreignColumn Column name storing the file path
+     * @return array|false Array with gibbonFileID and gibbonFilePointerID on success, false on failure
+     */
+    public function recordFileUpload(array $metaData, string $foreignTable, int|string $foreignTableID, string $foreignColumn)
+    {
+        // Begin database transaction
+        $this->db()->beginTransaction();
+
         // Validate file exists at filePath
-        if (!file_exists($filePath)) {
+        if (!file_exists($metaData['absolutePath'])) {
             return false;
         }
 
         // Calculate SHA-256 checksum
-        $checksum = hash_file('sha256', $filePath);
+        $checksum = hash_file('sha256', $metaData['absolutePath']);
         if ($checksum === false) {
             return false;
         }
 
         // Build data array with all parameters plus checksum and current timestamp
         $data = [
-            'filePath' => $filePath,
-            'fileName' => $fileName,
-            'fileExtension' => $fileExtension,
-            'fileSize' => $fileSize,
-            'mimeType' => $mimeType,
-            'gibbonPersonIDOwner' => $gibbonPersonIDOwner,
+            'filePath' => $metaData['filePath'] ?? '',
+            'fileName' => $metaData['fileName'] ?? '',
+            'fileExtension' => $metaData['fileExtension'] ?? '',
+            'fileSize' => $metaData['fileSize'] ?? '',
+            'mimeType' => $metaData['mimeType'] ?? '',
+            'gibbonPersonIDOwner' => $metaData['gibbonPersonIDOwner'] ?? '',
             'checksum' => $checksum
         ];
 
         // Insert record into gibbonFile table
-        return $this->insert($data);
-    }
-
-    /**
-     * Record a file upload with pointer in a transaction
-     *
-     * @param FilePointerGateway $filePointerGateway Gateway for file pointer operations
-     * @param string $filePath Relative path from Gibbon root
-     * @param string $fileName Original filename
-     * @param string $fileExtension File extension
-     * @param int $fileSize Size in bytes
-     * @param string $mimeType MIME type
-     * @param int $gibbonPersonIDOwner gibbonPersonID of uploader
-     * @param string $foreignTable Name of the foreign table
-     * @param int $foreignTableID Primary key value in the foreign table
-     * @param string $foreignColumn Column name storing the file path
-     * @return array|false Array with gibbonFileID and gibbonFilePointerID on success, false on failure
-     */
-    public function recordFileUploadWithPointer(FilePointerGateway $filePointerGateway, $filePath, $fileName, $fileExtension, $fileSize, $mimeType, $gibbonPersonIDOwner, $foreignTable, $foreignTableID, $foreignColumn)
-    {
-        // Begin database transaction
-        $this->db()->beginTransaction();
-
-        // Call recordFileUpload and store gibbonFileID
-        $gibbonFileID = $this->recordFileUpload($filePath, $fileName, $fileExtension, $fileSize, $mimeType, $gibbonPersonIDOwner);
+        $gibbonFileID = $this->insert($data);
 
         // If recordFileUpload fails, rollback and return false
         if (empty($gibbonFileID)) {
@@ -106,7 +103,7 @@ class FileGateway extends QueryableGateway
         }
 
         // Call recordFilePointer with the gibbonFileID
-        $gibbonFilePointerID = $filePointerGateway->recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn);
+        $gibbonFilePointerID = $this->filePointerGateway->recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn);
 
         // If recordFilePointer fails, rollback transaction and return false
         if (empty($gibbonFilePointerID)) {
@@ -146,7 +143,7 @@ class FileGateway extends QueryableGateway
     /**
      * Query all file records where the file no longer exists on the filesystem
      *
-     * @return DataSet DataSet object with orphaned file records (gibbonFileID, filePath, fileName, uploadedAt)
+     * @return array of records
      */
     public function selectOrphanedFileRecords()
     {
@@ -158,7 +155,8 @@ class FileGateway extends QueryableGateway
         // Filter to records where file does not exist
         $orphanedRecords = [];
         foreach ($result as $record) {
-            if (!file_exists($record['filePath'])) {
+            $fullPath = $this->session->get('absolutePath'). '/' . $record['filePath'];
+            if (!file_exists($fullPath)) {
                 $orphanedRecords[] = $record;
             }
         }
@@ -189,13 +187,16 @@ class FileGateway extends QueryableGateway
         $storedChecksum = $record['checksum'];
         $filePath = $record['filePath'];
         
-        // Check if file exists at filePath
-        if (!file_exists($filePath)) {
+        // Construct absolute path from stored relative filePath
+        $absolutePath = $this->session->get('absolutePath') . '/' . $filePath;
+        
+        // Check if file exists at absolute path
+        if (!file_exists($absolutePath)) {
             return false;
         }
         
-        // Recalculate checksum from file at filePath
-        $calculatedChecksum = hash_file('sha256', $filePath);
+        // Recalculate checksum from file at absolute path
+        $calculatedChecksum = hash_file('sha256', $absolutePath);
         
         if (empty($calculatedChecksum)) {
             return false;
