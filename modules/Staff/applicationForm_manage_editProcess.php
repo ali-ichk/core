@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Data\Validator;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -161,14 +162,21 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/applicationForm_mana
 
                             // Upload the file, return the /uploads relative path
                             $attachment = $fileUploader->uploadFromPost($file, 'ApplicationDocument');
+                            $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
                             // Write files to database, if there is one
                             if (!empty($attachment)) {
-
-                                    $dataFile = array('gibbonStaffApplicationFormID' => $gibbonStaffApplicationFormID, 'name' => $fileName, 'path' => $attachment);
-                                    $sqlFile = 'INSERT INTO gibbonStaffApplicationFormFile SET gibbonStaffApplicationFormID=:gibbonStaffApplicationFormID, name=:name, path=:path';
-                                    $resultFile = $connection2->prepare($sqlFile);
-                                    $resultFile->execute($dataFile);
+                                $dataFile = array('gibbonStaffApplicationFormID' => $gibbonStaffApplicationFormID, 'name' => $fileName, 'path' => $attachment);
+                                $sqlFile = 'INSERT INTO gibbonStaffApplicationFormFile SET gibbonStaffApplicationFormID=:gibbonStaffApplicationFormID, name=:name, path=:path';
+                                $resultFile = $connection2->prepare($sqlFile);
+                                $resultFile->execute($dataFile);
+                                    
+                                // Record file tracking
+                                if (!empty($fileMetaData)) {
+                                    $gibbonStaffApplicationFormFileID = $connection2->lastInsertID();
+                                    $fileGateway = $container->get(FileGateway::class);
+                                    $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+                                }
                             } else {
                                 $partialFail = true;
                             }

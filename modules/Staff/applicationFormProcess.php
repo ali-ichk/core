@@ -29,6 +29,7 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\System\EmailTemplateGateway;
 use Gibbon\Forms\Builder\FormBuilderInterface;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -145,8 +146,8 @@ if ($proceed == false) {
                 for ($i = 0; $i < $fileCount; ++$i) {
                     if (empty($_FILES["file$i"]['tmp_name'])) continue;
 
-                    $file = (isset($_FILES["file$i"]))? $_FILES["file$i"] : null;
-                    $fileName = (isset($_POST["fileName$i"]))? $_POST["fileName$i"] : null;
+                    $file = (isset($_FILES["file$i"])) ? $_FILES["file$i"] : null;
+                    $fileName = (isset($_POST["fileName$i"])) ? $_POST["fileName$i"] : null;
 
                     // Upload the file, return the /uploads relative path
                     $attachment = $fileUploader->uploadFromPost($file, 'StaffApplicationDocument');
@@ -205,12 +206,20 @@ if ($proceed == false) {
                         // Attach required documents
                         if ($requiredDocuments != false && !empty($uploadedDocuments) && is_array($uploadedDocuments)) {
                             foreach ($uploadedDocuments as $fileName => $attachment) {
-                                //Write files to database, one for each attachment
+                                // Write files to database, one for each attachment
+                                $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
-                                    $dataFile = array('gibbonStaffApplicationFormID' => $AI, 'name' => $fileName, 'path' => $attachment);
-                                    $sqlFile = 'INSERT INTO gibbonStaffApplicationFormFile SET gibbonStaffApplicationFormID=:gibbonStaffApplicationFormID, name=:name, path=:path';
-                                    $resultFile = $connection2->prepare($sqlFile);
-                                    $resultFile->execute($dataFile);
+                                $dataFile = array('gibbonStaffApplicationFormID' => $AI, 'name' => $fileName, 'path' => $attachment);
+                                $sqlFile = 'INSERT INTO gibbonStaffApplicationFormFile SET gibbonStaffApplicationFormID=:gibbonStaffApplicationFormID, name=:name, path=:path';
+                                $resultFile = $connection2->prepare($sqlFile);
+                                $resultFile->execute($dataFile);
+                                    
+                                // Record file tracking
+                                if (!empty($fileMetaData)) {
+                                    $gibbonStaffApplicationFormFileID = $connection2->lastInsertID();
+                                    $fileGateway = $container->get(FileGateway::class);
+                                    $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+                                }
                             }
                         }
 

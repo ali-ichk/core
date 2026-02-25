@@ -76,13 +76,53 @@ class FileGateway extends QueryableGateway
             return false;
         }
 
+        $oldFile = $this->filePointerGateway->checkPointerExists($foreignTable, $foreignTableID, $foreignColumn);
+
+        if (empty($oldFile)) {
+            // Insert record into gibbonFile table
+            $gibbonFileID = $this->insertAndUpdateFile($metaData);
+
+            // If recordFileUpload fails, rollback and return false
+            if (empty($gibbonFileID)) {
+                $this->db()->rollBack();
+                return false;
+            }
+
+            // Call recordFilePointer with the gibbonFileID
+            $gibbonFilePointerID = $this->filePointerGateway->insertFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn);
+
+            // If pointer insertion fails, rollback transaction and return false
+            if (empty($gibbonFilePointerID)) {
+                $this->db()->rollBack();
+                return false;
+            }
+        } else {
+            $gibbonFileID = $this->insertAndUpdateFile($metaData, $oldFile['gibbonFileID']);
+            unlink($oldFile['filePath']);
+        }
+
+        // All operations succeeded, commit the transaction
+        $this->db()->commit();
+
+        // Return $gibbonFileID
+        return $gibbonFileID;
+    }
+
+        /**
+     * Record a file upload with metadata
+     *
+     * @param array $metaData Array with file metadata
+     * @return int|false gibbonFileID on success, false on failure
+     */
+    protected function insertAndUpdateFile(array $metaData, $gibbonFileID = null)
+    {
         // Calculate SHA-256 checksum
         $checksum = hash_file('sha256', $metaData['absolutePath']);
         if ($checksum === false) {
             return false;
         }
 
-        // Build data array with all parameters plus checksum and current timestamp
+        // Build data array with all fields
         $data = [
             'filePath' => $metaData['filePath'] ?? '',
             'fileName' => $metaData['fileName'] ?? '',
@@ -93,33 +133,16 @@ class FileGateway extends QueryableGateway
             'checksum' => $checksum
         ];
 
-        // Insert record into gibbonFile table
-        $gibbonFileID = $this->insert($data);
-
-        // If recordFileUpload fails, rollback and return false
         if (empty($gibbonFileID)) {
-            $this->db()->rollBack();
-            return false;
+            // Insert record into gibbonFile table
+            $gibbonFileID = $this->insert($data);
+        } else {
+            $updated = $this->update($gibbonFileID, $data);
         }
-
-        // Call recordFilePointer with the gibbonFileID
-        $gibbonFilePointerID = $this->filePointerGateway->recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn);
-
-        // If recordFilePointer fails, rollback transaction and return false
-        if (empty($gibbonFilePointerID)) {
-            $this->db()->rollBack();
-            return false;
-        }
-
-        // Both operations succeeded, commit the transaction
-        $this->db()->commit();
-
-        // Return array with both IDs
-        return [
-            'gibbonFileID' => $gibbonFileID,
-            'gibbonFilePointerID' => $gibbonFilePointerID
-        ];
+        
+        return $gibbonFileID;
     }
+
 
     /**
      * Query all files linked to a specific foreign table record
@@ -205,4 +228,5 @@ class FileGateway extends QueryableGateway
         // Compare stored and calculated checksums
         return $storedChecksum === $calculatedChecksum;
     }
+
 }

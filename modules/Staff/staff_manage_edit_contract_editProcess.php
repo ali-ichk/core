@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -83,6 +84,7 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
                 $notes = $_POST['notes'] ?? '';
 
                 $partialFail = false;
+                $fileMetaData = null;
                 if (!empty($_FILES['file1']['tmp_name'])) {
                     $fileUploader = new Gibbon\FileUploader($pdo, $session);
                     $fileUploader->getFileExtensions('Document');
@@ -91,6 +93,7 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
 
                     // Upload the file, return the /uploads relative path
                     $contractUpload = $fileUploader->uploadFromPost($file, $username);
+                    $fileMetaData = $fileUploader->getFileMetaData($contractUpload);
 
                     if (empty($contractUpload)) {
                         $contractUpload = '';
@@ -115,6 +118,12 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
                         $URL .= '&return=error2';
                         header("Location: {$URL}");
                         exit();
+                    }
+
+                    // Record file tracking (only if new file uploaded)
+                    if (!empty($fileMetaData)) {
+                        $fileGateway = $container->get(FileGateway::class);
+                        $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffContract', $gibbonStaffContractID, 'contractUpload');
                     }
 
                     if ($partialFail == true) {

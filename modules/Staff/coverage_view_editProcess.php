@@ -22,6 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Domain\Staff\StaffCoverageGateway;
 use Gibbon\FileUploader;
 use Gibbon\Data\Validator;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -70,11 +71,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
     }
 
     // File Upload
+    $fileMetaData = null;
     if ($type == 'File') {
         if (!empty($_FILES['file'])) {
             // Upload the file, return the /uploads relative path
             $fileUploader = new FileUploader($pdo, $session);
             $content = $fileUploader->uploadFromPost($_FILES['file']);
+            $fileMetaData = $fileUploader->getFileMetaData($content);
     
             if (empty($content)) {
                 $URL .= '&return=error3';
@@ -93,6 +96,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
         'attachmentType'    => $type,
         'attachmentContent' => $content,
     ]);
+
+    // Record file tracking (only if new file uploaded)
+    if (!empty($fileMetaData)) {
+        $fileGateway = $container->get(FileGateway::class);
+        $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
+    }
 
     $URL .= !$updated
         ? "&return=error2"

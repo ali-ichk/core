@@ -46,7 +46,7 @@ class FilePointerGateway extends QueryableGateway
      * @param string $foreignColumn Column name storing the file path
      * @return int|false gibbonFilePointerID on success, false on failure
      */
-    public function recordFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn)
+    public function insertFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn)
     {
         // Build data array with all parameters
         $data = [
@@ -58,5 +58,28 @@ class FilePointerGateway extends QueryableGateway
 
         // Insert record into gibbonFilePointer table
         return $this->insert($data);
+    }
+
+    /**
+     * Check if a file pointer exists and return the file path
+     *
+     * @param string $foreignTable Name of the foreign table
+     * @param int|string $foreignTableID Primary key value in the foreign table
+     * @param string $foreignColumn Column name storing the file path
+     * @return string|null The file path if pointer exists, null otherwise
+     */
+    public function checkPointerExists(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
+    {
+        $data = [
+            'foreignTable' => $foreignTable, 'foreignTableID' => $foreignTableID, 'foreignColumn' => $foreignColumn];
+
+        $sql = "SELECT gibbonFile.gibbonFileID, gibbonFile.filePath
+                FROM gibbonFilePointer
+                JOIN gibbonFile ON gibbonFilePointer.gibbonFileID = gibbonFile.gibbonFileID
+                WHERE gibbonFilePointer.foreignTable = :foreignTable
+                AND gibbonFilePointer.foreignTableID = :foreignTableID
+                AND gibbonFilePointer.foreignColumn = :foreignColumn";
+
+        return $this->db()->select($sql, $data);
     }
 }
