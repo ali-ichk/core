@@ -26,8 +26,8 @@ use Gibbon\Module\Reports\Domain\ReportingScopeGateway;
 use Gibbon\Module\Reports\Domain\ReportingCriteriaGateway;
 use Gibbon\Module\Reports\Domain\ReportingAccessGateway;
 use Gibbon\Data\Validator;
-use Gibbon\Services\Format;
 use Gibbon\FileUploader;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -58,6 +58,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
     $reportingCriteriaGateway = $container->get(ReportingCriteriaGateway::class);
     $reportingAccessGateway = $container->get(ReportingAccessGateway::class);
     $fileUploader = $container->get(FileUploader::class);
+    $fileGateway = $container->get(FileGateway::class);
     
     $values = $_POST['value'] ?? [];
 
@@ -115,6 +116,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
         
         $criteriaType = $reportingCriteriaGateway->getCriteriaTypeByID($gibbonReportingCriteriaID);
         $criteriaOptions = !empty($criteriaType['options']) ? json_decode($criteriaType['options'], true) : [];
+        
+        $fileMetaData = null;
         if ($criteriaType['valueType'] == 'Comment' || $criteriaType['valueType'] == 'Remark') {
             $data['comment'] = $value;
         } elseif ($criteriaType['valueType'] == 'Grade Scale') {
@@ -123,6 +126,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
         } elseif ($criteriaType['valueType'] == 'Image') {
             if (!empty($_FILES['file'.$gibbonReportingCriteriaID]['tmp_name'])) {
                 $data['value'] = $fileUploader->uploadAndResizeImage($_FILES['file'.$gibbonReportingCriteriaID], 'reportFile', $criteriaOptions['imageSize'] ?? 1024, $criteriaOptions['imageQuality'] ?? 80);
+                
+                // Get file metadata for tracking
+                if (!empty($data['value'])) {
+                    $fileMetaData = $fileUploader->getFileMetaData($data['value']);
+                }
             } else {
                 $data['value'] = empty($value) ? '' : $existing['value'];
             }
@@ -138,9 +146,29 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
                 'gibbonPersonIDModified' => $session->get('gibbonPersonID'),
                 'timestampModified' => date('Y-m-d H:i:s'),
             ]);
+            
+            // Record file tracking after successful update
+            if (!empty($fileMetaData) && $updated) {
+                $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $existing['gibbonReportingValueID'], 'value');
+
+                if (empty($gibbonFileID)) {
+                    $partialFail = true;
+                }
+            }
+            
             $partialFail = !$updated;
         } else {
             $inserted = $reportingValueGateway->insert($data);
+            
+            // Record file tracking after successful insert
+            if (!empty($fileMetaData) && $inserted) {
+                $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $inserted, 'value');
+                
+                if (empty($gibbonFileID)) {
+                    $partialFail = true;
+                }
+            }
+            
             $partialFail = !$inserted;
         }
     }
