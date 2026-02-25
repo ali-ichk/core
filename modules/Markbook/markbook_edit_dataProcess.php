@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Services\Format;
 use Gibbon\Domain\System\LogGateway;
 use Gibbon\Data\Validator;
@@ -274,6 +275,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
                         $entry = $result->rowCount() > 0 ? $result->fetch() : [];
 
                         // Move attached file, if there is one
+                        $fileMetaData = null;
                         if ($uploadedResponse == 'Y') {
                             //Move attached image  file, if there is one
                             if (!empty($_FILES['response'.$i]['tmp_name'])) {
@@ -283,6 +285,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
 
                                 // Upload the file, return the /uploads relative path
                                 $attachment = $fileUploader->uploadFromPost($file, $name."_Uploaded Response");
+                                $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
                                 if (empty($attachment)) {
                                     $partialFail = true;
@@ -323,6 +326,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
                                 $sql = 'INSERT INTO gibbonMarkbookEntry SET gibbonMarkbookColumnID=:gibbonMarkbookColumnID, gibbonPersonIDStudent=:gibbonPersonIDStudent, modifiedAssessment=:modifiedAssessment, attainmentValue=:attainmentValue, attainmentValueRaw=:attainmentValueRaw, attainmentDescriptor=:attainmentDescriptor, attainmentConcern=:attainmentConcern, effortValue=:effortValue, effortDescriptor=:effortDescriptor, effortConcern=:effortConcern, comment=:comment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit, response=:attachment';
                                 $result = $connection2->prepare($sql);
                                 $result->execute($data);
+                                
+                                // Record file tracking for INSERT
+                                if (!empty($fileMetaData)) {
+                                    $gibbonMarkbookEntryID = $connection2->lastInsertID();
+                                    $fileGateway = $container->get(FileGateway::class);
+                                    $fileGateway->recordFileUpload($fileMetaData, 'gibbonMarkbookEntry', $gibbonMarkbookEntryID, 'response');
+                                }
                             } catch (PDOException $e) {
                                 $partialFail = true;
                             }
@@ -333,6 +343,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
                                 $sql = 'UPDATE gibbonMarkbookEntry SET gibbonMarkbookColumnID=:gibbonMarkbookColumnID, gibbonPersonIDStudent=:gibbonPersonIDStudent, modifiedAssessment=:modifiedAssessment, attainmentValue=:attainmentValue, attainmentValueRaw=:attainmentValueRaw, attainmentDescriptor=:attainmentDescriptor, attainmentConcern=:attainmentConcern, effortValue=:effortValue, effortDescriptor=:effortDescriptor, effortConcern=:effortConcern, comment=:comment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit, response=:attachment WHERE gibbonMarkbookEntryID=:gibbonMarkbookEntryID';
                                 $result = $connection2->prepare($sql);
                                 $result->execute($data);
+                                
+                                // Record file tracking for UPDATE
+                                if (!empty($fileMetaData)) {
+                                    $fileGateway = $container->get(FileGateway::class);
+                                    $fileGateway->recordFileUpload($fileMetaData, 'gibbonMarkbookEntry', $entry['gibbonMarkbookEntryID'], 'response');
+                                }
                             } catch (PDOException $e) {
                                 $partialFail = true;
                             }

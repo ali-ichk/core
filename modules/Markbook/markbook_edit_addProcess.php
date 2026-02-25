@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
 
@@ -171,6 +172,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_add
         $partialFail = false;
 
         //Move attached image  file, if there is one
+        $fileMetaData = null;
         if (!empty($_FILES['file']['tmp_name'])) {
             $fileUploader = new Gibbon\FileUploader($pdo, $session);
 
@@ -178,6 +180,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_add
 
             // Upload the file, return the /uploads relative path
             $attachment = $fileUploader->uploadFromPost($file, $name);
+            $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
             if (empty($attachment)) {
                 $partialFail = true;
@@ -202,6 +205,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_add
 
             //Last insert ID
             $AI = str_pad($connection2->lastInsertID(), 10, '0', STR_PAD_LEFT);
+
+            // Record file tracking
+            if (!empty($fileMetaData)) {
+                $fileGateway = $container->get(FileGateway::class);
+                $fileGateway->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $AI, 'attachment');
+            }
 
             //Unlock module table
 

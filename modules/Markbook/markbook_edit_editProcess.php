@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
 
@@ -160,6 +161,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_edi
                     $partialFail = false;
 
                     //Move attached image  file, if there is one
+                    $fileMetaData = null;
                     if (!empty($_FILES['file']['tmp_name'])) {
                         $fileUploader = new Gibbon\FileUploader($pdo, $session);
 
@@ -167,6 +169,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_edi
 
                         // Upload the file, return the /uploads relative path
                         $attachment = $fileUploader->uploadFromPost($file, $name);
+                        $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
                         if (empty($attachment)) {
                             $partialFail = true;
@@ -186,6 +189,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_edi
                             $sql = 'UPDATE gibbonMarkbookColumn SET gibbonUnitID=:gibbonUnitID, gibbonPlannerEntryID=:gibbonPlannerEntryID, gibbonCourseClassID=:gibbonCourseClassID, name=:name, description=:description, columnColor=:columnColor, type=:type, date=:date, attainment=:attainment, gibbonScaleIDAttainment=:gibbonScaleIDAttainment, attainmentWeighting=:attainmentWeighting, attainmentRaw=:attainmentRaw, attainmentRawMax=:attainmentRawMax, effort=:effort, gibbonScaleIDEffort=:gibbonScaleIDEffort, gibbonRubricIDAttainment=:gibbonRubricIDAttainment, gibbonRubricIDEffort=:gibbonRubricIDEffort, comment=:comment, uploadedResponse=:uploadedResponse, completeDate=:completeDate, complete=:complete, viewableStudents=:viewableStudents, viewableParents=:viewableParents, attachment=:attachment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit, gibbonSchoolYearTermID=:gibbonSchoolYearTermID WHERE gibbonMarkbookColumnID=:gibbonMarkbookColumnID';
                             $result = $connection2->prepare($sql);
                             $result->execute($data);
+                            
+                            // Record file tracking for UPDATE
+                            if (!empty($fileMetaData)) {
+                                $fileGateway = $container->get(FileGateway::class);
+                                $fileGateway->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+                            }
                         } catch (PDOException $e) {
                             $URL .= '&return=error2';
                             header("Location: {$URL}");
