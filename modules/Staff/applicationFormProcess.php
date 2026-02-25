@@ -217,8 +217,11 @@ if ($proceed == false) {
                                 // Record file tracking
                                 if (!empty($fileMetaData)) {
                                     $gibbonStaffApplicationFormFileID = $connection2->lastInsertID();
-                                    $fileGateway = $container->get(FileGateway::class);
-                                    $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+                                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+
+                                    if (empty($gibbonFileID)) {
+                                        $partialFail = true;
+                                    }
                                 }
                             }
                         }

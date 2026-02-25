@@ -20,8 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Services\Format;
 use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
+use Gibbon\Domain\System\FileGateway;
+use Gibbon\Services\Format;
 
 require_once '../../gibbon.php';
 
@@ -102,6 +103,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                 $gibbonPersonIDLastEdit = $session->get('gibbonPersonID');
 
                 $time = time();
+                $fileMetaData = null;
                 //Move attached file, if there is one
                 if (!empty($_FILES['file']['tmp_name'])) {
                     $fileUploader = new Gibbon\FileUploader($pdo, $session);
@@ -113,6 +115,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                     if (empty($attachment)) {
                         $partialFail = true;
+                    } else {
+                        $fileMetaData = $fileUploader->getFileMetaData($attachment);
                     }
                 } else {
                     // Remove the attachment if it has been deleted, otherwise retain the original value
@@ -133,6 +137,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         $URL .= '&return=error2';
                         header("Location: {$URL}");
                         exit();
+                    }
+
+                    // Record file tracking
+                    if (!empty($fileMetaData)) {
+                        $fileGateway = $container->get(FileGateway::class);
+                        $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+
+                        if (empty($gibbonFileID)) {
+                            $partialFail = true;
+                        }
                     }
 
                     if ($partialFail == true) {

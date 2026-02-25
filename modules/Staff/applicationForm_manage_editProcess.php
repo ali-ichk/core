@@ -162,7 +162,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/applicationForm_mana
 
                             // Upload the file, return the /uploads relative path
                             $attachment = $fileUploader->uploadFromPost($file, 'ApplicationDocument');
-                            $fileMetaData = $fileUploader->getFileMetaData($attachment);
+
+                            if (!empty($attachment)) {
+                                $fileMetaData = $fileUploader->getFileMetaData($attachment);
+                            }
 
                             // Write files to database, if there is one
                             if (!empty($attachment)) {
@@ -174,8 +177,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/applicationForm_mana
                                 // Record file tracking
                                 if (!empty($fileMetaData)) {
                                     $gibbonStaffApplicationFormFileID = $connection2->lastInsertID();
-                                    $fileGateway = $container->get(FileGateway::class);
-                                    $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+                                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+
+                                    if (empty($gibbonFileID)) {
+                                        $partialFail = true;
+                                    }
                                 }
                             } else {
                                 $partialFail = true;

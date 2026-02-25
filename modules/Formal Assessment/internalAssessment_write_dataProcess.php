@@ -20,9 +20,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Services\Format;
 use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 use Gibbon\Domain\School\GradeScaleGateway;
+use Gibbon\Domain\System\FileGateway;
+use Gibbon\Services\Format;
 
 require_once '../../gibbon.php';
 
@@ -161,6 +162,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         $entry = $result->rowCount() > 0 ? $result->fetch() : [];
 
                         $attachment = $entry['response'] ?? null;
+                        $fileMetaDataResponse = null;
 
                         //Move attached file, if there is one
                         if ($uploadedResponse == 'Y') {
@@ -174,6 +176,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                                 if (empty($attachment)) {
                                     $partialFail = true;
+                                } else {
+                                    $fileMetaDataResponse = $fileUploader->getFileMetaData($attachment);
                                 }
                             } else {
                                 // Remove the attachment if it has been deleted, otherwise retain the original value
@@ -187,6 +191,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                                 $sql = 'INSERT INTO gibbonInternalAssessmentEntry SET gibbonInternalAssessmentColumnID=:gibbonInternalAssessmentColumnID, gibbonPersonIDStudent=:gibbonPersonIDStudent, attainmentValue=:attainmentValue, attainmentDescriptor=:attainmentDescriptor, effortValue=:effortValue, effortDescriptor=:effortDescriptor, comment=:comment, response=:attachment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit';
                                 $result = $connection2->prepare($sql);
                                 $result->execute($data);
+                                
+                                // Record file tracking for INSERT case (capture lastInsertID)
+                                if (!empty($fileMetaDataResponse)) {
+                                    $gibbonInternalAssessmentEntryID = $connection2->lastInsertID();
+                                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaDataResponse, 'gibbonInternalAssessmentEntry', $gibbonInternalAssessmentEntryID, 'response');
+                                    if (empty($gibbonFileID)) {
+                                        $partialFail = true;
+                                    }
+                                }
                             } catch (PDOException $e) {
                                 $partialFail = true;
                             }
@@ -207,6 +220,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                 //Update column
                 $description = $_POST['description'] ?? '';
                 $time = time();
+                $fileMetaData = null;
                 //Move attached file, if there is one
                 if (!empty($_FILES['file']['tmp_name'])) {
                     $fileUploader = new Gibbon\FileUploader($pdo, $session);
@@ -218,6 +232,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                     if (empty($attachment)) {
                         $partialFail = true;
+                    } else {
+                        $fileMetaData = $fileUploader->getFileMetaData($attachment);
                     }
                 } else {
                     $attachment = empty($_POST['attachment']) ? null : $row['attachment'];
@@ -238,6 +254,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     $result->execute($data);
                 } catch (PDOException $e) {
                     $partialFail = true;
+                }
+
+                // Record file tracking for column attachment UPDATE
+                if (!empty($fileMetaData)) {
+                   $gibbonFileID =  $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+
+                   if (empty($gibbonFileID)) {
+                       $partialFail = true;
+                   }
                 }
 
                 //Return!

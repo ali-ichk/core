@@ -77,12 +77,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
             // Upload the file, return the /uploads relative path
             $fileUploader = new FileUploader($pdo, $session);
             $content = $fileUploader->uploadFromPost($_FILES['file']);
-            $fileMetaData = $fileUploader->getFileMetaData($content);
-    
+
             if (empty($content)) {
                 $URL .= '&return=error3';
                 header("Location: {$URL}");
                 exit;
+            } else {
+                $fileMetaData = $fileUploader->getFileMetaData($content);
             }
         } else {
             // Remove the attachment if it has been deleted, otherwise retain the original value
@@ -99,8 +100,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
 
     // Record file tracking (only if new file uploaded)
     if (!empty($fileMetaData)) {
-        $fileGateway = $container->get(FileGateway::class);
-        $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
+        $gibbonFileiD = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
+
+        if (empty($gibbonFileiD)) {
+            $updated = false;
+        }
     }
 
     $URL .= !$updated

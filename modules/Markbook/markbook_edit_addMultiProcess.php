@@ -168,10 +168,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_add
 
             // Upload the file, return the /uploads relative path
             $attachment = $fileUploader->uploadFromPost($file, $name);
-            $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
             if (empty($attachment)) {
                 $partialFail = true;
+            } else {
+                $fileMetaData = $fileUploader->getFileMetaData($attachment);
             }
         }
 
@@ -209,8 +210,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_add
                     // Record file tracking for each column
                     if (!empty($fileMetaData)) {
                         $gibbonMarkbookColumnID = $connection2->lastInsertID();
-                        $fileGateway = $container->get(FileGateway::class);
-                        $fileGateway->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+
+                        if (empty($gibbonFileID)) {
+                            $partialFail = true;
+                        }
                     }
                 } catch (PDOException $e) {
                     $partialFail = true;

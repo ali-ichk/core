@@ -93,11 +93,12 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
 
                     // Upload the file, return the /uploads relative path
                     $contractUpload = $fileUploader->uploadFromPost($file, $username);
-                    $fileMetaData = $fileUploader->getFileMetaData($contractUpload);
 
                     if (empty($contractUpload)) {
                         $contractUpload = '';
                         $partialFail = true;
+                    } else {
+                        $fileMetaData = $fileUploader->getFileMetaData($contractUpload);
                     }
                 } else {
                     // Remove the attachment if it has been deleted, otherwise retain the original value
@@ -122,8 +123,11 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
 
                     // Record file tracking (only if new file uploaded)
                     if (!empty($fileMetaData)) {
-                        $fileGateway = $container->get(FileGateway::class);
-                        $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonStaffContract', $gibbonStaffContractID, 'contractUpload');
+                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffContract', $gibbonStaffContractID, 'contractUpload');
+
+                        if (empty($gibbonFileID)) {
+                            $partialFail = true;
+                        }
                     }
 
                     if ($partialFail == true) {
