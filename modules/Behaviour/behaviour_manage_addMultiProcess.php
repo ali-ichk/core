@@ -103,6 +103,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
 
             if (empty($gibbonBehaviourID)) {
                 $partialFail = true;
+            } else {
+                // Record custom field file uploads
+                if (!empty($fields)) {
+                    $filesRecorded = $container->get(CustomFieldHandler::class)->recordCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID);
+                }
             }
 
             // ALERTS: possible change to Behaviour alert status, recalculate alerts

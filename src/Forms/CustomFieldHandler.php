@@ -25,6 +25,7 @@ use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Domain\System\CustomFieldGateway;
+use Gibbon\Domain\System\FileGateway;
 
 class CustomFieldHandler
 {
@@ -37,6 +38,11 @@ class CustomFieldHandler
      * @var \Gibbon\FileUploader
      */
     protected $fileUploader;
+
+    /**
+     * @var \Gibbon\Domain\System\FileGateway
+     */
+    protected $fileGateway;
 
     /**
      * @var string[][]
@@ -53,10 +59,11 @@ class CustomFieldHandler
      */
     protected $headings;
 
-    public function __construct(CustomFieldGateway $customFieldGateway, FileUploader $fileUploader)
+    public function __construct(CustomFieldGateway $customFieldGateway, FileUploader $fileUploader, FileGateway $fileGateway = null)
     {
         $this->customFieldGateway = $customFieldGateway;
         $this->fileUploader = $fileUploader;
+        $this->fileGateway = $fileGateway;
 
         $this->contexts = [
             __('User Admin') => [
@@ -492,5 +499,74 @@ class CustomFieldHandler
         }
 
         return $fields;
+    }
+
+    /**
+     * Record file uploads from custom fields in the file tracking system
+     * 
+     * @param string $context The custom field context (e.g., 'User', 'Staff', 'Behaviour')
+     * @param array $params Parameters for filtering custom fields
+     * @param string $fields JSON string or array of custom field values
+     * @param string $foreignTable The foreign table name
+     * @param int $foreignTableID The foreign table record ID
+     * @return int Count of successfully tracked files, or false on error
+     */
+    public function recordCustomFieldFileUploads($context, $params, $fields, $foreignTable, $foreignTableID)
+    {
+
+        // Decode JSON if needed
+        $fieldsArray = is_string($fields) ? json_decode($fields, true) : $fields;
+        if (empty($fieldsArray)) {
+            return false;
+        }
+
+        // Get custom field definitions for this context
+        $customFields = $this->customFieldGateway->selectCustomFields($context, $params)->fetchAll();
+        if (empty($customFields)) {
+            return false;
+        }
+
+        $trackedCount = 0;
+
+        // Process each custom field
+        foreach ($customFields as $field) {
+            // Only process file and image type fields
+            if ($field['type'] != 'file' && $field['type'] != 'image') {
+                continue;
+            }
+
+            $gibbonCustomFieldID = $field['gibbonCustomFieldID'];
+
+            // Skip if this field has no value
+            if (empty($fieldsArray[$gibbonCustomFieldID])) {
+                continue;
+            }
+
+            $filePath = $fieldsArray[$gibbonCustomFieldID];
+
+            // Get file metadata
+            $fileMetaData = $this->fileUploader->getFileMetaData($filePath);
+
+            // Skip if metadata is not available
+            if (empty($fileMetaData)) {
+                continue;
+            }
+
+            // Record file upload with pointer
+            $foreignColumn = "fields[{$gibbonCustomFieldID}]";
+
+            $gibbonFileID = $this->fileGateway->recordFileUpload(
+                $fileMetaData,
+                $foreignTable,
+                $foreignTableID,
+                $foreignColumn
+            );
+
+            if (!empty($gibbonFileID)) {
+                $trackedCount++;
+            }
+        }
+
+        return $trackedCount;
     }
 }
