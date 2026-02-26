@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
 use Gibbon\Domain\Activities\ActivityCategoryGateway;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -85,6 +86,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_cate
     }
 
     // Move attached file, if there is one
+    $fileMetaData = null;
     if (!empty($_FILES['backgroundImageFile']['tmp_name'])) {
         $fileUploader = new Gibbon\FileUploader($pdo, $session);
         $fileUploader->getFileExtensions('Graphics/Design');
@@ -93,9 +95,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_cate
 
         // Upload the file, return the /uploads relative path
         $data['backgroundImage'] = $fileUploader->uploadFromPost($file, $data['name']);
-
+        
         if (empty($data['backgroundImage'])) {
             $partialFail = true;
+        } else {
+            $fileMetaData = $fileUploader->getFileMetaData($data['backgroundImage']);
         }
 
     } else {
@@ -104,6 +108,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_cate
 
     // Update the record
     $updated = $categoryGateway->update($gibbonActivityCategoryID, $data);
+
+    // Record file tracking
+    if (!empty($fileMetaData)) {
+        $gibbonFileID = $fileGateway = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonActivityCategory', $gibbonActivityCategoryID, 'backgroundImage');
+        
+        if (empty($gibbonFileID)) {
+            $partialFail = true;
+        }
+    }
 
     if (!$updated) {
       $URL .= "&return=error2";

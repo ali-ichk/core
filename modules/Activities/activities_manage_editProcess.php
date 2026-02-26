@@ -26,6 +26,7 @@ use Gibbon\Domain\Activities\ActivityGateway;
 use Gibbon\Domain\Activities\ActivitySlotGateway;
 use Gibbon\Domain\Activities\ActivityStaffGateway;
 use Gibbon\Domain\Activities\ActivityPhotoGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\FileUploader;
 
 require_once '../../gibbon.php';
@@ -178,6 +179,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                     'sequenceNumber'     => array_search($index, $photoOrder) ?? false,
                 ];
 
+                $fileMetaData = null;
                 if (!empty($_FILES['photos']['tmp_name'][$index]['fileUpload'])) {
                     $file = [
                         'name' => $_FILES['photos']['name'][$index]['fileUpload'] ?? '',
@@ -195,6 +197,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                 if (empty($photoData['filePath'])) {
                     $partialFail = true;
                     continue;
+                } else {
+                    $fileMetaData = $fileUploader->getFileMetaData($photoData['filePath']);
                 }
 
                 if ($photoData['sequenceNumber'] === false) {
@@ -212,6 +216,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                 }
 
                 $photoIDs[] = str_pad($gibbonActivityPhotoID, 12, '0', STR_PAD_LEFT);
+
+                // Record file tracking
+                if (!empty($fileMetaData)) {
+                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonActivityPhoto', $gibbonActivityPhotoID, 'filePath');
+                    
+                    if (empty($gibbonFileID)) {
+                        $partialFail = true;
+                    }
+                }
             }
 
             // Remove photos that have been deleted from the filesystem
