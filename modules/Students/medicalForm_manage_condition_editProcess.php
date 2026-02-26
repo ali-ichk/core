@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Data\Validator;
 use Gibbon\Domain\System\AlertLevelGateway;
 use Gibbon\UI\Components\Alert;
@@ -72,6 +73,7 @@ if ($gibbonPersonMedicalID == '' or $gibbonPersonMedicalConditionID == '') { ech
                 $comment = $_POST['comment'] ?? '';
 
                 // File Upload
+                $fileMetaData = null;
                 if (!empty($_FILES['attachment']['tmp_name'])) {
                     // Upload the file, return the /uploads relative path
                     $fileUploader = new FileUploader($pdo, $session);
@@ -82,6 +84,8 @@ if ($gibbonPersonMedicalID == '' or $gibbonPersonMedicalConditionID == '') { ech
                         header("Location: {$URL}");
                         exit;
                     }
+                    
+                    $fileMetaData = $fileUploader->getFileMetaData($attachment);
                 } else {
                     // Remove the attachment if it has been deleted, otherwise retain the original value
                     $attachment = empty($_POST['attachment']) ? '' : $values['attachment'];
@@ -101,6 +105,17 @@ if ($gibbonPersonMedicalID == '' or $gibbonPersonMedicalConditionID == '') { ech
                         $URL .= '&return=error2';
                         header("Location: {$URL}");
                         exit();
+                    }
+                    
+                    // Record file tracking
+                    if (!empty($fileMetaData) && !empty($gibbonPersonMedicalConditionID)) {
+                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $gibbonPersonMedicalConditionID, 'attachment');
+
+                        if (empty($gibbonFileID)) {
+                            $URL .= '&return=error2';
+                            header("Location: {$URL}");
+                            exit();
+                        }
                     }
 
                     // ALERTS: possible change to Medical alert status, recalculate alerts

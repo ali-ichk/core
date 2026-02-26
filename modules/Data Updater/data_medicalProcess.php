@@ -26,6 +26,7 @@ use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\DataUpdater\MedicalUpdateGateway;
 use Gibbon\Data\Validator;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -188,6 +189,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         'gibbonPersonIDUpdater' => $session->get('gibbonPersonID'),
                     ];
 
+                    $fileMetaData = null;
                     if (!empty($_FILES["attachment$i"]['tmp_name'])) {
                         // Upload the file, return the /uploads relative path
                         $fileUploader = new FileUploader($pdo, $session);
@@ -195,6 +197,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 
                         if (empty($data['attachment'])) {
                             $partialFail = true;
+                        } else {
+                            $fileMetaData = $fileUploader->getFileMetaData($data['attachment']);
                         }
                     } else {
                         // Remove the attachment if it has been deleted, otherwise retain the original value
@@ -214,13 +218,24 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                     $data['timestamp'] = date('Y-m-d H:i:s');
 
                     if ($existing != 'N' && !empty($_POST["gibbonPersonMedicalConditionUpdateID$i"])) {
-                        $data['gibbonPersonMedicalConditionUpdateID'] = $_POST["gibbonPersonMedicalConditionUpdateID$i"] ?? '';
+                        $gibbonPersonMedicalConditionUpdateID = $_POST["gibbonPersonMedicalConditionUpdateID$i"];
+                        $data['gibbonPersonMedicalConditionUpdateID'] = $gibbonPersonMedicalConditionUpdateID ?? '';
                         $sql = 'UPDATE gibbonPersonMedicalConditionUpdate SET gibbonPersonMedicalUpdateID=:gibbonPersonMedicalUpdateID, gibbonPersonMedicalID=:gibbonPersonMedicalID, name=:name, gibbonAlertLevelID=:gibbonAlertLevelID, triggers=:triggers, reaction=:reaction, response=:response, medication=:medication, lastEpisode=:lastEpisode, lastEpisodeTreatment=:lastEpisodeTreatment, comment=:comment, attachment=:attachment, gibbonPersonIDUpdater=:gibbonPersonIDUpdater, timestamp=:timestamp WHERE gibbonPersonMedicalConditionUpdateID=:gibbonPersonMedicalConditionUpdateID';
-                        $pdo->update($sql, $data);
+                        $updated = $pdo->update($sql, $data);
                     } else {
                         $data['gibbonPersonMedicalConditionID'] = $gibbonPersonMedicalConditionID;
                         $sql = 'INSERT INTO gibbonPersonMedicalConditionUpdate SET gibbonPersonMedicalUpdateID=:gibbonPersonMedicalUpdateID, gibbonPersonMedicalConditionID=:gibbonPersonMedicalConditionID, gibbonPersonMedicalID=:gibbonPersonMedicalID, name=:name, gibbonAlertLevelID=:gibbonAlertLevelID, triggers=:triggers, reaction=:reaction, response=:response, medication=:medication, lastEpisode=:lastEpisode, lastEpisodeTreatment=:lastEpisodeTreatment, comment=:comment, attachment=:attachment, gibbonPersonIDUpdater=:gibbonPersonIDUpdater, timestamp=:timestamp';
                         $gibbonPersonMedicalConditionUpdateID = $pdo->insert($sql, $data);
+                    }
+
+                     // Record file tracking
+                    if (!empty($fileMetaData) && !empty($gibbonPersonMedicalConditionUpdateID)) {
+                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment'
+                        );
+                        
+                        if (empty($gibbonFileID)) {
+                            $partialFail = true;
+                        }
                     }
                 }
 
@@ -244,6 +259,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         'timestamp'                   => date('Y-m-d H:i:s'),
                     ];
 
+                    $newFileMetaData = null;
                     if (!empty($_FILES['attachment']['tmp_name'])) {
                         // Upload the file, return the /uploads relative path
                         $fileUploader = new FileUploader($pdo, $session);
@@ -251,12 +267,23 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 
                         if (empty($data['attachment'])) {
                             $partialFail = true;
+                        } else {
+                            $newFileMetaData = $fileUploader->getFileMetaData($data['attachment']);
                         }
                     }
 
                     if (!empty($data['name']) and !empty($data['gibbonAlertLevelID'])) {
                         $sql = 'INSERT INTO gibbonPersonMedicalConditionUpdate SET gibbonPersonMedicalUpdateID=:gibbonPersonMedicalUpdateID, gibbonPersonMedicalID=:gibbonPersonMedicalID, name=:name, gibbonAlertLevelID=:gibbonAlertLevelID, triggers=:triggers, reaction=:reaction, response=:response, medication=:medication, lastEpisode=:lastEpisode, lastEpisodeTreatment=:lastEpisodeTreatment, comment=:comment, attachment=:attachment, gibbonPersonIDUpdater=:gibbonPersonIDUpdater, timestamp=:timestamp';
-                        $pdo->insert($sql, $data);
+                        $gibbonPersonMedicalConditionUpdateID = $pdo->insert($sql, $data);
+                        
+                        // Record file tracking
+                        if (!empty($newFileMetaData) && !empty($gibbonPersonMedicalConditionUpdateID)) {
+                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($newFileMetaData, 'gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment');
+                            
+                            if (empty($gibbonFileID)) {
+                                $partialFail = true;
+                            }
+                        }
                     } else {
                         $partialFail = true;
                     }

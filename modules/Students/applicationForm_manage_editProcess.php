@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Services\Format;
 use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\CustomFieldHandler;
@@ -416,14 +417,27 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/applicationForm_m
 
                                 // Upload the file, return the /uploads relative path
                                 $attachment = $fileUploader->uploadFromPost($file, 'ApplicationDocument');
+                                $fileMetaData = null;
 
                                 // Write files to database, if there is one
                                 if (!empty($attachment)) {
+                                    $fileMetaData = $fileUploader->getFileMetaData($attachment);
+
                                     try {
-                                        $dataFile = array('gibbonApplicationFormID' => $gibbonApplicationFormID, 'name' => $fileName, 'path' => $attachment);
+                                        $dataFile = ['gibbonApplicationFormID' => $gibbonApplicationFormID, 'name' => $fileName, 'path' => $attachment];
                                         $sqlFile = "INSERT INTO gibbonApplicationFormFile SET gibbonApplicationFormID=:gibbonApplicationFormID, name=:name, path=:path";
                                         $resultFile = $connection2->prepare($sqlFile);
                                         $resultFile->execute($dataFile);
+                                        $gibbonApplicationFormFileID = $connection2->lastInsertID();
+                                        
+                                        // Record file tracking
+                                        if (!empty($fileMetaData) && !empty($gibbonApplicationFormFileID)) {
+                                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
+                                            
+                                            if (empty($gibbonFileID)) {
+                                                $partialFail = true;
+                                            }
+                                        }
                                     } catch (PDOException $e) {
                                         $partialFail = true;
                                     }
