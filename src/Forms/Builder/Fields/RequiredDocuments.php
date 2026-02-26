@@ -27,6 +27,7 @@ use Gibbon\FileUploader;
 use Gibbon\Forms\Layout\Row;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Domain\Forms\FormUploadGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Forms\Builder\AbstractFieldGroup;
 use Gibbon\Forms\Builder\FormBuilderInterface;
 
@@ -55,17 +56,25 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
     protected $formUploadGateway;
 
     /**
+     * The file gateway instance.
+     *
+     * @var FileGateway
+     */
+    protected $fileGateway;
+
+    /**
      * The file uploader instance.
      *
      * @var FileUploader
      */
     protected $fileUploader;
 
-    public function __construct(Session $session, FormUploadGateway $formUploadGateway, FileUploader $fileUploader, View $view)
+    public function __construct(Session $session, FormUploadGateway $formUploadGateway, FileGateway $fileGateway, FileUploader $fileUploader, View $view)
     {
         $this->view = $view;
         $this->session = $session;
         $this->formUploadGateway = $formUploadGateway;
+        $this->fileGateway = $fileGateway;
         $this->fileUploader = $fileUploader;
     }
 
@@ -139,14 +148,24 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
                 if (empty($filePath)) {
                     $this->formUploadGateway->delete($existing['gibbonFormUploadID']);
                 } else {
+                    $fileMetaData = $this->fileUploader->getFileMetaData($filePath);
                     $this->formUploadGateway->update($existing['gibbonFormUploadID'], [
                         'gibbonFormFieldID' => $field['gibbonFormFieldID'] ?? null,
                         'path'              => $filePath,
                         'timestamp'         => date('Y-m-d H:i:s'),
                     ]);
+
+                    // Record file tracking for new upload
+                    if (!empty($fileMetaData)) {
+                        $gibbonFileID = $this->fileGateway->recordFileUpload($fileMetaData, 'gibbonFormUpload', $existing['gibbonFormUploadID'], 'path');
+
+                        if (empty($gibbonFileID)) {
+                            $requiredDocumentFail = true;
+                        }
+                    }
                 }
             } elseif (empty($existing) && !empty($filePath)) {
-                $this->formUploadGateway->insert([
+                $gibbonFormUploadID = $this->formUploadGateway->insert([
                     'gibbonFormID'      => $formBuilder->getFormID(),
                     'gibbonFormFieldID' => $field['gibbonFormFieldID'] ?? null,
                     'foreignTable'      => $foreignTable,
@@ -154,6 +173,16 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
                     'name'              => $document,
                     'path'              => $filePath,
                 ]);
+
+                // Record file tracking for new upload
+                $fileMetaData = $this->fileUploader->getFileMetaData($filePath);
+                if (!empty($fileMetaData)) {
+                    $gibbonFileID = $this->fileGateway->recordFileUpload($fileMetaData, 'gibbonFormUpload', $gibbonFormUploadID, 'path');
+
+                    if (empty($gibbonFileID)) {
+                        $requiredDocumentFail = true;
+                    }
+                }
             }
         }
 

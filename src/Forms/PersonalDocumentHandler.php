@@ -26,6 +26,7 @@ use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\User\PersonalDocumentGateway;
+use Gibbon\Domain\System\FileGateway;
 
 class PersonalDocumentHandler
 {
@@ -33,16 +34,18 @@ class PersonalDocumentHandler
     protected $fileUploader;
     protected $settingGateway;
     protected $view;
+    protected $fileGateway;
 
     protected $documents;
     protected $fields;
 
-    public function __construct(PersonalDocumentGateway $personalDocumentGateway, FileUploader $fileUploader, View $view, SettingGateway $settingGateway)
+    public function __construct(PersonalDocumentGateway $personalDocumentGateway, FileUploader $fileUploader, View $view, SettingGateway $settingGateway, FileGateway $fileGateway = null)
     {
         $this->personalDocumentGateway = $personalDocumentGateway;
         $this->fileUploader = $fileUploader;
         $this->settingGateway = $settingGateway;
         $this->view = $view;
+        $this->fileGateway = $fileGateway;
 
         $this->documents = [
             'Passport' => __('Passport'),
@@ -80,6 +83,7 @@ class PersonalDocumentHandler
             $fields = json_decode($document['fields']);
             $prefix = $params['prefix'] ?? '';
             $data = [];
+            $fileMetaData = null;
 
             foreach ($fields as $field) {
                 $value = $_POST[$prefix.'document'][$document['gibbonPersonalDocumentTypeID']][$field] ?? null;
@@ -99,6 +103,9 @@ class PersonalDocumentHandler
 
                         if (empty($data[$field])) {
                             $personalDocumentFail = true;
+                        } else {
+                            // Capture file metadata for tracking
+                            $fileMetaData = $this->fileUploader->getFileMetaData($data[$field]);
                         }
                     } else {
                         $documentID = $_POST[$prefix.'document'][$document['gibbonPersonalDocumentTypeID']]['gibbonPersonalDocumentID'] ?? null;
@@ -129,8 +136,17 @@ class PersonalDocumentHandler
             $data['foreignTableID'] = $foreignTableID;
             $data['timestamp'] = date('Y-m-d H:i:s');
 
-            $success = $this->personalDocumentGateway->insertAndUpdate($data, $data);
-            $personalDocumentFail &= !$success;
+            $gibbonPersonalDocumentID = $this->personalDocumentGateway->insertAndUpdate($data, $data);
+            $personalDocumentFail &= !$gibbonPersonalDocumentID;
+
+            // Record file tracking (only if file was uploaded and insert/update succeeded)
+            if (!empty($fileMetaData) && !empty($gibbonPersonalDocumentID)) {
+                $gibbonFileID = $this->fileGateway->recordFileUpload($fileMetaData, 'gibbonPersonalDocument', $gibbonPersonalDocumentID, 'filePath');
+
+                if (empty($gibbonFileID)) {
+                    $personalDocumentFail = true;
+                }
+            }
         }
     }
 
