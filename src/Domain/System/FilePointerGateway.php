@@ -66,7 +66,7 @@ class FilePointerGateway extends QueryableGateway
      * @param string $foreignTable Name of the foreign table
      * @param int|string $foreignTableID Primary key value in the foreign table
      * @param string $foreignColumn Column name storing the file path
-     * @return string|null The file path if pointer exists, null otherwise
+     * @return result object
      */
     public function checkPointerExists(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
     {

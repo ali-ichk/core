@@ -109,7 +109,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/templates_manage_s
     $updated = $templateSectionGateway->update($gibbonReportTemplateSectionID, $data);
 
     // Record file tracking for each uploaded file in JSON config
-    if (!empty($fileMetaDataList) && $updated) {
+    if (!empty($fileMetaDataList)) {
         $fileGateway = $container->get(FileGateway::class);
         foreach ($fileMetaDataList as $configName => $fileMetaData) {
             $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportTemplateSection', $gibbonReportTemplateSectionID, 'config[' . $configName . ']');

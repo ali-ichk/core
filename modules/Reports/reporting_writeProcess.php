@@ -132,7 +132,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write.ph
             $data['value'] = $value;
         }
 
-        $updated = $reportingValueGateway->insertAndUpdate($data, [
+        $gibbonReportingValueID = $reportingValueGateway->insertAndUpdate($data, [
             'value' => $data['value'],
             'comment' => $data['comment'],
             'gibbonScaleGradeID' => $data['gibbonScaleGradeID'],
@@ -141,24 +141,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write.ph
         ]);
         
         // Record file tracking after successful insert/update
-        if (!empty($fileMetaData)) {
-            // We need the record ID to track the file
-            $gibbonReportingValueID = null;
-            
-            if (is_numeric($updated) && $updated > 1) {
-                $gibbonReportingValueID = $updated;
-            } else {
-                // UPDATE case
-                $record = $reportingValueGateway->selectBy(['gibbonReportingCriteriaID' => $gibbonReportingCriteriaID, 'gibbonReportingCycleID' => $data['gibbonReportingCycleID'], 'gibbonCourseClassID' => $data['gibbonCourseClassID']])->fetch();
-                
-                if (!empty($record)) {
-                    $gibbonReportingValueID = $record['gibbonReportingValueID'];
-                }
-            }
-            
-            if (!empty($gibbonReportingValueID)) {
-                $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $gibbonReportingValueID, 'value');
-            }
+        if (!empty($fileMetaData) && !empty($gibbonReportingValueID)) {
+            $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $gibbonReportingValueID, 'value');
 
             if (empty($gibbonFileID)) {
                 $partialFail = true;

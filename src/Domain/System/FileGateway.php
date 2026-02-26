@@ -76,7 +76,7 @@ class FileGateway extends QueryableGateway
             return false;
         }
 
-        $oldFile = $this->filePointerGateway->checkPointerExists($foreignTable, $foreignTableID, $foreignColumn);
+        $oldFile = $this->filePointerGateway->checkPointerExists($foreignTable, $foreignTableID, $foreignColumn)->fetch();
 
         if (empty($oldFile)) {
             // Insert record into gibbonFile table
@@ -130,8 +130,13 @@ class FileGateway extends QueryableGateway
             'fileSize' => $metaData['fileSize'] ?? '',
             'mimeType' => $metaData['mimeType'] ?? '',
             'gibbonPersonIDOwner' => $metaData['gibbonPersonIDOwner'] ?? '',
+            'uploadedAt' => date('Y-m-d H:i:s'),
             'checksum' => $checksum
         ];
+
+        if (!empty($gibbonFileID)) {
+            $data['gibbonFileID'] = $gibbonFileID;
+        }
 
         if (empty($gibbonFileID)) {
             // Insert record into gibbonFile table
@@ -139,7 +144,7 @@ class FileGateway extends QueryableGateway
         } else {
             $updated = $this->update($gibbonFileID, $data);
         }
-        
+
         return $gibbonFileID;
     }
 

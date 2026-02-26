@@ -147,8 +147,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
                 'timestampModified' => date('Y-m-d H:i:s'),
             ]);
             
-            // Record file tracking after successful update
-            if (!empty($fileMetaData) && $updated) {
+            // Record file tracking
+            if (!empty($fileMetaData)) {
                 $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $existing['gibbonReportingValueID'], 'value');
 
                 if (empty($gibbonFileID)) {
@@ -161,7 +161,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
             $inserted = $reportingValueGateway->insert($data);
             
             // Record file tracking after successful insert
-            if (!empty($fileMetaData) && $inserted) {
+            if (!empty($fileMetaData)) {
                 $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $inserted, 'value');
                 
                 if (empty($gibbonFileID)) {
