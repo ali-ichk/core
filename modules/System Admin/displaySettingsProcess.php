@@ -2,6 +2,7 @@
 
 use Gibbon\FileUploader;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\System\FileGateway;
 /*
 Gibbon: the flexible, open school platform
 Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
@@ -65,6 +66,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
 
     $fileUploader = new FileUploader($pdo, $session);
     $fileUploader->getFileExtensions('Graphics/Design');
+    $logoFileMetaData = null;
+    $backgroundFileMetaData = null;
 
     // Move attached logo file, if there is one
     if (!empty($_FILES['organisationLogoFile']['tmp_name'])) {
@@ -75,6 +78,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
 
         if (empty($_POST['organisationLogo'])) {
             $partialFail = true;
+        } else {
+            $logoFileMetaData = $fileUploader->getFileMetaData($_POST['organisationLogo']);
         }
     } else {
         $_POST['organisationLogo'] = $settingGateway->getSettingByScope('System', 'organisationLogo');
@@ -89,6 +94,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
 
         if (empty($_POST['organisationBackground'])) {
             $partialFail = true;
+        } else {
+            $backgroundFileMetaData = $fileUploader->getFileMetaData($_POST['organisationBackground']);
         }
     } else {
         $_POST['organisationBackground'] = !empty($_POST['organisationBackground'])
@@ -105,6 +112,30 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
 
             $updated = $settingGateway->updateSettingByScope($scope, $name, $value);
             $partialFail &= !$updated;
+        }
+    }
+
+    // Record file tracking for logo
+    if (!empty($logoFileMetaData)) {
+        $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
+        if (!empty($settingRecord)) {
+            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($logoFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+            
+            if (empty($gibbonFileID)) {
+                $partialFail = true;
+            }
+        }
+    }
+
+    // Record file tracking for background
+    if (!empty($backgroundFileMetaData)) {
+        $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationBackground'])->fetch();
+        if (!empty($settingRecord)) {
+            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($backgroundFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+            
+            if (empty($gibbonFileID)) {
+                $partialFail = true;
+            }
         }
     }
 

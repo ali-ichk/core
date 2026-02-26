@@ -29,6 +29,7 @@ use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\User\PersonPhotoGateway;
 use Gibbon\Domain\User\UserStatusLogGateway;
 use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Domain\System\FileGateway;
 
 require_once '../../gibbon.php';
 
@@ -269,6 +270,7 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                     header("Location: {$URL}");
                 } else {
                     $imageFail = false;
+                    $fileMetaData = null;
                     $updateBackupPhoto = false;
                     if (!empty($_FILES['file1']['tmp_name']))
                     {
@@ -286,6 +288,7 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                             if (empty($attachment1)) {
                                 $imageFail = true;
                             } else {
+                                $fileMetaData = $fileUploader->getFileMetaData($attachment1);
                                 $updateBackupPhoto = true;
                             }
                         }
@@ -319,6 +322,15 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                             $URL .= '&return=error2';
                             header("Location: {$URL}");
                             exit();
+                        }
+
+                        // Record file tracking
+                        if (!empty($fileMetaData) && !empty($gibbonPersonID)) {
+                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPerson', $gibbonPersonID, 'image_240');
+                            
+                            if (empty($gibbonFileID)) {
+                                $imageFail = true;
+                            }
                         }
 
                         if ($row['status'] != $status) {

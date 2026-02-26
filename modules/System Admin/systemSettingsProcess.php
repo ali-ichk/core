@@ -21,6 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\FileUploader;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\System\FileGateway;
 use Gibbon\Data\Validator;
 
 require_once '../../gibbon.php';
@@ -102,6 +103,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/systemSetting
 
     $fileUploader = new FileUploader($pdo, $session);
     $fileUploader->getFileExtensions('Graphics/Design');
+    $fileMetaData = null;
 
     // Move attached logo file, if there is one
     if (!empty($_FILES['organisationLogoFile']['tmp_name'])) {
@@ -112,6 +114,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/systemSetting
 
         if (empty($_POST['organisationLogo'])) {
             $partialFail = true;
+        } else {
+            $fileMetaData = $fileUploader->getFileMetaData($_POST['organisationLogo']);
         }
     } else {
         $_POST['organisationLogo'] = $settingGateway->getSettingByScope('System', 'organisationLogo');
@@ -126,6 +130,18 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/systemSetting
 
             $updated = $settingGateway->updateSettingByScope($scope, $name, $value);
             $partialFail &= !$updated;
+        }
+    }
+
+    // Record file tracking
+    if (!empty($fileMetaData)) {
+        $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
+        if (!empty($settingRecord)) {
+            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'],'value');
+            
+            if (empty($gibbonFileID)) {
+                $partialFail = true;
+            }
         }
     }
 

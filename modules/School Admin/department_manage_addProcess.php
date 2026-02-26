@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use Gibbon\Data\Validator;
 use Gibbon\Forms\CustomFieldHandler;
+use Gibbon\Domain\System\FileGateway;
 
 include '../../gibbon.php';
 
@@ -50,6 +51,7 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
         $partialFail = false;
 
         //Move attached file, if there is one
+        $fileMetaData = null;
         if (!empty($_FILES['file']['tmp_name'])) {
             $file = (isset($_FILES['file']))? $_FILES['file'] : null;
 
@@ -58,6 +60,8 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
 
             if (empty($attachment)) {
                 $partialFail = true;
+            } else {
+                $fileMetaData = $fileUploader->getFileMetaData($attachment);
             }
         } else {
             $attachment = '';
@@ -85,6 +89,15 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
         }
 
         $AI = $connection2->lastInsertID();
+
+        // Record file tracking
+        if (!empty($fileMetaData) && !empty($AI)) {
+            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonDepartment', $AI, 'logo');
+            
+            if (empty($gibbonFileID)) {
+                $partialFail = true;
+            }
+        }
 
         //Scan through staff
         $staff = array();
