@@ -618,7 +618,7 @@ class FileUploader
         $metaData['gibbonPersonIDOwner'] = $this->session->get('gibbonPersonID');
 
         // Skip if required data is missing
-        if (empty($metaData['fileSize']) || empty($metaData['mimeType']) || empty($metaData['fileName']) || empty($metaData['fileExtension']) || empty($metaData['gibbonPersonIDOwner'] )) {
+        if (empty($metaData['fileSize']) || empty($metaData['mimeType']) || empty($metaData['fileName']) || empty($metaData['fileExtension'])) {
             return;
         }
 
