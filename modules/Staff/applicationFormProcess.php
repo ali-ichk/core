@@ -29,7 +29,7 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\System\EmailTemplateGateway;
 use Gibbon\Forms\Builder\FormBuilderInterface;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -217,7 +217,7 @@ if ($proceed == false) {
                                 // Record file tracking
                                 if (!empty($fileMetaData)) {
                                     $gibbonStaffApplicationFormFileID = $connection2->lastInsertID();
-                                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+                                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
 
                                     if (empty($gibbonFileID)) {
                                         $partialFail = true;

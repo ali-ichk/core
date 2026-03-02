@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\CustomFieldHandler;
@@ -432,7 +432,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/applicationForm_m
                                         
                                         // Record file tracking
                                         if (!empty($fileMetaData) && !empty($gibbonApplicationFormFileID)) {
-                                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
+                                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
                                             
                                             if (empty($gibbonFileID)) {
                                                 $partialFail = true;

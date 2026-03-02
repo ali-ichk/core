@@ -1,8 +1,4 @@
 <?php
-
-use Gibbon\FileUploader;
-use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\System\FileGateway;
 /*
 Gibbon: the flexible, open school platform
 Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
@@ -23,6 +19,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use Gibbon\Data\Validator;
+use Gibbon\FileUploader;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -119,7 +118,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
     if (!empty($logoFileMetaData)) {
         $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
         if (!empty($settingRecord)) {
-            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($logoFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($logoFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
             
             if (empty($gibbonFileID)) {
                 $partialFail = true;
@@ -131,7 +130,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
     if (!empty($backgroundFileMetaData)) {
         $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationBackground'])->fetch();
         if (!empty($settingRecord)) {
-            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($backgroundFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($backgroundFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
             
             if (empty($gibbonFileID)) {
                 $partialFail = true;

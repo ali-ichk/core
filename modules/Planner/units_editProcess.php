@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Domain\Timetable\CourseGateway;
 
 require_once '../../gibbon.php';
@@ -266,7 +266,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units_edit.php') =
 
                         // Record file tracking
                         if (!empty($fileMetaData)) {
-                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonUnit', $gibbonUnitID, 'attachment');
+                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonUnit', $gibbonUnitID, 'attachment');
 
                             if (empty($gibbonFileID)) {
                                 $partialFail = true;

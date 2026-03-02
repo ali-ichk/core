@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use Gibbon\Data\Validator;
 use Gibbon\Forms\CustomFieldHandler;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 include '../../gibbon.php';
 
@@ -92,7 +92,7 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
 
         // Record file tracking
         if (!empty($fileMetaData) && !empty($AI)) {
-            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonDepartment', $AI, 'logo');
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonDepartment', $AI, 'logo');
             
             if (empty($gibbonFileID)) {
                 $partialFail = true;

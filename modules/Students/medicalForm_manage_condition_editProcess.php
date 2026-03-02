@@ -24,7 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Data\Validator;
 use Gibbon\Domain\System\AlertLevelGateway;
 use Gibbon\UI\Components\Alert;
@@ -109,7 +109,7 @@ if ($gibbonPersonMedicalID == '' or $gibbonPersonMedicalConditionID == '') { ech
                     
                     // Record file tracking
                     if (!empty($fileMetaData) && !empty($gibbonPersonMedicalConditionID)) {
-                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $gibbonPersonMedicalConditionID, 'attachment');
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $gibbonPersonMedicalConditionID, 'attachment');
 
                         if (empty($gibbonFileID)) {
                             $URL .= '&return=error2';

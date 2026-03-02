@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 
 include '../../gibbon.php';
@@ -83,8 +83,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
 
         // Record file tracking
         if (!empty($fileMetaData)) {
-            $fileGateway = $container->get(FileGateway::class);
-            $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $AI, 'attachment');
+            $fileHandler = $container->get(FileHandler::class);
+            $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $AI, 'attachment');
 
             if (empty($gibbonFileID)) {
                 $partialFail = true;

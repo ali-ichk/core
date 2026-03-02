@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Domain\Staff\StaffCoverageGateway;
 use Gibbon\FileUploader;
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -100,7 +100,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
 
     // Record file tracking (only if new file uploaded)
     if (!empty($fileMetaData)) {
-        $gibbonFileiD = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
+        $gibbonFileiD = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
 
         if (empty($gibbonFileiD)) {
             $updated = false;

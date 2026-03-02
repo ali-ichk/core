@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\FileUploader;
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 use Gibbon\Module\Reports\Domain\ReportArchiveGateway;
 use Gibbon\Data\Validator;
@@ -146,7 +146,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage_upl
             // Record file tracking
             $fileMetaData = $fileUploader->getFileMetaData($archiveEntry['filePath']);
             if (!empty($fileMetaData)) {
-                $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonReportArchiveEntry', $inserted, 'filePath');
+                $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonReportArchiveEntry', $inserted, 'filePath');
                 
                 if (empty($gibbonFileID)) {
                     $partialFail = true;

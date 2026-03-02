@@ -26,7 +26,7 @@ use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\DataUpdater\MedicalUpdateGateway;
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -230,7 +230,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 
                      // Record file tracking
                     if (!empty($fileMetaData) && !empty($gibbonPersonMedicalConditionUpdateID)) {
-                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment'
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment'
                         );
                         
                         if (empty($gibbonFileID)) {
@@ -278,7 +278,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         
                         // Record file tracking
                         if (!empty($newFileMetaData) && !empty($gibbonPersonMedicalConditionUpdateID)) {
-                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($newFileMetaData, 'gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment');
+                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($newFileMetaData, 'gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment');
                             
                             if (empty($gibbonFileID)) {
                                 $partialFail = true;

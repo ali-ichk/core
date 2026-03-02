@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 
 include '../../gibbon.php';
@@ -151,8 +151,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     // Record file tracking (capture lastInsertID for each iteration)
                     if (!empty($fileMetaData)) {
                         $gibbonInternalAssessmentColumnID = $connection2->lastInsertID();
-                        $fileGateway = $container->get(FileGateway::class);
-                        $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+                        $fileHandler = $container->get(FileHandler::class);
+                        $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
                         
                         if (empty($gibbonFileID)) {
                             $partialFail = true;

@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 include '../../gibbon.php';
 
@@ -92,7 +92,7 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/house_manage_
 
             // Record file tracking
             if (!empty($fileMetaData) && !empty($AI)) {
-                $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonHouse', $AI, 'logo');
+                $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonHouse', $AI, 'logo');
                 
                 if (empty($gibbonFileID)) {
                     $imageFail = true;

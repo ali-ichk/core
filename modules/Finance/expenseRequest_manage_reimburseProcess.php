@@ -24,7 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Finance\FinanceExpenseApproverGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -139,7 +139,7 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
 
                         // Record file tracking
                         if (!empty($fileMetaData) && !empty($gibbonFinanceExpenseID)) {
-                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonFinanceExpense', $gibbonFinanceExpenseID, 'paymentReimbursementReceipt');
+                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonFinanceExpense', $gibbonFinanceExpenseID, 'paymentReimbursementReceipt');
                             
                             if (empty($gibbonFileID)) {
                                 $URL .= '&return=error2';

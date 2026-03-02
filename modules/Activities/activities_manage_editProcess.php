@@ -26,7 +26,7 @@ use Gibbon\Domain\Activities\ActivityGateway;
 use Gibbon\Domain\Activities\ActivitySlotGateway;
 use Gibbon\Domain\Activities\ActivityStaffGateway;
 use Gibbon\Domain\Activities\ActivityPhotoGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\FileUploader;
 
 require_once '../../gibbon.php';
@@ -219,7 +219,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
 
                 // Record file tracking
                 if (!empty($fileMetaData)) {
-                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonActivityPhoto', $gibbonActivityPhotoID, 'filePath');
+                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonActivityPhoto', $gibbonActivityPhotoID, 'filePath');
                     
                     if (empty($gibbonFileID)) {
                         $partialFail = true;

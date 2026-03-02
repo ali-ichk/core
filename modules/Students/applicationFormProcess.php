@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 use Gibbon\Contracts\Comms\Mailer;
 use Gibbon\Contracts\Services\Payment;
@@ -374,7 +374,7 @@ if ($proceed == false) {
                             
                             // Record file tracking
                             if (!empty($fileMetaData) && !empty($gibbonApplicationFormFileID)) {
-                                $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
+                                $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
                             }
 
                             if (empty($gibbonFileID)) {

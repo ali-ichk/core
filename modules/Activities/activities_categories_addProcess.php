@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
 use Gibbon\Domain\Activities\ActivityCategoryGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -97,7 +97,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_cate
 
     // Record file tracking
     if (!empty($fileMetaData) && !empty($gibbonActivityCategoryID)) {
-        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonActivityCategory', $gibbonActivityCategoryID, 'backgroundImage');
+        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonActivityCategory', $gibbonActivityCategoryID, 'backgroundImage');
         
         if (empty($gibbonFileID)) {
             $partialFail = true;

@@ -21,15 +21,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Gibbon\Forms\Builder\Fields;
 
-use Gibbon\View\View;
-use Gibbon\Forms\Form;
-use Gibbon\FileUploader;
-use Gibbon\Forms\Layout\Row;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Domain\Forms\FormUploadGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\FileUploader;
 use Gibbon\Forms\Builder\AbstractFieldGroup;
 use Gibbon\Forms\Builder\FormBuilderInterface;
+use Gibbon\Forms\Form;
+use Gibbon\Forms\Layout\Row;
+use Gibbon\View\View;
 
 class RequiredDocuments extends AbstractFieldGroup implements UploadableInterface
 {
@@ -58,9 +58,9 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
     /**
      * The file gateway instance.
      *
-     * @var FileGateway
+     * @var FileHandler
      */
-    protected $fileGateway;
+    protected $fileHandler;
 
     /**
      * The file uploader instance.
@@ -69,13 +69,13 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
      */
     protected $fileUploader;
 
-    public function __construct(Session $session, FormUploadGateway $formUploadGateway, FileGateway $fileGateway, FileUploader $fileUploader, View $view)
+    public function __construct(Session $session, FormUploadGateway $formUploadGateway, FileHandler $fileHandler, FileUploader $fileUploader, View $view)
     {
         $this->view = $view;
         $this->session = $session;
         $this->formUploadGateway = $formUploadGateway;
-        $this->fileGateway = $fileGateway;
         $this->fileUploader = $fileUploader;
+        $this->fileHandler = $fileHandler;
     }
 
     public function getDescription() : string
@@ -157,7 +157,7 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
 
                     // Record file tracking for new upload
                     if (!empty($fileMetaData)) {
-                        $gibbonFileID = $this->fileGateway->recordFileUpload($fileMetaData, 'gibbonFormUpload', $existing['gibbonFormUploadID'], 'path');
+                        $gibbonFileID = $this->fileHandler->recordFileUpload($fileMetaData, 'gibbonFormUpload', $existing['gibbonFormUploadID'],'path');
 
                         if (empty($gibbonFileID)) {
                             $requiredDocumentFail = true;
@@ -177,7 +177,12 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
                 // Record file tracking for new upload
                 $fileMetaData = $this->fileUploader->getFileMetaData($filePath);
                 if (!empty($fileMetaData)) {
-                    $gibbonFileID = $this->fileGateway->recordFileUpload($fileMetaData, 'gibbonFormUpload', $gibbonFormUploadID, 'path');
+                    $gibbonFileID = $this->fileHandler->recordFileUpload(
+                        $fileMetaData,
+                        'gibbonFormUpload',
+                        $gibbonFormUploadID,
+                        'path'
+                    );
 
                     if (empty($gibbonFileID)) {
                         $requiredDocumentFail = true;

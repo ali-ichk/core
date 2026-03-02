@@ -23,7 +23,7 @@ use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Data\Validator;
 use Gibbon\Domain\System\AlertLevelGateway;
 use Gibbon\UI\Components\Alert;
@@ -120,7 +120,7 @@ if ($gibbonPersonMedicalID == '') { echo 'Fatal error loading this page!';
                     
                     // Record file tracking
                     if (!empty($fileMetaData) && !empty($AI)) {
-                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $AI, 'attachment');
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $AI, 'attachment');
                     }
 
                     // ALERTS: possible change to Medical alert status, recalculate alerts

@@ -27,7 +27,7 @@ use Gibbon\Module\Reports\Domain\ReportingCriteriaGateway;
 use Gibbon\Module\Reports\Domain\ReportingAccessGateway;
 use Gibbon\Data\Validator;
 use Gibbon\FileUploader;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -58,7 +58,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
     $reportingCriteriaGateway = $container->get(ReportingCriteriaGateway::class);
     $reportingAccessGateway = $container->get(ReportingAccessGateway::class);
     $fileUploader = $container->get(FileUploader::class);
-    $fileGateway = $container->get(FileGateway::class);
+    $fileHandler = $container->get(FileHandler::class);
     
     $values = $_POST['value'] ?? [];
 
@@ -149,7 +149,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
             
             // Record file tracking
             if (!empty($fileMetaData)) {
-                $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $existing['gibbonReportingValueID'], 'value');
+                $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportingValue', $existing['gibbonReportingValueID'], 'value');
 
                 if (empty($gibbonFileID)) {
                     $partialFail = true;
@@ -162,7 +162,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
             
             // Record file tracking after successful insert
             if (!empty($fileMetaData)) {
-                $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportingValue', $inserted, 'value');
+                $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportingValue', $inserted, 'value');
                 
                 if (empty($gibbonFileID)) {
                     $partialFail = true;

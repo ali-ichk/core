@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\FileUploader;
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Data\Validator;
 
 require_once '../../gibbon.php';
@@ -137,7 +137,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/systemSetting
     if (!empty($fileMetaData)) {
         $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
         if (!empty($settingRecord)) {
-            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'],'value');
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'],'value');
             
             if (empty($gibbonFileID)) {
                 $partialFail = true;

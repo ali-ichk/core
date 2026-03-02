@@ -26,7 +26,7 @@ use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\User\PersonalDocumentGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 class PersonalDocumentHandler
 {
@@ -34,18 +34,18 @@ class PersonalDocumentHandler
     protected $fileUploader;
     protected $settingGateway;
     protected $view;
-    protected $fileGateway;
+    protected $fileHandler;
 
     protected $documents;
     protected $fields;
 
-    public function __construct(PersonalDocumentGateway $personalDocumentGateway, FileUploader $fileUploader, View $view, SettingGateway $settingGateway, FileGateway $fileGateway = null)
+    public function __construct(PersonalDocumentGateway $personalDocumentGateway, FileUploader $fileUploader, View $view, SettingGateway $settingGateway, ?FileHandler $fileHandler = null)
     {
         $this->personalDocumentGateway = $personalDocumentGateway;
         $this->fileUploader = $fileUploader;
         $this->settingGateway = $settingGateway;
         $this->view = $view;
-        $this->fileGateway = $fileGateway;
+        $this->fileHandler = $fileHandler;
 
         $this->documents = [
             'Passport' => __('Passport'),
@@ -141,7 +141,7 @@ class PersonalDocumentHandler
 
             // Record file tracking (only if file was uploaded and insert/update succeeded)
             if (!empty($fileMetaData) && !empty($gibbonPersonalDocumentID)) {
-                $gibbonFileID = $this->fileGateway->recordFileUpload($fileMetaData, 'gibbonPersonalDocument', $gibbonPersonalDocumentID, 'filePath');
+                $gibbonFileID = $this->fileHandler->recordFileUpload($fileMetaData, 'gibbonPersonalDocument', $gibbonPersonalDocumentID, 'filePath');
 
                 if (empty($gibbonFileID)) {
                     $personalDocumentFail = true;

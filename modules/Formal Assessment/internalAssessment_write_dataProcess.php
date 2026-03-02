@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Data\Validator;
 use Gibbon\Domain\FormalAssessment\InternalAssessmentColumnGateway;
 use Gibbon\Domain\School\GradeScaleGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 
 require_once '../../gibbon.php';
@@ -195,7 +195,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                                 // Record file tracking for INSERT case (capture lastInsertID)
                                 if (!empty($fileMetaDataResponse)) {
                                     $gibbonInternalAssessmentEntryID = $connection2->lastInsertID();
-                                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaDataResponse, 'gibbonInternalAssessmentEntry', $gibbonInternalAssessmentEntryID, 'response');
+                                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaDataResponse, 'gibbonInternalAssessmentEntry', $gibbonInternalAssessmentEntryID, 'response');
                                     if (empty($gibbonFileID)) {
                                         $partialFail = true;
                                     }
@@ -258,7 +258,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                 // Record file tracking for column attachment UPDATE
                 if (!empty($fileMetaData)) {
-                   $gibbonFileID =  $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+                   $gibbonFileID =  $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
 
                    if (empty($gibbonFileID)) {
                        $partialFail = true;

@@ -29,7 +29,7 @@ use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\User\PersonPhotoGateway;
 use Gibbon\Domain\User\UserStatusLogGateway;
 use Gibbon\Domain\System\NotificationGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -326,7 +326,7 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
 
                         // Record file tracking
                         if (!empty($fileMetaData) && !empty($gibbonPersonID)) {
-                            $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPerson', $gibbonPersonID, 'image_240');
+                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPerson', $gibbonPersonID, 'image_240');
                             
                             if (empty($gibbonFileID)) {
                                 $imageFail = true;

@@ -25,7 +25,7 @@ use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Domain\System\CustomFieldGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 class CustomFieldHandler
 {
@@ -40,9 +40,9 @@ class CustomFieldHandler
     protected $fileUploader;
 
     /**
-     * @var \Gibbon\Domain\System\FileGateway
+     * @var \Gibbon\Contracts\Filesystem\FileHandler
      */
-    protected $fileGateway;
+    protected $fileHandler;
 
     /**
      * @var string[][]
@@ -59,11 +59,11 @@ class CustomFieldHandler
      */
     protected $headings;
 
-    public function __construct(CustomFieldGateway $customFieldGateway, FileUploader $fileUploader, FileGateway $fileGateway = null)
+    public function __construct(CustomFieldGateway $customFieldGateway, FileUploader $fileUploader, ?FileHandler $fileHandler = null)
     {
         $this->customFieldGateway = $customFieldGateway;
         $this->fileUploader = $fileUploader;
-        $this->fileGateway = $fileGateway;
+        $this->fileHandler = $fileHandler;
 
         $this->contexts = [
             __('User Admin') => [
@@ -555,7 +555,7 @@ class CustomFieldHandler
             // Record file upload with pointer
             $foreignColumn = "fields[{$gibbonCustomFieldID}]";
 
-            $gibbonFileID = $this->fileGateway->recordFileUpload(
+            $gibbonFileID = $this->fileHandler->recordFileUpload(
                 $fileMetaData,
                 $foreignTable,
                 $foreignTableID,

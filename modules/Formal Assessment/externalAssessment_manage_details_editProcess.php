@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Data\Validator;
 use Gibbon\Domain\FormalAssessment\ExternalAssessmentStudentGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 
 require_once '../../gibbon.php';
@@ -131,8 +131,8 @@ if ($gibbonPersonID == '') { echo 'Fatal error loading this page!';
 
                     // Record file tracking
                     if (!empty($fileMetaData)) {
-                        $fileGateway = $container->get(FileGateway::class);
-                        $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $gibbonExternalAssessmentStudentID, 'attachment');
+                        $fileHandler = $container->get(FileHandler::class);
+                        $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $gibbonExternalAssessmentStudentID, 'attachment');
 
                         if (empty($gibbonFileID)) {
                             $partialFail = true;

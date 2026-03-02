@@ -29,7 +29,7 @@ use Gibbon\Domain\Students\StudentGateway;
 use Gibbon\Domain\User\PersonPhotoGateway;
 use Gibbon\Domain\User\UserStatusLogGateway;
 use Gibbon\Domain\Timetable\CourseEnrolmentGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 include '../../gibbon.php';
 
@@ -207,8 +207,8 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add
 
                     // Record file tracking
                     if (!empty($fileMetaData) && !empty($AI)) {
-                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonPerson', $AI, 'image_240');
-                        
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPerson', $AI, 'image_240');
+                                                
                         if (empty($gibbonFileID)) {
                             $imageFail = true;
                         }

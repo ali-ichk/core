@@ -23,7 +23,7 @@ use Gibbon\FileUploader;
 use Gibbon\Data\Validator;
 use Gibbon\Module\Reports\Domain\ReportTemplateGateway;
 use Gibbon\Module\Reports\Domain\ReportTemplateSectionGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -110,9 +110,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/templates_manage_s
 
     // Record file tracking for each uploaded file in JSON config
     if (!empty($fileMetaDataList)) {
-        $fileGateway = $container->get(FileGateway::class);
+        $fileHandler = $container->get(FileHandler::class);
         foreach ($fileMetaDataList as $configName => $fileMetaData) {
-            $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonReportTemplateSection', $gibbonReportTemplateSectionID, 'config[' . $configName . ']');
+            $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportTemplateSection', $gibbonReportTemplateSectionID, 'config[' . $configName . ']');
         }
     }
 

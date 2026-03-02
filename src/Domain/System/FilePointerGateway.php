@@ -36,54 +36,18 @@ class FilePointerGateway extends QueryableGateway
 
     private static $tableName = 'gibbonFilePointer';
     private static $primaryKey = 'gibbonFilePointerID';
-
-    /**
-     * Record a file pointer linking a file to a foreign table record
-     *
-     * @param int $gibbonFileID ID of the file in gibbonFile
-     * @param string|null $foreignTable Name of the foreign table (nullable)
-     * @param int|null $foreignTableID Primary key value in the foreign table (nullable)
-     * @param string $foreignColumn Column name storing the file path
-     * @return int|false gibbonFilePointerID on success, false on failure
-     */
-    public function insertFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn)
-    {
-        // Validate required parameter
-        if (empty($gibbonFileID)) {
-            return false;
-        }
-        
-        // Build data array with all parameters
-        $data = [
-            'gibbonFileID' => $gibbonFileID,
-            'foreignTable' => $foreignTable,
-            'foreignTableID' => $foreignTableID,
-            'foreignColumn' => $foreignColumn
-        ];
-
-        // Insert record into gibbonFilePointer table
-        return $this->insert($data);
-    }
-
-    /**
-     * Check if a file pointer exists and return the file path
-     *
-     * @param string $foreignTable Name of the foreign table
-     * @param int|string $foreignTableID Primary key value in the foreign table
-     * @param string $foreignColumn Column name storing the file path
-     * @return result object
-     */
-    public function checkPointerExists(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
+    
+    public function getFileAndPointerID(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
     {
         $data = ['foreignTable' => $foreignTable, 'foreignTableID' => $foreignTableID, 'foreignColumn' => $foreignColumn];
 
-        $sql = "SELECT gibbonFile.gibbonFileID, gibbonFile.filePath
+        $sql = "SELECT gibbonFilePointer.gibbonFilePointerID, gibbonFile.gibbonFileID, gibbonFile.filePath
                 FROM gibbonFilePointer
                 JOIN gibbonFile ON gibbonFilePointer.gibbonFileID = gibbonFile.gibbonFileID
                 WHERE gibbonFilePointer.foreignTable = :foreignTable
                 AND gibbonFilePointer.foreignTableID = :foreignTableID
                 AND gibbonFilePointer.foreignColumn = :foreignColumn";
 
-        return $this->db()->select($sql, $data);
+        return $this->db()->selectOne($sql, $data);
     }
 }

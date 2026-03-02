@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 use Gibbon\Domain\System\LogGateway;
 use Gibbon\Data\Validator;
@@ -333,7 +333,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
                                 // Record file tracking for INSERT
                                 if (!empty($fileMetaData)) {
                                     $gibbonMarkbookEntryID = $connection2->lastInsertID();
-                                    $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookEntry', $gibbonMarkbookEntryID, 'response');
+                                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookEntry', $gibbonMarkbookEntryID, 'response');
 
                                     if (empty($gibbonFileID)) {
                                         $partialFail = true;
@@ -352,7 +352,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
                                 
                                 // Record file tracking for UPDATE
                                 if (!empty($fileMetaData)) {
-                                    $gibbonFileiD = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookEntry', $entry['gibbonMarkbookEntryID'], 'response');
+                                    $gibbonFileiD = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookEntry', $entry['gibbonMarkbookEntryID'], 'response');
 
                                     if (empty($gibbonFileiD)) {
                                         $partialFail = true;

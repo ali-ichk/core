@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
 
@@ -193,8 +193,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_edi
                             
                             // Record file tracking for UPDATE
                             if (!empty($fileMetaData)) {
-                                $fileGateway = $container->get(FileGateway::class);
-                                $gibbonFileID = $fileGateway->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+                                $fileHandler = $container->get(FileHandler::class);
+                                $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
 
                                 if (empty($gibbonFileID)) {
                                     $partialFail = true;

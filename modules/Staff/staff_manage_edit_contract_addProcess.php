@@ -21,7 +21,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
-use Gibbon\Domain\System\FileGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 include '../../gibbon.php';
 
@@ -125,7 +125,7 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
 
                     // Record file tracking
                     if (!empty($fileMetaData)) { 
-                        $gibbonFileID = $container->get(FileGateway::class)->recordFileUpload($fileMetaData, 'gibbonStaffContract', $AI, 'contractUpload');
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonStaffContract', $AI, 'contractUpload');
 
                         if (empty($gibbonFileID)) {
                             $partialFail = true;
