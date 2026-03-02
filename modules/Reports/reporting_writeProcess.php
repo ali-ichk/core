@@ -120,13 +120,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write.ph
         } elseif ($criteriaType['valueType'] == 'Image') {
             if (!empty($_FILES['file'.$gibbonReportingCriteriaID]['tmp_name'])) {
                 $data['value'] = $fileUploader->uploadAndResizeImage($_FILES['file'.$gibbonReportingCriteriaID], 'reportFile', $criteriaOptions['imageSize'] ?? 1024, $criteriaOptions['imageQuality'] ?? 80);
-                
-                // Get file metadata for tracking
-                if (!empty($data['value'])) {
-                    $fileMetaData = $fileUploader->getFileMetaData($data['value']);
-                }
             } else {
                 $data['value'] = $value;
+            }
+
+            // Get file metadata for tracking
+            if (!empty($data['value'])) {
+                $fileMetaData = $fileUploader->getFileMetaData($data['value']);
             }
         } else {
             $data['value'] = $value;
