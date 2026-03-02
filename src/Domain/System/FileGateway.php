@@ -98,11 +98,22 @@ class FileGateway extends QueryableGateway
             }
         } else {
             $gibbonFileID = $this->insertAndUpdateFile($metaData, $oldFile['gibbonFileID']);
-            unlink($oldFile['filePath']);
+
+            // If update fails, rollback and return false
+            if (empty($gibbonFileID)) {
+                $this->db()->rollBack();
+                return false;
+            }
+
+            $oldFilePath = $this->session->get('absolutePath') . '/' . $oldFile['filePath'];
         }
 
         // All operations succeeded, commit the transaction
         $this->db()->commit();
+
+        if (!empty($oldFilePath) && file_exists($oldFilePath)) {
+            unlink($oldFilePath);
+        }
 
         // Return $gibbonFileID
         return $gibbonFileID;
@@ -134,15 +145,13 @@ class FileGateway extends QueryableGateway
             'checksum' => $checksum
         ];
 
-        if (!empty($gibbonFileID)) {
-            $data['gibbonFileID'] = $gibbonFileID;
-        }
-
         if (empty($gibbonFileID)) {
             // Insert record into gibbonFile table
             $gibbonFileID = $this->insert($data);
         } else {
-            $updated = $this->update($gibbonFileID, $data);
+            if (!$this->update($gibbonFileID, $data)) {
+                return false;
+            }
         }
 
         return $gibbonFileID;
