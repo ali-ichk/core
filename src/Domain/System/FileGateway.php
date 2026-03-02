@@ -24,6 +24,7 @@ namespace Gibbon\Domain\System;
 use Gibbon\Domain\QueryableGateway;
 use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Contracts\Database\Connection;
+use Gibbon\Contracts\Database\Result;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Domain\System\FilePointerGateway;
 
@@ -64,7 +65,7 @@ class FileGateway extends QueryableGateway
      * @param string|null $foreignTable Name of the foreign table (nullable)
      * @param int|null $foreignTableID Primary key value in the foreign table (nullable)
      * @param string $foreignColumn Column name storing the file path
-     * @return array|false Array with gibbonFileID and gibbonFilePointerID on success, false on failure
+     * @return int|false gibbonFileID on success, false on failure
      */
     public function recordFileUpload(array $metaData, string $foreignTable, int|string $foreignTableID, string $foreignColumn)
     {
@@ -105,12 +106,14 @@ class FileGateway extends QueryableGateway
                 return false;
             }
 
+            // Store old file path for deletion after transaction commits
             $oldFilePath = $this->session->get('absolutePath') . '/' . $oldFile['filePath'];
         }
 
         // All operations succeeded, commit the transaction
         $this->db()->commit();
 
+        // Delete old file only after successful commit (for updates only)
         if (!empty($oldFilePath) && file_exists($oldFilePath)) {
             unlink($oldFilePath);
         }
@@ -148,6 +151,10 @@ class FileGateway extends QueryableGateway
         if (empty($gibbonFileID)) {
             // Insert record into gibbonFile table
             $gibbonFileID = $this->insert($data);
+            
+            if (empty($gibbonFileID)) {
+                return false;
+            }
         } else {
             if (!$this->update($gibbonFileID, $data)) {
                 return false;

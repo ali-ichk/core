@@ -48,6 +48,11 @@ class FilePointerGateway extends QueryableGateway
      */
     public function insertFilePointer($gibbonFileID, $foreignTable, $foreignTableID, $foreignColumn)
     {
+        // Validate required parameter
+        if (empty($gibbonFileID)) {
+            return false;
+        }
+        
         // Build data array with all parameters
         $data = [
             'gibbonFileID' => $gibbonFileID,
@@ -70,8 +75,7 @@ class FilePointerGateway extends QueryableGateway
      */
     public function checkPointerExists(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
     {
-        $data = [
-            'foreignTable' => $foreignTable, 'foreignTableID' => $foreignTableID, 'foreignColumn' => $foreignColumn];
+        $data = ['foreignTable' => $foreignTable, 'foreignTableID' => $foreignTableID, 'foreignColumn' => $foreignColumn];
 
         $sql = "SELECT gibbonFile.gibbonFileID, gibbonFile.filePath
                 FROM gibbonFilePointer
