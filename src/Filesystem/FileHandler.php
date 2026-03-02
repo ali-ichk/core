@@ -149,11 +149,58 @@ class FileHandler
     }
 
     /**
-     * {@inheritdoc}
+     * Delete a file and its pointer
+     * @param string $foreignTable Name of the foreign table
+     * @param int|string $foreignTableID Primary key value in the foreign table
+     * @param string $foreignColumn Column name storing the file path
+     * @return bool True on success, false on failure
      */
     public function deleteFile(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
     {
+        // Begin database transaction
+        $this->db->beginTransaction();
 
+        // Find the pointer and get the gibbonFileID and filePath
+        $filePointer = $this->filePointerGateway->getFileAndPointerID($foreignTable, $foreignTableID, $foreignColumn);
+            
+        if (empty($filePointer)) {
+            $this->db->rollBack();
+            return false;
+        }
+
+        $gibbonFileID = $filePointer['gibbonFileID'];
+        $filePath = $filePointer['filePath'];
+            
+        // Delete the pointer
+        if (!$this->filePointerGateway->delete($filePointer['gibbonFilePointerID'])) {
+            $this->db->rollBack();
+            return false;
+        }
+
+        // Check if the file has any other pointers
+        $pointersExist = $this->filePointerGateway->countPointersByFileID($gibbonFileID)->fetch();
+        $pointerCount = $pointersExist['count'];
+
+        if ($pointerCount == 0) {
+            // Delete the record from gibbonFile table
+            if (!$this->fileGateway->delete($gibbonFileID)) {
+                $this->db->rollBack();
+                return false;
+            }
+                
+            // Store file path for deletion after transaction commits
+            $absolutePath = $this->session->get('absolutePath') . '/' . $filePath;
+        }
+
+        // All operations succeeded, commit the transaction
+        $this->db->commit();
+
+        // Delete physical file only after successful commit (if no other pointers existed)
+        if ($pointerCount == 0 &&!empty($absolutePath) && file_exists($absolutePath)) {
+            unlink($absolutePath);
+        }
+        
+        return true;
     }
 
      /**

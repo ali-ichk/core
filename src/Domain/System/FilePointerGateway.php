@@ -36,7 +36,7 @@ class FilePointerGateway extends QueryableGateway
 
     private static $tableName = 'gibbonFilePointer';
     private static $primaryKey = 'gibbonFilePointerID';
-    
+
     public function getFileAndPointerID(string $foreignTable, int|string $foreignTableID, string $foreignColumn)
     {
         $data = ['foreignTable' => $foreignTable, 'foreignTableID' => $foreignTableID, 'foreignColumn' => $foreignColumn];
@@ -49,5 +49,13 @@ class FilePointerGateway extends QueryableGateway
                 AND gibbonFilePointer.foreignColumn = :foreignColumn";
 
         return $this->db()->selectOne($sql, $data);
+    }
+
+    public function countPointersByFileID(int $gibbonFileID)
+    {
+        $data = ['gibbonFileID' => $gibbonFileID];
+        $sql = "SELECT COUNT(*) as count FROM gibbonFilePointer WHERE gibbonFileID = :gibbonFileID";
+        
+       return $this->db()->select($sql, $data);
     }
 }
