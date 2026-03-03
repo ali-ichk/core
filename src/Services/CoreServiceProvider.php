@@ -33,14 +33,17 @@ use Gibbon\Domain\System\Theme;
 use Gibbon\Domain\System\Module;
 use Gibbon\Session\SessionFactory;
 use Gibbon\Services\Payment\Payment;
+use Gibbon\Filesystem\FileHandler;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Contracts\Comms\SMS as SMSInterface;
 use Gibbon\Contracts\Comms\Mailer as MailerInterface;
 use Gibbon\Contracts\Services\Payment as PaymentInterface;
 use Gibbon\Contracts\Services\Session as SessionInterface;
+use Gibbon\Contracts\Filesystem\FileHandler as FileHandlerInterface;
 use Gibbon\Data\PasswordPolicy;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use League\Container\ServiceProvider\BootableServiceProviderInterface;
+use ZipStream\File;
 
 /**
  * DI Container Services for the Core
@@ -80,6 +83,7 @@ class CoreServiceProvider extends AbstractServiceProvider implements BootableSer
         'mysql_logger',
         Validator::class,
         PasswordPolicy::class,
+        FileHandlerInterface::class
     ];
 
     /**
@@ -279,6 +283,10 @@ class CoreServiceProvider extends AbstractServiceProvider implements BootableSer
 
         $container->add(PaymentInterface::class, function () use ($container) {
            return $container->get(Payment::class);
+        });
+
+        $container->add(FileHandlerInterface::class, function () use ($container) {
+           return $container->get(FileHandler::class);
         });
 
         $container->share(Validator::class, function () {
