@@ -46,14 +46,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             $URL .= '&return=error1';
             header("Location: {$URL}");
         } else {
-            try {
-                
-                $result = $container->get(InternalAssessmentColumnGateway::class)->selectBy(['gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonCourseClassID' => $gibbonCourseClassID]);
-            } catch (PDOException $e) {
-                $URL .= '&return=error2';
-                header("Location: {$URL}");
-                exit();
-            }
+            $result = $container->get(InternalAssessmentColumnGateway::class)->selectBy(['gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonCourseClassID' => $gibbonCourseClassID]);
 
             if ($result->rowCount() != 1) {
                 $URL .= '&return=error2';
@@ -139,9 +132,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         exit();
                     }
 
+                    $fileHandler = $container->get(FileHandler::class);
+                    // Handle file deletion when user removes attachment
+                    if (empty($attachment) && !empty($row['attachment'])) {
+                        $deleted = $fileHandler->deleteFile('gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+                    }
+
                     // Record file tracking
-                    if (!empty($fileMetaData)) {
-                        $fileHandler = $container->get(FileHandler::class);
+                    if (!empty($fileMetaData) && !empty($gibbonInternalAssessmentColumnID)) {
                         $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
 
                         if (empty($gibbonFileID)) {

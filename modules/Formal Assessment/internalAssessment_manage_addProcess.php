@@ -147,12 +147,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     $sql = 'INSERT INTO gibbonInternalAssessmentColumn SET groupingID=:groupingID, gibbonCourseClassID=:gibbonCourseClassID, name=:name, description=:description, type=:type, attainment=:attainment, gibbonScaleIDAttainment=:gibbonScaleIDAttainment, effort=:effort, gibbonScaleIDEffort=:gibbonScaleIDEffort, comment=:comment, uploadedResponse=:uploadedResponse, completeDate=:completeDate, complete=:complete, viewableStudents=:viewableStudents, viewableParents=:viewableParents, attachment=:attachment, gibbonPersonIDCreator=:gibbonPersonIDCreator, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit';
                     $result = $connection2->prepare($sql);
                     $result->execute($data);
-                    
+
+                    $gibbonInternalAssessmentColumnID = $connection2->lastInsertID();
+
                     // Record file tracking (capture lastInsertID for each iteration)
-                    if (!empty($fileMetaData)) {
-                        $gibbonInternalAssessmentColumnID = $connection2->lastInsertID();
-                        $fileHandler = $container->get(FileHandler::class);
-                        $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+                    if (!empty($fileMetaData) && !empty($gibbonInternalAssessmentColumnID)) {
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
                         
                         if (empty($gibbonFileID)) {
                             $partialFail = true;

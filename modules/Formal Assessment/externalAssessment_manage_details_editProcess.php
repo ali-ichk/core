@@ -129,9 +129,14 @@ if ($gibbonPersonID == '') { echo 'Fatal error loading this page!';
                         exit();
                     }
 
+                    $fileHandler = $container->get(FileHandler::class); 
+                    // Handle file deletion when user removes attachment
+                    if (empty($attachment) && !empty($row['attachment'])) {
+                        $deleted = $fileHandler->deleteFile('gibbonExternalAssessmentStudent', $gibbonExternalAssessmentStudentID, 'attachment');
+                    }
+
                     // Record file tracking
-                    if (!empty($fileMetaData)) {
-                        $fileHandler = $container->get(FileHandler::class);
+                    if (!empty($fileMetaData) && !empty($gibbonExternalAssessmentStudentID)) {
                         $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $gibbonExternalAssessmentStudentID, 'attachment');
 
                         if (empty($gibbonFileID)) {

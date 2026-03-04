@@ -83,8 +83,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
 
         // Record file tracking
         if (!empty($fileMetaData)) {
-            $fileHandler = $container->get(FileHandler::class);
-            $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $AI, 'attachment');
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonExternalAssessmentStudent', $AI, 'attachment');
 
             if (empty($gibbonFileID)) {
                 $partialFail = true;

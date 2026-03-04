@@ -151,13 +151,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     $time = time();
 
                     $selectFail = false;
-                    try {
-                        $result = $container->get(InternalAssessmentColumnGateway::class)->selectInternalAssessmentEntry($gibbonInternalAssessmentColumnID, $gibbonPersonIDStudent);
-
-                    } catch (PDOException $e) {
-                        $partialFail = true;
-                        $selectFail = true;
-                    }
+                    $result = $container->get(InternalAssessmentColumnGateway::class)->selectInternalAssessmentEntry($gibbonInternalAssessmentColumnID, $gibbonPersonIDStudent);
                     if (!($selectFail)) {
                         $entry = $result->rowCount() > 0 ? $result->fetch() : [];
 
@@ -191,28 +185,35 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                                 $sql = 'INSERT INTO gibbonInternalAssessmentEntry SET gibbonInternalAssessmentColumnID=:gibbonInternalAssessmentColumnID, gibbonPersonIDStudent=:gibbonPersonIDStudent, attainmentValue=:attainmentValue, attainmentDescriptor=:attainmentDescriptor, effortValue=:effortValue, effortDescriptor=:effortDescriptor, comment=:comment, response=:attachment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit';
                                 $result = $connection2->prepare($sql);
                                 $result->execute($data);
-                                
-                                // Record file tracking for INSERT case (capture lastInsertID)
-                                if (!empty($fileMetaDataResponse)) {
-                                    $gibbonInternalAssessmentEntryID = $connection2->lastInsertID();
-                                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaDataResponse, 'gibbonInternalAssessmentEntry', $gibbonInternalAssessmentEntryID, 'response');
-                                    if (empty($gibbonFileID)) {
-                                        $partialFail = true;
-                                    }
-                                }
+
+                                $gibbonInternalAssessmentEntryID = $connection2->lastInsertID();
                             } catch (PDOException $e) {
                                 $partialFail = true;
                             }
                         } else {
                             //Update
                             try {
-                                $data = array('gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonPersonIDStudent' => $gibbonPersonIDStudent, 'attainmentValue' => $attainmentValue, 'attainmentDescriptor' => $attainmentDescriptor, 'comment' => $commentValue, 'attachment' => $attachment, 'effortValue' => $effortValue, 'effortDescriptor' => $effortDescriptor, 'gibbonPersonIDLastEdit' => $gibbonPersonIDLastEdit, 'gibbonInternalAssessmentEntryID' => $entry['gibbonInternalAssessmentEntryID']);
+                                $gibbonInternalAssessmentEntryID = $entry['gibbonInternalAssessmentEntryID'];
+                                $data = array('gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonPersonIDStudent' => $gibbonPersonIDStudent, 'attainmentValue' => $attainmentValue, 'attainmentDescriptor' => $attainmentDescriptor, 'comment' => $commentValue, 'attachment' => $attachment, 'effortValue' => $effortValue, 'effortDescriptor' => $effortDescriptor, 'gibbonPersonIDLastEdit' => $gibbonPersonIDLastEdit, 'gibbonInternalAssessmentEntryID' => $gibbonInternalAssessmentEntryID);
                                 $sql = 'UPDATE gibbonInternalAssessmentEntry SET gibbonInternalAssessmentColumnID=:gibbonInternalAssessmentColumnID, gibbonPersonIDStudent=:gibbonPersonIDStudent, attainmentValue=:attainmentValue, attainmentDescriptor=:attainmentDescriptor, effortValue=:effortValue, effortDescriptor=:effortDescriptor, comment=:comment, response=:attachment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit WHERE gibbonInternalAssessmentEntryID=:gibbonInternalAssessmentEntryID';
                                 $result = $connection2->prepare($sql);
                                 $result->execute($data);
                             } catch (PDOException $e) {
                                 $partialFail = true;
                             }
+                        }
+
+                        // Record file tracking for Upload Case
+                        if (!empty($fileMetaDataResponse) && !empty($gibbonInternalAssessmentEntryID)) {
+                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaDataResponse, 'gibbonInternalAssessmentEntry', $gibbonInternalAssessmentEntryID, 'response');
+                            if (empty($gibbonFileID)) {
+                                $partialFail = true;
+                            }
+                        }
+
+                        // Handle file deletion when user removes attachment
+                        if (empty($attachment) && !empty($entry['response'])) {
+                            $deleted = $container->get(FileHandler::class)->deleteFile('gibbonInternalAssessmentEntry', $gibbonInternalAssessmentEntryID, 'response');
                         }
                     }
                 }
@@ -256,8 +257,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     $partialFail = true;
                 }
 
+                // Handle file deletion when user removes attachment
+                if (empty($attachment) && !empty($row['attachment'])) {
+                    $deleted = $container->get(FileHandler::class)->deleteFile('gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
+                }
+
                 // Record file tracking for column attachment UPDATE
-                if (!empty($fileMetaData)) {
+                if (!empty($fileMetaData) && !empty($gibbonInternalAssessmentColumnID)) {
                    $gibbonFileID =  $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonInternalAssessmentColumn', $gibbonInternalAssessmentColumnID, 'attachment');
 
                    if (empty($gibbonFileID)) {
