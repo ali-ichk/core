@@ -218,7 +218,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                 $photoIDs[] = str_pad($gibbonActivityPhotoID, 12, '0', STR_PAD_LEFT);
 
                 // Record file tracking
-                if (!empty($fileMetaData)) {
+                if (!empty($fileMetaData) && !empty($gibbonActivityPhotoID)) {
                     $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonActivityPhoto', $gibbonActivityPhotoID, 'filePath');
                     
                     if (empty($gibbonFileID)) {
@@ -230,12 +230,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
             // Remove photos that have been deleted from the filesystem
             $cleanupPhotos = $activityPhotoGateway->selectPhotosNotInList($gibbonActivityID, $photoIDs)->fetchAll();
             foreach ($cleanupPhotos as $photo) {
-                $activityPhotoGateway->delete($photo['gibbonActivityPhotoID']);
-
                 $photoPath = $session->get('absolutePath').'/'.$photo['filePath'];
                 if (!empty($photo['filePath']) && file_exists($photoPath)) {
-                    unlink($photoPath);
+                    $deleted = $container->get(FileHandler::class)->deleteFile('gibbonActivityPhoto', $photo['gibbonActivityPhotoID'], 'filePath');
                 }
+
+                $activityPhotoGateway->delete($photo['gibbonActivityPhotoID']);
             }
 
             //Write to database
