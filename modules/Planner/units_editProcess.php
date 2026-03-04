@@ -94,6 +94,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units_edit.php') =
                         header("Location: {$URL}");
                     } else {
                         $row = $result->fetch();
+                        $fileHandler = $container->get(FileHandler::class);
                         $partialFail = false;
                         $fileMetaData = null;
                         //Move attached file, if there is one
@@ -264,9 +265,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/units_edit.php') =
                             exit();
                         }
 
+                        // Handle file deletion when user removes attachment
+                        if (empty($attachment) && !empty($row['attachment'])) {
+                            $deleted = $fileHandler->deleteFile('gibbonUnit', $gibbonUnitID, 'attachment');
+                        }
+
                         // Record file tracking
-                        if (!empty($fileMetaData)) {
-                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonUnit', $gibbonUnitID, 'attachment');
+                        if (!empty($fileMetaData) && !empty($gibbonUnitID)) {
+                            $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonUnit', $gibbonUnitID, 'attachment');
 
                             if (empty($gibbonFileID)) {
                                 $partialFail = true;

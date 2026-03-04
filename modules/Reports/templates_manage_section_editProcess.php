@@ -115,7 +115,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/templates_manage_s
             $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportTemplateSection', $gibbonReportTemplateSectionID, 'config[' . $configName . ']');
         }
     }
-
+    
     $URL .= !$updated
         ? "&return=error2"
         : "&return=success0";

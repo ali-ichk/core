@@ -118,15 +118,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write.ph
             $data['value'] = $reportingValueGateway->getGradeScaleValueByID($value);
             $data['gibbonScaleGradeID'] = $value;
         } elseif ($criteriaType['valueType'] == 'Image') {
+            // Check if a new file is being uploaded
             if (!empty($_FILES['file'.$gibbonReportingCriteriaID]['tmp_name'])) {
                 $data['value'] = $fileUploader->uploadAndResizeImage($_FILES['file'.$gibbonReportingCriteriaID], 'reportFile', $criteriaOptions['imageSize'] ?? 1024, $criteriaOptions['imageQuality'] ?? 80);
+
+                // Get file metadata for tracking
+                if (!empty($data['value'])) {
+                    $fileMetaData = $fileUploader->getFileMetaData($data['value']);
+                }
             } else {
                 $data['value'] = $value;
-            }
-
-            // Get file metadata for tracking
-            if (!empty($data['value'])) {
-                $fileMetaData = $fileUploader->getFileMetaData($data['value']);
             }
         } else {
             $data['value'] = $value;
@@ -140,6 +141,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write.ph
             'timestampModified' => date('Y-m-d H:i:s'),
         ]);
         
+        // Check if insert/update was successful
+        if (empty($gibbonReportingValueID)) {
+            $partialFail = true;
+            continue;
+        }
+
         // Record file tracking after successful insert/update
         if (!empty($fileMetaData) && !empty($gibbonReportingValueID)) {
             $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportingValue', $gibbonReportingValueID, 'value');
@@ -148,8 +155,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write.ph
                 $partialFail = true;
             }
         }
-        
-        $partialFail = !$updated;
+
+        // Handle file deletion when user removes image
+        if (empty($data['value']) && !empty($gibbonReportingValueID)) {
+            $deleted = $fileHandler->deleteFile('gibbonReportingValue', $gibbonReportingValueID, 'value');
+        }
     }
 
     // Update progress

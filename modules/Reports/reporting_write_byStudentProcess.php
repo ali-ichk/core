@@ -126,50 +126,48 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_write_by
         } elseif ($criteriaType['valueType'] == 'Image') {
             if (!empty($_FILES['file'.$gibbonReportingCriteriaID]['tmp_name'])) {
                 $data['value'] = $fileUploader->uploadAndResizeImage($_FILES['file'.$gibbonReportingCriteriaID], 'reportFile', $criteriaOptions['imageSize'] ?? 1024, $criteriaOptions['imageQuality'] ?? 80);
+
+                // Get file metadata for tracking
+                if (!empty($data['value'])) {
+                    $fileMetaData = $fileUploader->getFileMetaData($data['value']);
+                }
             } else {
                 $data['value'] = empty($value) ? '' : $existing['value'];
-            }
-
-            // Get file metadata for tracking
-            if (!empty($data['value'])) {
-                $fileMetaData = $fileUploader->getFileMetaData($data['value']);
             }
         } else {
             $data['value'] = $value;
         }
 
+        $gibbonReportingValueID = null;
         if (!empty($existing)) {
-            $updated = $reportingValueGateway->update($existing['gibbonReportingValueID'], $data + [
+            $gibbonReportingValueID = $existing['gibbonReportingValueID'];
+            $updated = $reportingValueGateway->update($gibbonReportingValueID, $data + [
                 'value' => $data['value'],
                 'comment' => $data['comment'],
                 'gibbonScaleGradeID' => $data['gibbonScaleGradeID'],
                 'gibbonPersonIDModified' => $session->get('gibbonPersonID'),
                 'timestampModified' => date('Y-m-d H:i:s'),
             ]);
-            
-            // Record file tracking
-            if (!empty($fileMetaData)) {
-                $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportingValue', $existing['gibbonReportingValueID'], 'value');
 
-                if (empty($gibbonFileID)) {
-                    $partialFail = true;
-                }
-            }
-            
             $partialFail = !$updated;
         } else {
-            $inserted = $reportingValueGateway->insert($data);
-            
-            // Record file tracking after successful insert
-            if (!empty($fileMetaData)) {
-                $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportingValue', $inserted, 'value');
-                
-                if (empty($gibbonFileID)) {
-                    $partialFail = true;
-                }
+            $gibbonReportingValueID = $reportingValueGateway->insert($data);
+
+            $partialFail = !$gibbonReportingValueID;
+        }
+
+        // Record file tracking
+        if (!empty($fileMetaData) && !empty($gibbonReportingValueID)) {
+            $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonReportingValue', $gibbonReportingValueID, 'value');
+
+            if (empty($gibbonFileID)) {
+                $partialFail = true;
             }
-            
-            $partialFail = !$inserted;
+        }
+
+        // Handle file deletion when user removes image
+        if (empty($data['value']) && !empty($gibbonReportingValueID)) {
+            $deleted = $fileHandler->deleteFile('gibbonReportingValue', $gibbonReportingValueID, 'value');
         }
     }
 
