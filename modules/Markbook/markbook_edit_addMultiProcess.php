@@ -201,30 +201,30 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_add
                 }
 
                 //Write to database
+                $gibbonMarkbookColumnID = null;
                 try {
                     $data = array('groupingID' => $groupingID, 'gibbonCourseClassID' => $gibbonCourseClassIDSingle, 'name' => $name, 'description' => $description, 'columnColor' => $columnColor, 'type' => $type, 'date' => $date, 'sequenceNumber' => $sequenceNumber, 'attainment' => $attainment, 'gibbonScaleIDAttainment' => $gibbonScaleIDAttainment, 'attainmentWeighting' => $attainmentWeighting, 'attainmentRaw' => $attainmentRaw, 'attainmentRawMax' => $attainmentRawMax, 'effort' => $effort, 'gibbonScaleIDEffort' => $gibbonScaleIDEffort, 'gibbonRubricIDAttainment' => $gibbonRubricIDAttainment, 'gibbonRubricIDEffort' => $gibbonRubricIDEffort, 'comment' => $comment, 'uploadedResponse' => $uploadedResponse, 'completeDate' => $completeDate, 'complete' => $complete, 'viewableStudents' => $viewableStudents, 'viewableParents' => $viewableParents, 'attachment' => $attachment, 'gibbonPersonIDCreator' => $gibbonPersonIDCreator, 'gibbonPersonIDLastEdit' => $gibbonPersonIDLastEdit, 'gibbonSchoolYearTermID' => $gibbonSchoolYearTermID);
                     $sql = 'INSERT INTO gibbonMarkbookColumn SET groupingID=:groupingID, gibbonCourseClassID=:gibbonCourseClassID, name=:name, description=:description, columnColor=:columnColor, type=:type, date=:date, sequenceNumber=:sequenceNumber, attainment=:attainment, gibbonScaleIDAttainment=:gibbonScaleIDAttainment, attainmentWeighting=:attainmentWeighting, attainmentRaw=:attainmentRaw, attainmentRawMax=:attainmentRawMax, effort=:effort, gibbonScaleIDEffort=:gibbonScaleIDEffort, gibbonRubricIDAttainment=:gibbonRubricIDAttainment, gibbonRubricIDEffort=:gibbonRubricIDEffort, comment=:comment, uploadedResponse=:uploadedResponse, completeDate=:completeDate, complete=:complete, viewableStudents=:viewableStudents, viewableParents=:viewableParents, attachment=:attachment, gibbonPersonIDCreator=:gibbonPersonIDCreator, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit, gibbonSchoolYearTermID=:gibbonSchoolYearTermID';
                     $result = $connection2->prepare($sql);
                     $result->execute($data);
-                    
-                    // Record file tracking for each column
-                    if (!empty($fileMetaData)) {
-                        $gibbonMarkbookColumnID = $connection2->lastInsertID();
-                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
-
-                        if (empty($gibbonFileID)) {
-                            $partialFail = true;
-                        }
-                    }
+                    $gibbonMarkbookColumnID = $connection2->lastInsertID();
                 } catch (PDOException $e) {
                     $partialFail = true;
+                }
+                
+                // Record file tracking for each column
+                if (!empty($fileMetaData) && !empty($gibbonMarkbookColumnID)) {
+                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+
+                    if (empty($gibbonFileID)) {
+                        $partialFail = true;
+                    }
                 }
             }
 
             //Unlock module table
-
-                $sql = 'UNLOCK TABLES';
-                $result = $connection2->query($sql);
+            $sql = 'UNLOCK TABLES';
+            $result = $connection2->query($sql);
 
             if ($partialFail != false) {
                 $URL .= '&return=warning1';

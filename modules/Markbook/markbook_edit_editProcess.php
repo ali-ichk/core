@@ -190,20 +190,24 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_edi
                             $sql = 'UPDATE gibbonMarkbookColumn SET gibbonUnitID=:gibbonUnitID, gibbonPlannerEntryID=:gibbonPlannerEntryID, gibbonCourseClassID=:gibbonCourseClassID, name=:name, description=:description, columnColor=:columnColor, type=:type, date=:date, attainment=:attainment, gibbonScaleIDAttainment=:gibbonScaleIDAttainment, attainmentWeighting=:attainmentWeighting, attainmentRaw=:attainmentRaw, attainmentRawMax=:attainmentRawMax, effort=:effort, gibbonScaleIDEffort=:gibbonScaleIDEffort, gibbonRubricIDAttainment=:gibbonRubricIDAttainment, gibbonRubricIDEffort=:gibbonRubricIDEffort, comment=:comment, uploadedResponse=:uploadedResponse, completeDate=:completeDate, complete=:complete, viewableStudents=:viewableStudents, viewableParents=:viewableParents, attachment=:attachment, gibbonPersonIDLastEdit=:gibbonPersonIDLastEdit, gibbonSchoolYearTermID=:gibbonSchoolYearTermID WHERE gibbonMarkbookColumnID=:gibbonMarkbookColumnID';
                             $result = $connection2->prepare($sql);
                             $result->execute($data);
-                            
-                            // Record file tracking for UPDATE
-                            if (!empty($fileMetaData)) {
-                                $fileHandler = $container->get(FileHandler::class);
-                                $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
-
-                                if (empty($gibbonFileID)) {
-                                    $partialFail = true;
-                                }
-                            }
                         } catch (PDOException $e) {
                             $URL .= '&return=error2';
                             header("Location: {$URL}");
                             exit();
+                        }
+
+                        // Handle file deletion when user removes attachment
+                        if (empty($attachment) && !empty($row['attachment'])) {
+                            $deleted = $container->get(FileHandler::class)->deleteFile('gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+                        }
+                            
+                        // Record file tracking for UPDATE
+                        if (!empty($fileMetaData) && !empty($gibbonMarkbookColumnID)) {
+                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonMarkbookColumn', $gibbonMarkbookColumnID, 'attachment');
+
+                            if (empty($gibbonFileID)) {
+                                $partialFail = true;
+                            }
                         }
 
                         $URL .= '&return=success0';
