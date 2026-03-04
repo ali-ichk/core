@@ -39,6 +39,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
 } else {
     // Proceed!
     $staffCoverageGateway = $container->get(StaffCoverageGateway::class);
+    $partialFail = false;
 
     $type = $_POST['attachmentType'] ?? '';
     switch ($type) {
@@ -57,6 +58,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
 
     // Validate the database relationships exist
     $coverage = $staffCoverageGateway->getByID($gibbonStaffCoverageID);
+    $fileHandler = $container->get(FileHandler::class);
 
     if (empty($coverage)) {
         $URL .= '&return=error2';
@@ -100,16 +102,25 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/coverage_view_edit.p
 
     // Record file tracking (only if new file uploaded)
     if (!empty($fileMetaData)) {
-        $gibbonFileiD = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
+        $gibbonFileID = $fileHandler->recordFileUpload($fileMetaData, 'gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
 
-        if (empty($gibbonFileiD)) {
-            $updated = false;
+        if (empty($gibbonFileID)) {
+            $partialFail = true;
         }
     }
 
-    $URL .= !$updated
-        ? "&return=error2"
-        : "&return=success0";
+    // Handle file deletion when user removes attachment
+    if ($type == 'File' && empty($content) && !empty($coverage['attachmentContent'])) {
+        $deleted = $fileHandler->deleteFile('gibbonStaffCoverage', $gibbonStaffCoverageID, 'attachmentContent');
+    }
+
+    if (!$updated) {
+        $URL .= "&return=error2";
+    } else if ($partialFail) {
+        $URL .= "&return=warning1";
+    } else {
+        $URL .= "&return=success0";
+    }
 
     header("Location: {$URL}");
 }

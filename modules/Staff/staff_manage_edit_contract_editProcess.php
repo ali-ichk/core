@@ -122,12 +122,17 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
                     }
 
                     // Record file tracking (only if new file uploaded)
-                    if (!empty($fileMetaData)) {
+                    if (!empty($fileMetaData) && !empty($gibbonStaffContractID)) {
                         $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonStaffContract', $gibbonStaffContractID, 'contractUpload');
 
                         if (empty($gibbonFileID)) {
                             $partialFail = true;
                         }
+                    }
+
+                    // Handle file deletion when user removes attachment
+                    if (empty($contractUpload) && !empty($rozw['contractUpload'])) {
+                        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonStaffContract', $gibbonStaffContractID, 'contractUspload');
                     }
 
                     if ($partialFail == true) {
