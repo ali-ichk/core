@@ -429,17 +429,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/applicationForm_m
                                         $resultFile = $connection2->prepare($sqlFile);
                                         $resultFile->execute($dataFile);
                                         $gibbonApplicationFormFileID = $connection2->lastInsertID();
-                                        
-                                        // Record file tracking
-                                        if (!empty($fileMetaData) && !empty($gibbonApplicationFormFileID)) {
-                                            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
-                                            
-                                            if (empty($gibbonFileID)) {
-                                                $partialFail = true;
-                                            }
-                                        }
                                     } catch (PDOException $e) {
                                         $partialFail = true;
+                                    }
+
+                                    // Record file tracking
+                                    if (!empty($fileMetaData) && !empty($gibbonApplicationFormFileID)) {
+                                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
+                                        
+                                        if (empty($gibbonFileID)) {
+                                            $partialFail = true;
+                                        }
                                     }
                                 } else {
                                     $partialFail = true;
@@ -451,13 +451,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/applicationForm_m
 
                         // File is flagged for deletion if the attachment path has been removed
                         foreach ($attachments as $gibbonApplicationFormFileID => $attachment) {
-                            if (!empty($gibbonApplicationFormFileID) && empty($attachment)) {
+                            if (!empty($gibbonApplicationFormFileID) && empty($attachment)) {                                
                                 try {
                                     $dataFile = array('gibbonApplicationFormFileID' => $gibbonApplicationFormFileID);
                                     $sqlFile = "DELETE FROM gibbonApplicationFormFile WHERE gibbonApplicationFormFileID=:gibbonApplicationFormFileID";
                                     $resultFile = $connection2->prepare($sqlFile);
                                     $resultFile->execute($dataFile);
                                 } catch (PDOException $e) {
+                                    $partialFail = true;
+                                }
+
+                                // Delete file tracking before deleting the database record
+                                $deleted = $container->get(FileHandler::class)->deleteFile('gibbonApplicationFormFile', $gibbonApplicationFormFileID, 'path');
+
+                                if (!$deleted) {
                                     $partialFail = true;
                                 }
                             }

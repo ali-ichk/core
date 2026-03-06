@@ -106,16 +106,21 @@ if ($gibbonPersonMedicalID == '' or $gibbonPersonMedicalConditionID == '') { ech
                         header("Location: {$URL}");
                         exit();
                     }
-                    
+                                        
                     // Record file tracking
                     if (!empty($fileMetaData) && !empty($gibbonPersonMedicalConditionID)) {
                         $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $gibbonPersonMedicalConditionID, 'attachment');
 
                         if (empty($gibbonFileID)) {
-                            $URL .= '&return=error2';
+                            $URL .= '&return=warning1';
                             header("Location: {$URL}");
                             exit();
                         }
+                    }
+
+                     // Handle file deletion when user removes attachment
+                    if (empty($attachment) && !empty($values['attachment'])) {
+                        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonPersonMedicalCondition', $gibbonPersonMedicalConditionID, 'attachment');
                     }
 
                     // ALERTS: possible change to Medical alert status, recalculate alerts

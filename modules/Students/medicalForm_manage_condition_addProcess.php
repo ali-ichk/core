@@ -121,6 +121,10 @@ if ($gibbonPersonMedicalID == '') { echo 'Fatal error loading this page!';
                     // Record file tracking
                     if (!empty($fileMetaData) && !empty($AI)) {
                         $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonPersonMedicalCondition', $AI, 'attachment');
+
+                        if (empty($gibbonFileID)) {
+                            $partialFail = true;
+                        }
                     }
 
                     // ALERTS: possible change to Medical alert status, recalculate alerts

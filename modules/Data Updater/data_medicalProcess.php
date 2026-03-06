@@ -27,6 +27,7 @@ use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\DataUpdater\MedicalUpdateGateway;
 use Gibbon\Data\Validator;
 use Gibbon\Contracts\Filesystem\FileHandler;
+use Gibbon\Domain\DataUpdater\MedicalConditionUpdateGateway;
 
 require_once '../../gibbon.php';
 
@@ -217,8 +218,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
 
                     $data['timestamp'] = date('Y-m-d H:i:s');
 
+                    // Get old update record for deletion check
+                    $oldUpdateRecord = null;
+                    
                     if ($existing != 'N' && !empty($_POST["gibbonPersonMedicalConditionUpdateID$i"])) {
                         $gibbonPersonMedicalConditionUpdateID = $_POST["gibbonPersonMedicalConditionUpdateID$i"];
+                        $oldUpdateRecord = $container->get(MedicalConditionUpdateGateway::class)->getByID($gibbonPersonMedicalConditionUpdateID);
+
                         $data['gibbonPersonMedicalConditionUpdateID'] = $gibbonPersonMedicalConditionUpdateID ?? '';
                         $sql = 'UPDATE gibbonPersonMedicalConditionUpdate SET gibbonPersonMedicalUpdateID=:gibbonPersonMedicalUpdateID, gibbonPersonMedicalID=:gibbonPersonMedicalID, name=:name, gibbonAlertLevelID=:gibbonAlertLevelID, triggers=:triggers, reaction=:reaction, response=:response, medication=:medication, lastEpisode=:lastEpisode, lastEpisodeTreatment=:lastEpisodeTreatment, comment=:comment, attachment=:attachment, gibbonPersonIDUpdater=:gibbonPersonIDUpdater, timestamp=:timestamp WHERE gibbonPersonMedicalConditionUpdateID=:gibbonPersonMedicalConditionUpdateID';
                         $updated = $pdo->update($sql, $data);
@@ -236,6 +242,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                         if (empty($gibbonFileID)) {
                             $partialFail = true;
                         }
+                    }
+
+                    // Handle file deletion when user removes file
+                    if (empty($data['attachment']) && !empty($oldUpdateRecord['attachment'])) {
+                        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonPersonMedicalConditionUpdate', $gibbonPersonMedicalConditionUpdateID, 'attachment');
                     }
                 }
 
