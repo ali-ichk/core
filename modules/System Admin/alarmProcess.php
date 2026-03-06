@@ -77,15 +77,20 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/alarm.php') =
         $dataWhere = ['scope' => 'System Admin', 'name' => 'customAlarmSound'];
         $settingGateway->updateWhere($dataWhere, ['value' => $attachment]);
 
+        // Get the setting record for file tracking
+        $settingRecord = $settingGateway->selectBy($dataWhere)->fetch();
+        
+        // Handle file deletion when user removes attachment
+        if (empty($attachment) && !empty($attachmentCurrent) && !empty($settingRecord)) {
+            $deleted = $container->get(FileHandler::class)->deleteFile('gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+        }
+
         // Record file tracking
-        if (!empty($fileMetaData)) {
-            $settingRecord = $settingGateway->selectBy($dataWhere)->fetch();
-            if (!empty($settingRecord)) {
-                $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+        if (!empty($fileMetaData) && !empty($settingRecord)) {
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
                 
-                if (empty($gibbonFileID)) {
-                    $partialFail = true;
-                }
+            if (empty($gibbonFileID)) {
+                $partialFail = true;
             }
         }
 

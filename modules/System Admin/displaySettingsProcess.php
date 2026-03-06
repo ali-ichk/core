@@ -97,9 +97,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
             $backgroundFileMetaData = $fileUploader->getFileMetaData($_POST['organisationBackground']);
         }
     } else {
-        $_POST['organisationBackground'] = !empty($_POST['organisationBackground'])
-            ? $settingGateway->getSettingByScope('System', 'organisationBackground')
-            : '';
+        $oldBackground = $settingGateway->getSettingByScope('System', 'organisationBackground');
+        $_POST['organisationBackground'] = !empty($_POST['organisationBackground']) ? $oldBackground : '';
     }
 
     // Update fields
@@ -115,10 +114,11 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
     }
 
     // Record file tracking for logo
-    if (!empty($logoFileMetaData)) {
-        $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
-        if (!empty($settingRecord)) {
-            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($logoFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
+    if (!empty($logoFileMetaData) ) {
+        $logoSettingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
+
+        if (!empty($logoSettingRecord)) {
+            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($logoFileMetaData, 'gibbonSetting', $logoSettingRecord['gibbonSettingID'], 'value');
             
             if (empty($gibbonFileID)) {
                 $partialFail = true;
@@ -126,16 +126,19 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/displaySettin
         }
     }
 
+    $backgroundSettingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationBackground'])->fetch();
     // Record file tracking for background
-    if (!empty($backgroundFileMetaData)) {
-        $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationBackground'])->fetch();
-        if (!empty($settingRecord)) {
-            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($backgroundFileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'], 'value');
-            
-            if (empty($gibbonFileID)) {
-                $partialFail = true;
-            }
+    if (!empty($backgroundFileMetaData) && !empty($backgroundSettingRecord)) {
+        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($backgroundFileMetaData, 'gibbonSetting', $backgroundSettingRecord['gibbonSettingID'], 'value');
+        
+        if (empty($gibbonFileID)) {
+            $partialFail = true;
         }
+    }
+
+    // Handle file deletion for background
+    if (!empty($backgroundSettingRecord) && empty($_POST['organisationBackground']) && !empty($oldBackground)) {
+        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonSetting', $backgroundSettingRecord['gibbonSettingID'], 'value');
     }
 
     // Update all the system settings that are stored in the session

@@ -118,7 +118,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/systemSetting
             $fileMetaData = $fileUploader->getFileMetaData($_POST['organisationLogo']);
         }
     } else {
-        $_POST['organisationLogo'] = $settingGateway->getSettingByScope('System', 'organisationLogo');
+        $oldLogo = $settingGateway->getSettingByScope('System', 'organisationLogo');
+        $_POST['organisationLogo'] = $oldLogo;
     }
 
     // Update fields
@@ -134,14 +135,11 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/systemSetting
     }
 
     // Record file tracking
-    if (!empty($fileMetaData)) {
-        $settingRecord = $settingGateway->selectBy(['scope' => 'System', 'name' => 'organisationLogo'])->fetch();
-        if (!empty($settingRecord)) {
-            $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'],'value');
-            
-            if (empty($gibbonFileID)) {
-                $partialFail = true;
-            }
+    if (!empty($fileMetaData) && !empty($settingRecord)) {
+        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonSetting', $settingRecord['gibbonSettingID'],'value');
+        
+        if (empty($gibbonFileID)) {
+            $partialFail = true;
         }
     }
 

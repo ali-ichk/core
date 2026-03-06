@@ -145,6 +145,11 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
                     exit();
                 }
 
+                // Handle file deletion when user removes attachment
+                if (empty($attachment) && !empty($row['logo'])) {
+                    $deleted = $container->get(FileHandler::class)->deleteFile('gibbonDepartment', $gibbonDepartmentID, 'logo');
+                }
+
                 // Record file tracking
                 if (!empty($fileMetaData) && !empty($gibbonDepartmentID)) {
                     $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonDepartment', $gibbonDepartmentID, 'logo');

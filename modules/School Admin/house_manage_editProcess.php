@@ -112,14 +112,14 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/house_manage_
                         exit();
                     }
 
+                    // Handle file deletion when user removes attachment
+                    if (empty($logo) && !empty($row['logo'])) {
+                        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonHouse', $gibbonHouseID, 'logo');
+                    }
+
                     // Record file tracking
                     if (!empty($fileMetaData) && !empty($gibbonHouseID)) {
-                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload(
-                            $fileMetaData, 
-                            'gibbonHouse',
-                            $gibbonHouseID,
-                            'logo'
-                        );
+                        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonHouse', $gibbonHouseID, 'logo');
                         
                         if (empty($gibbonFileID)) {
                             $imageFail = true;

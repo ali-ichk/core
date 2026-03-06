@@ -333,6 +333,11 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                             }
                         }
 
+                        // Handle file deletion when user removes attachment
+                        if (empty($attachment1) && !empty($row['image_240'])) {
+                            $deleted = $container->get(FileHandler::class)->deleteFile('gibbonPerson', $gibbonPersonID, 'image_240');
+                        }
+
                         if ($row['status'] != $status) {
                             $statusReason = $_POST['statusReason'] ?? '';
 
