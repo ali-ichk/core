@@ -159,6 +159,11 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
                     }
                 }
 
+                // Manage custom field file uploads
+                if (!empty($fields)) {
+                    $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Department', [], $fields, 'gibbonDepartment', $gibbonDepartmentID, $row['fields'] ?? null);
+                }
+
                 if ($partialFail == true) {
                     $URL .= '&return=warning1';
                     header("Location: {$URL}");

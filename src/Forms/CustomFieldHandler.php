@@ -553,7 +553,7 @@ class CustomFieldHandler
             $hasOldFile = !empty($oldValue) && is_string($oldValue);
             
             // Only process if something has changed
-            if ($oldValue == $newValue) {
+            if ($oldValue === $newValue) {
                 continue;
             }
 

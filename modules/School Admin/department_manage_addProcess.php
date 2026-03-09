@@ -99,6 +99,11 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/department_ma
             }
         }
 
+        // Manage custom field file uploads
+        if (!empty($fields) && !empty($AI)) {
+            $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Department', [], $fields, 'gibbonDepartment', $AI);
+        }
+
         //Scan through staff
         $staff = array();
         if (isset($_POST['staff'])) {
