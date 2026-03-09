@@ -152,8 +152,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                 $data['timestamp'] = date('Y-m-d H:i:s');
                 $data['fields'] = $fields;
 
+                $oldUpdateRecord = null;
                 if ($existing != 'N') {
+                    // Fetch the old update record for comparison
                     $gibbonPersonMedicalUpdateID = $existing;
+                    $oldUpdateRecord = $container->get(MedicalUpdateGateway::class)->getByID($gibbonPersonMedicalUpdateID);
+
                     $data['gibbonPersonMedicalUpdateID'] = $gibbonPersonMedicalUpdateID;
                     $sql = 'UPDATE gibbonPersonMedicalUpdate SET gibbonSchoolYearID=:gibbonSchoolYearID, gibbonPersonMedicalID=:gibbonPersonMedicalID, gibbonPersonID=:gibbonPersonID, longTermMedication=:longTermMedication, longTermMedicationDetails=:longTermMedicationDetails, fields=:fields, comment=:comment, gibbonPersonIDUpdater=:gibbonPersonIDUpdater, timestamp=:timestamp WHERE gibbonPersonMedicalUpdateID=:gibbonPersonMedicalUpdateID';
                     $pdo->update($sql, $data);
@@ -162,6 +166,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_medical.
                     $gibbonPersonMedicalUpdateID = $pdo->insert($sql, $data);
                 }
 
+                // Manage custom field file uploads
+                if (!empty($fields) && !empty($gibbonPersonMedicalUpdateID)) {
+                    $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Medical Form', ['dataUpdater' => true], $fields, 'gibbonPersonMedicalUpdate', $gibbonPersonMedicalUpdateID, $oldUpdateRecord['fields'] ?? null);
+                }
+                
                 // Update existing medical conditions
                 $partialFail = false;
                 $count = $_POST['count'] ?? 0;

@@ -24,8 +24,8 @@ namespace Gibbon\Forms;
 use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
-use Gibbon\Domain\System\CustomFieldGateway;
 use Gibbon\Contracts\Filesystem\FileHandler;
+use Gibbon\Domain\System\CustomFieldGateway;
 
 class CustomFieldHandler
 {
@@ -40,7 +40,7 @@ class CustomFieldHandler
     protected $fileUploader;
 
     /**
-     * @var \Gibbon\Contracts\Filesystem\FileHandler
+     * @var FileHandler
      */
     protected $fileHandler;
 
@@ -59,7 +59,7 @@ class CustomFieldHandler
      */
     protected $headings;
 
-    public function __construct(CustomFieldGateway $customFieldGateway, FileUploader $fileUploader, ?FileHandler $fileHandler = null)
+    public function __construct(CustomFieldGateway $customFieldGateway, FileUploader $fileUploader, FileHandler $fileHandler)
     {
         $this->customFieldGateway = $customFieldGateway;
         $this->fileUploader = $fileUploader;
@@ -502,23 +502,27 @@ class CustomFieldHandler
     }
 
     /**
-     * Record file uploads from custom fields in the file tracking system
+     * Manage custom field file uploads and deletions
      * 
-     * @param string $context The custom field context (e.g., 'User', 'Staff', 'Behaviour')
+     * @param string $context The custom field context
      * @param array $params Parameters for filtering custom fields
-     * @param string $fields JSON string or array of custom field values
-     * @param string $foreignTable The foreign table name
+     * @param string|array $newFields JSON string or array of new custom field values from POST
+     * @param string $foreignTable The foreign table name 
      * @param int $foreignTableID The foreign table record ID
-     * @return int Count of successfully tracked files, or false on error
+     * @param string|array|null $oldFields Optional. JSON string or array of old field values from database
+     * @return int Count of successfully processed files or false on error
      */
-    public function recordCustomFieldFileUploads($context, $params, $fields, $foreignTable, $foreignTableID)
+    public function manageCustomFieldFileUploads($context, $params, $newFields, $foreignTable, $foreignTableID, $oldFields = null)
     {
-
-        // Decode JSON if needed
-        $fieldsArray = is_string($fields) ? json_decode($fields, true) : $fields;
-        if (empty($fieldsArray)) {
+        // Validate and decode new fields
+        $newFieldsArray = is_string($newFields) ? json_decode($newFields, true) : (is_array($newFields) ? $newFields : null);
+        
+        if (!is_array($newFieldsArray)) {
             return false;
         }
+
+        // Decode old fields if provided (for edit operations)
+        $oldFieldsArray = !empty($oldFields) && is_string($oldFields) ? json_decode($oldFields, true) : (is_array($oldFields) ? $oldFields : []);
 
         // Get custom field definitions for this context
         $customFields = $this->customFieldGateway->selectCustomFields($context, $params)->fetchAll();
@@ -526,47 +530,59 @@ class CustomFieldHandler
             return false;
         }
 
-        $trackedCount = 0;
+        $processedCount = 0;
 
         // Process each custom field
         foreach ($customFields as $field) {
             // Only process file and image type fields
-            if ($field['type'] != 'file' && $field['type'] != 'image') {
+            if (!isset($field['type']) || ($field['type'] !== 'file' && $field['type'] !== 'image')) {
                 continue;
             }
 
-            $gibbonCustomFieldID = $field['gibbonCustomFieldID'];
-
-            // Skip if this field has no value
-            if (empty($fieldsArray[$gibbonCustomFieldID])) {
+            $gibbonCustomFieldID = $field['gibbonCustomFieldID'] ?? '';
+            if (empty($gibbonCustomFieldID)) {
                 continue;
             }
 
-            $filePath = $fieldsArray[$gibbonCustomFieldID];
+            // Get old and new values for this field
+            $oldValue = $oldFieldsArray[$gibbonCustomFieldID] ?? null;
+            $newValue = $newFieldsArray[$gibbonCustomFieldID] ?? null;
 
-            // Get file metadata
-            $fileMetaData = $this->fileUploader->getFileMetaData($filePath);
-
-            // Skip if metadata is not available
-            if (empty($fileMetaData)) {
+            // Determine if the file value has changed
+            $hasNewFile = !empty($newValue) && is_string($newValue);
+            $hasOldFile = !empty($oldValue) && is_string($oldValue);
+            
+            // Only process if something has changed
+            if ($oldValue == $newValue) {
                 continue;
             }
 
-            // Record file upload with pointer
             $foreignColumn = "fields[{$gibbonCustomFieldID}]";
+            // New file upload or replacement
+            if ($hasNewFile) {
+                // Get file metadata
+                $fileMetaData = $this->fileUploader->getFileMetaData($newValue);
 
-            $gibbonFileID = $this->fileHandler->recordFileUpload(
-                $fileMetaData,
-                $foreignTable,
-                $foreignTableID,
-                $foreignColumn
-            );
-
-            if (!empty($gibbonFileID)) {
-                $trackedCount++;
+                if (!empty($fileMetaData)) {
+                    // Record new file upload (automatically handles old file deletion if pointer exists)
+                    $gibbonFileID = $this->fileHandler->recordFileUpload($fileMetaData, $foreignTable, $foreignTableID, $foreignColumn);
+                    
+                    if (!empty($gibbonFileID)) {
+                        $processedCount++;
+                    }
+                }
+            }
+            // File removal (old exists, new is empty)
+            elseif ($hasOldFile && !$hasNewFile) {                
+                // Delete file with proper tracking cleanup
+                $deleted = $this->fileHandler->deleteFile($foreignTable, $foreignTableID, $foreignColumn);
+                
+                if ($deleted) {
+                    $processedCount++;
+                }
             }
         }
 
-        return $trackedCount;
+        return $processedCount;
     }
 }

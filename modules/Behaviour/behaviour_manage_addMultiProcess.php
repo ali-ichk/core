@@ -105,8 +105,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                 $partialFail = true;
             } else {
                 // Record custom field file uploads
-                if (!empty($fields)) {
-                    $filesRecorded = $container->get(CustomFieldHandler::class)->recordCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID);
+                if (!empty($fields) ) {
+                    $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID);
                 }
             }
 

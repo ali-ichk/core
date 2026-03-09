@@ -321,6 +321,23 @@ if ($proceed == false) {
                     }
                 }
 
+                // Manage custom field file uploads for student
+                $params = ['student' => true, 'applicationForm' => true];
+                $customFieldHandler->manageCustomFieldFileUploads('User', $params, $fields, 'gibbonApplicationForm', $AI);
+
+                // Manage custom field file uploads for parents if no existing family
+                if ($gibbonFamily == 'FALSE') {
+                    if (!empty($parent1fields)) {
+                        $params = ['parent' => true, 'applicationForm' => true, 'prefix' => 'parent1custom'];
+                        $customFieldHandler->manageCustomFieldFileUploads('User', $params, $parent1fields, 'gibbonApplicationFormParent1', $AI);
+                    }
+
+                    if (empty($_POST['secondParent']) && !empty($parent2fields)) {
+                        $params = ['parent' => true, 'applicationForm' => true, 'prefix' => 'parent2custom'];
+                        $customFieldHandler->manageCustomFieldFileUploads('User', $params, $parent2fields, 'gibbonApplicationFormParent2', $AI);
+                    }
+                }
+
                 // Update the Application Form with a hash for looking up this record in the future
                 $data = array('gibbonApplicationFormID' => $AI, 'gibbonApplicationFormHash' => $secureAI );
                 $sql = 'UPDATE gibbonApplicationForm SET gibbonApplicationFormHash=:gibbonApplicationFormHash WHERE gibbonApplicationFormID=:gibbonApplicationFormID';

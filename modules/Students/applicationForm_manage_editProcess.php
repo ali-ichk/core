@@ -65,6 +65,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/applicationForm_m
             $URL .= '&return=error2';
             header("Location: {$URL}");
         } else {
+            // Fetch old record for comparison
+            $oldApplicationRecord = $result->fetch();
+
             //Proceed!
             //Get student fields
             $priority = $_POST['priority'] ?? '';
@@ -381,6 +384,25 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/applicationForm_m
                         $URL .= '&return=error2';
                         header("Location: {$URL}");
                         exit();
+                    }
+
+                    // Manage custom field file uploads for student
+                    if (!empty($fields)) {
+                        $params = ['student' => true, 'applicationForm' => true];
+                        $customFieldHandler->manageCustomFieldFileUploads('User', $params, $fields, 'gibbonApplicationForm', $gibbonApplicationFormID, $oldApplicationRecord['fields'] ?? null);
+                    }
+
+                    // Manage custom field file uploads for parents if no existing family
+                    if ($gibbonFamily == 'FALSE') {
+                        if (!empty($parent1fields)) {
+                            $params = ['parent' => true, 'applicationForm' => true, 'prefix' => 'parent1custom'];
+                            $customFieldHandler->manageCustomFieldFileUploads('User', $params, $parent1fields, 'gibbonApplicationFormParent1', $gibbonApplicationFormID, $oldApplicationRecord['parent1fields'] ?? null);
+                        }
+
+                        if (empty($_POST['secondParent']) && !empty($parent2fields)) {
+                            $params = ['parent' => true, 'applicationForm' => true, 'prefix' => 'parent2custom'];
+                            $customFieldHandler->manageCustomFieldFileUploads('User', $params, $parent2fields, 'gibbonApplicationFormParent2', $gibbonApplicationFormID, $oldApplicationRecord['parent2fields'] ?? null);
+                        }
                     }
 
                     $partialFail = false;

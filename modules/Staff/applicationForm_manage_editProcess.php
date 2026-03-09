@@ -63,6 +63,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/applicationForm_mana
             $URL .= '&return=error2';
             header("Location: {$URL}");
         } else {
+            // Get old record for file deletion tracking
+            $oldApplicationRecord = $result->fetch();
+
             //Proceed!
             $settingGateway = $container->get(SettingGateway::class);
             //Get student fields
@@ -143,6 +146,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/applicationForm_mana
                     }
 
                     $partialFail = false;
+
+                    // Manage custom field file uploads and deletions for User context
+                    if (!empty($fields)) {
+                        $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('User', ['staff' => 1, 'applicationForm' => 1], $fields, 'gibbonStaffApplicationForm', $gibbonStaffApplicationFormID, $oldApplicationRecord['fields']);
+                    }
+
+                    // Manage custom field file uploads and deletions for Staff context
+                    if (!empty($staffFields)) {
+                        $staffFilesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Staff', ['applicationForm' => 1, 'prefix' => 'customStaff'], $staffFields, 'gibbonStaffApplicationForm', $gibbonStaffApplicationFormID, $oldApplicationRecord['staffFields']);
+                    }
 
                     //Deal with required documents
                     $requiredDocuments = $settingGateway->getSettingByScope('Staff', 'staffApplicationFormRequiredDocuments');

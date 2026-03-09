@@ -203,6 +203,16 @@ if ($proceed == false) {
                         $params = ['staff' => true, 'applicationForm' => true];
                         $container->get(PersonalDocumentHandler::class)->updateDocumentsFromPOST('gibbonStaffApplicationForm', $AI, $params, $partialFail);
 
+                        // Manage custom field file uploads for User context
+                        if (!empty($fields)) {
+                            $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('User', ['staff' => 1, 'applicationForm' => 1], $fields, 'gibbonStaffApplicationForm', $AI);
+                        }
+
+                        // Manage custom field file uploads for Staff context
+                        if (!empty($staffFields)) {
+                            $staffFilesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Staff', ['applicationForm' => 1, 'prefix' => 'customStaff'], $staffFields, 'gibbonStaffApplicationForm', $AI);
+                        }
+
                         // Attach required documents
                         if ($requiredDocuments != false && !empty($uploadedDocuments) && is_array($uploadedDocuments)) {
                             foreach ($uploadedDocuments as $fileName => $attachment) {

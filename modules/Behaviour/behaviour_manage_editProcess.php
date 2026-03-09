@@ -136,9 +136,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                             exit();
                         }
 
-                        // Record custom field file uploads
+                        // Manage custom field file uploads and deletions
                         if (!empty($fields)) {
-                            $filesRecorded = $container->get(CustomFieldHandler::class)->recordCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID);
+                            $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID, $behaviourRecord['fields']);
                         }
                     }
 

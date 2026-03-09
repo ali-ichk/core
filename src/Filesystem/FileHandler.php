@@ -22,6 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 namespace Gibbon\Filesystem;
 
 use Gibbon\Contracts\Database\Connection;
+use Gibbon\Contracts\Filesystem\FileHandler as FileHandlerInterface;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Domain\System\FileGateway;
 use Gibbon\Domain\System\FilePointerGateway;
@@ -32,7 +33,7 @@ use Gibbon\Domain\System\FilePointerGateway;
  * @version	v31
  * @since	v31
  */
-class FileHandler
+class FileHandler implements FileHandlerInterface
 {
     protected Connection $db;
     protected Session $session;
