@@ -21,15 +21,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Gibbon\Forms\Builder\Fields;
 
-use Gibbon\Contracts\Filesystem\FileHandler;
 use Gibbon\Contracts\Services\Session;
-use Gibbon\Domain\Forms\FormUploadGateway;
-use Gibbon\FileUploader;
 use Gibbon\Forms\Builder\AbstractFieldGroup;
 use Gibbon\Forms\Builder\FormBuilderInterface;
 use Gibbon\Forms\Form;
 use Gibbon\Forms\Layout\Row;
 use Gibbon\View\View;
+use Gibbon\FileUploader;
+use Gibbon\Contracts\Filesystem\FileHandler;
+use Gibbon\Domain\Forms\FormUploadGateway;
 
 class RequiredDocuments extends AbstractFieldGroup implements UploadableInterface
 {
@@ -56,7 +56,7 @@ class RequiredDocuments extends AbstractFieldGroup implements UploadableInterfac
     protected $formUploadGateway;
 
     /**
-     * The file gateway instance.
+     * The file tracker instance.
      *
      * @var FileHandler
      */

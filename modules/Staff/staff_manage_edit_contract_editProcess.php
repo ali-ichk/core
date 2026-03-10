@@ -132,7 +132,7 @@ if ($gibbonStaffID == '') { echo 'Fatal error loading this page!';
 
                     // Handle file deletion when user removes attachment
                     if (empty($contractUpload) && !empty($rozw['contractUpload'])) {
-                        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonStaffContract', $gibbonStaffContractID, 'contractUspload');
+                        $deleted = $container->get(FileHandler::class)->deleteFile('gibbonStaffContract', $gibbonStaffContractID, 'contractUpload');
                     }
 
                     if ($partialFail == true) {

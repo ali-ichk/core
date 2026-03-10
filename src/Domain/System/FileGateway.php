@@ -23,7 +23,6 @@ namespace Gibbon\Domain\System;
 
 use Gibbon\Domain\QueryableGateway;
 use Gibbon\Domain\Traits\TableAware;
-use Gibbon\Contracts\Database\Result;
 
 /**
  * File Gateway

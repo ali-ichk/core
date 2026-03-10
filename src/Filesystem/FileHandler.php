@@ -204,63 +204,63 @@ class FileHandler implements FileHandlerInterface
         return true;
     }
 
-     /**
-     * Verify file integrity by comparing stored checksum with recalculated checksum
-     *
-     * @param int $gibbonFileID The file record ID to verify
-     * @return bool True if checksums match, false if mismatch or file missing
-     */
+    //  /**
+    //  * Verify file integrity by comparing stored checksum with recalculated checksum
+    //  *
+    //  * @param int $gibbonFileID The file record ID to verify
+    //  * @return bool True if checksums match, false if mismatch or file missing
+    //  */
 
-    public function verifyFileIntegrity($gibbonFileID)
-    {
+    // public function verifyFileIntegrity($gibbonFileID)
+    // {
         
-        $file = $this->fileGateway->getByID($gibbonFileID);
+    //     $file = $this->fileGateway->getByID($gibbonFileID);
         
-        if (empty($file)) {
-            return false;
-        }
+    //     if (empty($file)) {
+    //         return false;
+    //     }
 
-        $storedChecksum = $file['checksum'];
-        $filePath = $file['filePath'];
+    //     $storedChecksum = $file['checksum'];
+    //     $filePath = $file['filePath'];
         
-        // Construct absolute path from stored relative filePath
-        $absolutePath = $this->session->get('absolutePath') . '/' . $filePath;
+    //     // Construct absolute path from stored relative filePath
+    //     $absolutePath = $this->session->get('absolutePath') . '/' . $filePath;
         
-        // Check if file exists at absolute path
-        if (!file_exists($absolutePath)) {
-            return false;
-        }
+    //     // Check if file exists at absolute path
+    //     if (!file_exists($absolutePath)) {
+    //         return false;
+    //     }
         
-        // Recalculate checksum from file at absolute path
-        $calculatedChecksum = hash_file('sha256', $absolutePath);
+    //     // Recalculate checksum from file at absolute path
+    //     $calculatedChecksum = hash_file('sha256', $absolutePath);
         
-        if (empty($calculatedChecksum)) {
-            return false;
-        }
+    //     if (empty($calculatedChecksum)) {
+    //         return false;
+    //     }
         
-        // Compare stored and calculated checksums
-        return $storedChecksum === $calculatedChecksum;
-    }
+    //     // Compare stored and calculated checksums
+    //     return $storedChecksum === $calculatedChecksum;
+    // }
 
-     /**
-     * Query all file records where the file no longer exists on the filesystem
-     *
-     * @return array of records
-     */
-    public function selectOrphanedFileRecords()
-    {
-        // Query all records from gibbonFile
-        $allFiles = $this->fileGateway->selectAllFileRecords();
+    //  /**
+    //  * Query all file records where the file no longer exists on the filesystem
+    //  *
+    //  * @return array of records
+    //  */
+    // public function selectOrphanedFileRecords()
+    // {
+    //     // Query all records from gibbonFile
+    //     $allFiles = $this->fileGateway->selectAllFileRecords();
 
-        // Filter to records where file does not exist
-        $orphanedRecords = [];
-        foreach ($allFiles as $file) {
-            $fullPath = $this->session->get('absolutePath'). '/' . $file['filePath'];
-            if (!file_exists($fullPath)) {
-                $orphanedRecords[] = $file;
-            }
-        }
+    //     // Filter to records where file does not exist
+    //     $orphanedRecords = [];
+    //     foreach ($allFiles as $file) {
+    //         $fullPath = $this->session->get('absolutePath'). '/' . $file['filePath'];
+    //         if (!file_exists($fullPath)) {
+    //             $orphanedRecords[] = $file;
+    //         }
+    //     }
 
-        return $orphanedRecords;
-    }
+    //     return $orphanedRecords;
+    // }
 }

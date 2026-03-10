@@ -28,7 +28,6 @@ use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\System\EmailTemplateGateway;
-use Gibbon\Forms\Builder\FormBuilderInterface;
 use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
