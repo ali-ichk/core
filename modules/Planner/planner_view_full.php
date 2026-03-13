@@ -25,13 +25,7 @@ use Gibbon\Forms\Form;
 use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
-use Gibbon\Forms\CustomFieldHandler;
-use Gibbon\Domain\System\HookGateway;
-use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\User\FamilyChildGateway;
-use Gibbon\Domain\Planner\PlannerEntryGateway;
-use Gibbon\Domain\Timetable\CourseEnrolmentGateway;
-use Gibbon\Domain\Timetable\TimetableDayDateGateway;
 use Gibbon\UI\Components\Alert;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\System\HookGateway;
@@ -1296,7 +1290,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                                 // Add attendance fields, teacher only
                                 if ($canTakeAttendance) {
                                     $attendanceCount++;
-                                    if (!empty($person['log']['type']) && $attendance->isTypePresent($person['log']['type'])) {
+                                    if (!empty($person['log']['type']) && $attendance->isTypePresent($person['log']['type']) && $attendance->isTypeOnsite($person['log']['type'])) {
                                         $attendanceCountPresent++;
                                     }
 
@@ -1344,7 +1338,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                             $alertText = Format::bold(__('Total students:') . ' ' . $attendanceCount) ;
                             
                             if (!empty($classLogs)) {
-                                $alertText .= '<br/><span title="' . __('e.g. Present or Present - Late') . '" class="whitespace-nowrap">' . __('Total students present in room:') . ' ' . $attendanceCountPresent . '</span>' . '<br/><span title="' . __('e.g. not Present and not Present - Late') . '" class="whitespace-nowrap">' . __('Total students absent from room:') . ' ' . ($attendanceCount - $attendanceCountPresent) . '</span>';
+                                $alertText .= '<br/><span title="' . __('e.g. Present or Present - Late') . '" class="whitespace-nowrap">' . __('Students present in room:') . ' ' . $attendanceCountPresent . '</span>' . '<br/><span title="' . __('e.g. not Present and not Present - Late') . '" class="whitespace-nowrap">' . __('Students absent from room:') . ' ' . ($attendanceCount - $attendanceCountPresent) . '</span>';
                             } 
 
                             $form->addRow()->addAlert($alertText, !empty($classLogs) ? 'success' : 'message')->setClass('right');

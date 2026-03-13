@@ -37,6 +37,8 @@ v31.0.00
         System: updated TinyMCE to version 8 and added a minimal mode to Editor fields
         System: added a User module to organise user preferences and settings
         System: enabled configuring the time format as 12-hour clock or 24-hour clock in System Settings
+        System: added Peruvian Sol as a currency option
+        System: ensured Twig cache is turned off for Development installs
         System: added a new fileHandler class to track and monitor file uploads
         Admissions: added a progress bar for admissions milestones to Manage Applications
         Admissions: added a warning to Accept Application when milestones have not been completed
@@ -66,11 +68,12 @@ v31.0.00
     Bug Fixes
         System: fixed handling of array values in localeFriendlySort method in DatabaseFormFactory
         System: renamed ca_CA locale to ca_ES and updated locale files
-        School Admin: fixed inactive grade scales not selectable in Manage External Assessment
         Messenger: fixed the issue of incorrect name being displayed for mailing list users in Report Data 
         Messenger: fixed overflowing images and iframes on Message Wall
+        Planner: fixed "present in room" attendance counts in Lesson Plan to exclude Present - Offsite
         Staff: fixed staff coverage showing on timetable when not accepted yet or declined
-        School Admin: fixed inactive grade scales not selectable in Manage External Assessment 
+        Staff: fixed the issue of including staff email while submitting a job application form
+        School Admin: fixed inactive grade scales not selectable in Manage External Assessment
 
     Deprecations
 
