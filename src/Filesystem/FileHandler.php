@@ -204,6 +204,8 @@ class FileHandler implements FileHandlerInterface
         return true;
     }
 
+    ////-/-/--/-/-/-/-/ FOR PHASE-2 /-/-/-/--/--//
+
     //  /**
     //  * Verify file integrity by comparing stored checksum with recalculated checksum
     //  *
