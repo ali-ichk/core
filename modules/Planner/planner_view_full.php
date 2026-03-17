@@ -25,6 +25,7 @@ use Gibbon\Forms\Form;
 use Gibbon\FileUploader;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
+use Gibbon\Domain\User\FamilyChildGateway;
 use Gibbon\UI\Components\Alert;
 use Gibbon\Forms\CustomFieldHandler;
 use Gibbon\Domain\System\HookGateway;
@@ -32,6 +33,7 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Planner\PlannerEntryGateway;
 use Gibbon\Domain\Timetable\CourseEnrolmentGateway;
 use Gibbon\Domain\Timetable\TimetableDayDateGateway;
+use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
 use Gibbon\Domain\School\SchoolYearSpecialDayGateway;
 use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
 use Gibbon\Domain\Attendance\AttendanceLogCourseClassGateway;
@@ -109,11 +111,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                     echo __('Your request failed because some required values were not unique.');
                     echo '</div>';
                 } else {
-
-                        $dataChild = array('gibbonPersonID' => $gibbonPersonID, 'gibbonPersonID2' => $session->get('gibbonPersonID'));
-                        $sqlChild = "SELECT * FROM gibbonFamilyChild JOIN gibbonFamily ON (gibbonFamilyChild.gibbonFamilyID=gibbonFamily.gibbonFamilyID) JOIN gibbonFamilyAdult ON (gibbonFamilyAdult.gibbonFamilyID=gibbonFamily.gibbonFamilyID) JOIN gibbonPerson ON (gibbonFamilyChild.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonPerson.status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonFamilyChild.gibbonPersonID=:gibbonPersonID AND gibbonFamilyAdult.gibbonPersonID=:gibbonPersonID2 AND childDataAccess='Y'";
-                        $resultChild = $connection2->prepare($sqlChild);
-                        $resultChild->execute($dataChild);
+                    
+                        $resultChild = $container->get(FamilyChildGateway::class)->selectChildByFamilyAdultID($gibbonPersonID, $session->get('gibbonPersonID'));
 
                     if ($resultChild->rowCount() < 1) {
                         $page->addError(__('The selected record does not exist, or you do not have access to it.'));
@@ -132,7 +131,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
             }
             elseif ($highestAction == 'Lesson Planner_viewEditAllClasses' or $highestAction == 'Lesson Planner_viewAllEditMyClasses'  or $highestAction == 'Lesson Planner_viewOnly') {
                 $data = ['gibbonPlannerEntryID' => $gibbonPlannerEntryID];
-                $sql = "SELECT gibbonCourse.gibbonCourseID, gibbonPlannerEntry.gibbonPlannerEntryID, gibbonCourseClass.gibbonCourseClassID, gibbonUnitID, gibbonPlannerEntry.gibbonCourseClassID, gibbonPlannerEntry.name, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class, date, timeStart, timeEnd, summary, gibbonPlannerEntry.fields, gibbonPlannerEntry.description, teachersNotes, homework, homeworkDueDateTime, homeworkDetails, viewableStudents, viewableParents, 'Teacher' AS role, homeworkTimeCap, homeworkSubmission, homeworkSubmissionDateOpen, homeworkSubmissionDrafts, homeworkSubmissionType, homeworkSubmissionRequired, gibbonDepartmentID, gibbonCourseClass.attendance FROM gibbonPlannerEntry JOIN gibbonCourseClass ON (gibbonPlannerEntry.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) WHERE gibbonPlannerEntry.gibbonPlannerEntryID=:gibbonPlannerEntryID ORDER BY date, timeStart";
+                $sql = "SELECT gibbonCourse.gibbonCourseID, gibbonPlannerEntry.gibbonPlannerEntryID, gibbonCourseClass.gibbonCourseClassID, gibbonUnitID, gibbonPlannerEntry.gibbonCourseClassID, gibbonPlannerEntry.name, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class, date, timeStart, timeEnd, summary, gibbonPlannerEntry.fields, gibbonPlannerEntry.description, teachersNotes, homework, homeworkDueDateTime, homeworkDetails, viewableStudents, viewableParents, 'Teacher' AS role, homeworkTimeCap, homeworkSubmission, homeworkSubmissionDateOpen, homeworkSubmissionDrafts, homeworkSubmissionType, homeworkSubmissionRequired, gibbonDepartmentID, gibbonCourseClass.attendance, gibbonPlannerEntry.gibbonSpaceID, gibbonSpace.name AS spaceName FROM gibbonPlannerEntry JOIN gibbonCourseClass ON (gibbonPlannerEntry.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) LEFT JOIN gibbonSpace ON (gibbonSpace.gibbonSpaceID=gibbonPlannerEntry.gibbonSpaceID) WHERE gibbonPlannerEntry.gibbonPlannerEntryID=:gibbonPlannerEntryID ORDER BY date, timeStart;";
                 $teacher = false;
 
                     $dataTeacher = array('gibbonPersonID' => $session->get('gibbonPersonID'), 'gibbonPlannerEntryID' => $gibbonPlannerEntryID, 'gibbonPersonID2' => $session->get('gibbonPersonID'), 'gibbonPlannerEntryID2' => $gibbonPlannerEntryID, 'date2' => $date);
@@ -314,6 +313,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                         $col->addColumn('class', __('Class'))->format(Format::using('courseClassName', ['course', 'class']));
                         $col->addColumn('date', __('Date'))->format(Format::using('date', 'date'));
                         $col->addColumn('time', __('Time'))->format(Format::using('timeRange', ['timeStart', 'timeEnd']));
+                        $col->addColumn('location', __('Location'))->format(function ($values) {return !empty($values['spaceName']) ? $values['spaceName'] : '';});
 
                         $col->addColumn('summary', __('Summary'))->addClass('col-span-3');
 
@@ -854,10 +854,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
 														</td>
 
 														<?php
-                                                        $dataVersion = array('gibbonPlannerEntryID' => $values['gibbonPlannerEntryID'], 'gibbonPersonID' => $rowClass['gibbonPersonID']);
-                                                        $sqlVersion = 'SELECT * FROM gibbonPlannerEntryHomework WHERE gibbonPlannerEntryID=:gibbonPlannerEntryID AND gibbonPersonID=:gibbonPersonID ORDER BY count DESC';
-                                                        $resultVersion = $connection2->prepare($sqlVersion);
-                                                        $resultVersion->execute($dataVersion);
+                                                        
+                                                        $resultVersion = $container->get(PlannerEntryHomeworkGateway::class)->selectHomeworkByStudent($values['gibbonPlannerEntryID'], $rowClass['gibbonPersonID']);
+
 													    if ($resultVersion->rowCount() < 1) {
 														?>
 															<td colspan=4>
@@ -1134,7 +1133,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                         }
                         echo '</table>';
 
-                        if ($highestAction != 'Lesson Planner_viewOnly') {
+                        // Temporarily disabled
+                        if (false && $highestAction != 'Lesson Planner_viewOnly') {
 
                           echo "<a name='chat'></a>";
                           echo "<h2 style='padding-top: 30px'>".__('Chat').'</h2>';
@@ -1247,7 +1247,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                             }
                         }
 
-                        $grid = $form->addRow()->addGrid('attendance')->setClass('border bg-blue-50 rounded p-2 ')->setBreakpoints('w-1/2');
+                        $grid = $form->addRow()->addGrid('attendance')->addClass('border bg-blue-50 rounded p-2 ')->setBreakpoints('w-1/2');
 
                         // Display attendance grid
                         $count = 0;
@@ -1290,7 +1290,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                                 // Add attendance fields, teacher only
                                 if ($canTakeAttendance) {
                                     $attendanceCount++;
-                                    if (!empty($person['log']['type']) && $attendance->isTypePresent($person['log']['type'])) {
+                                    if (!empty($person['log']['type']) && $attendance->isTypePresent($person['log']['type']) && $attendance->isTypeOnsite($person['log']['type'])) {
                                         $attendanceCountPresent++;
                                     }
 
@@ -1338,7 +1338,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                             $alertText = Format::bold(__('Total students:') . ' ' . $attendanceCount) ;
                             
                             if (!empty($classLogs)) {
-                                $alertText .= '<br/><span title="' . __('e.g. Present or Present - Late') . '" class="whitespace-nowrap">' . __('Total students present in room:') . ' ' . $attendanceCountPresent . '</span>' . '<br/><span title="' . __('e.g. not Present and not Present - Late') . '" class="whitespace-nowrap">' . __('Total students absent from room:') . ' ' . ($attendanceCount - $attendanceCountPresent) . '</span>';
+                                $alertText .= '<br/><span title="' . __('e.g. Present or Present - Late') . '" class="whitespace-nowrap">' . __('Students present in room:') . ' ' . $attendanceCountPresent . '</span>' . '<br/><span title="' . __('e.g. not Present and not Present - Late') . '" class="whitespace-nowrap">' . __('Students absent from room:') . ' ' . ($attendanceCount - $attendanceCountPresent) . '</span>';
                             } 
 
                             $form->addRow()->addAlert($alertText, !empty($classLogs) ? 'success' : 'message')->setClass('right');

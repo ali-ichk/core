@@ -54,8 +54,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/staff_duty_edit.php'
         $row = $blockTemplate->addRow();
             $row->addLabel('name', __('Name'));
             $row->addTextField('name')
-                ->addClass('mb-2')
-                ->append('<input type="hidden" id="gibbonStaffDutyID" name="gibbonStaffDutyID" value="">');
+                ->addClass('mb-2');
 
             $row->addLabel('nameShort', __('Short Name'));
             $row->addTextField('nameShort')
@@ -84,7 +83,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/staff_duty_edit.php'
     $row = $form->addRow();
     $customBlocks = $row->addCustomBlocks('dutyList', $session)
         ->fromTemplate($blockTemplate)
-        ->settings(array('inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true))
+        ->settings([
+            'inputNameStrategy' => 'object',
+            'addOnEvent' => 'click',
+            'sortable' => true,
+            'uniqueID' => 'gibbonStaffDutyID',
+        ])
         ->placeholder(__('Time Slots will appear here...'))
         ->addToolInput($addBlockButton);
 
@@ -107,45 +111,3 @@ if (isActionAccessible($guid, $connection2, '/modules/Staff/staff_duty_edit.php'
     echo $form->getOutput();
 
 }
-?>
-
-<script type="text/javascript">
-        var time = 'input[id^="time"]';
-        function setTimepicker(input) {
-            input.removeClass('hasTimepicker').timepicker({
-                    'scrollDefault': 'now',
-                    'timeFormat': 'H:i',
-                    'minTime': '00:00',
-                    'maxTime': '23:59',
-                    onSelect: function(){$(this).blur();},
-                    onClose: function(){$(this).change();}
-                });
-        }
-
-        $(document).ready(function(){
-            //This is to ensure that loaded blocks have timepickers
-            $(time).each(function() {
-                setTimepicker($(this));
-            });
-
-            //This is needed to ensure that loaded timeEnds are properly chained to loaded timeStarts
-            $('input[id^=timeEnd]').each(function() {
-                var timeStart = $('#' + $(this).prop('id').replace('End', 'Start'));
-                $(this).timepicker('option', {'minTime': timeStart.val(), 'timeFormat': 'H:i', 'showDuration': true});
-            });
-        });
-
-        //This is needed to make chaining Times work with Custom Blocks
-        $(document).on('changeTime', 'input[id^=timeStart]', function() {
-            var timeEnd = $('#' + $(this).prop('id').replace('Start', 'End'));
-            if (timeEnd.val() == "" || $(this).val() > timeEnd.val()) {
-                timeEnd.val($(this).val());
-            }
-            timeEnd.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
-        });
-
-        //This is needed to make Time inputs have time pickers.
-        $(document).on('click', '.addBlock', function () {
-            setTimepicker($(time));
-        });
-    </script>

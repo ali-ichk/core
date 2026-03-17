@@ -67,7 +67,7 @@ if ($gibbonSchoolYearID == '') { echo 'Fatal error loading this page!';
             $randStrGenerator = new PasswordPolicy(true, true, false, 40);
 
             //PROCESS FEES
-            $fees = array();
+            $fees = [];
             foreach ($order as $fee) {
                 $fees[$fee]['name'] = $_POST['name'.$fee] ?? '';
                 $fees[$fee]['gibbonFinanceFeeCategoryID'] = $_POST['gibbonFinanceFeeCategoryID'.$fee] ?? '';
@@ -444,7 +444,7 @@ if ($gibbonSchoolYearID == '') { echo 'Fatal error loading this page!';
                     header("Location: {$URL}");
                 } else {
                     $URL .= '&return=success0';
-                    header("Location: {$URL}");
+                    header("Location: {$URL}&editID={$gibbonFinanceInvoiceID}");
                 }
             }
         }

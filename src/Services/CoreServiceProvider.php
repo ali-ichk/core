@@ -140,10 +140,10 @@ class CoreServiceProvider extends AbstractServiceProvider implements BootableSer
                 $loader->prependPath($absolutePath.'/themes/'.$themeName.'/templates');
             }
 
-            $enableDebug = $session->get('installType') == 'Development';
+            $devMode = $session->get('installType') == 'Development';
             // Override caching on systems during upgrades, when the system version is higher than database version
             if (version_compare((string) $this->getContainer()->get('config')->getVersion(), (string) $session->get('version'), '>')) {
-                $enableDebug = true;
+                $devMode = true;
             }
 
             // Add module templates
@@ -154,8 +154,8 @@ class CoreServiceProvider extends AbstractServiceProvider implements BootableSer
 
             $cachePath = $session->has('cachePath') ? $session->get('cachePath').'/templates' : '/uploads/cache';
             $twig = new \Twig\Environment($loader, array(
-                'cache' => $absolutePath.$cachePath,
-                'debug' => $enableDebug,
+                'cache' => $devMode ? false : $absolutePath.$cachePath,
+                'debug' => $devMode,
             ));
 
             $twig->addGlobal('absolutePath', $session->get('absolutePath'));

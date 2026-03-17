@@ -174,6 +174,11 @@ class FormFactory implements FormFactoryInterface
         return new Input\TextField($name);
     }
 
+    public function createTokenList($name)
+    {
+        return new Input\TokenList($name);
+    }
+
     public function createRange($name, $min, $max, $step = null)
     {
         return new Input\Range($name, $min, $max, $step);
@@ -294,9 +299,9 @@ class FormFactory implements FormFactoryInterface
         return new Input\Button($label, 'button', $onClick, $id);
     }
 
-    public function createCustomBlocks($name, Session $session, bool $canDelete = true)
+    public function createCustomBlocks($name, ?Session $session = null, bool $canDelete = true, bool $canCopy = true, bool $canAdd = false)
     {
-        return new Input\CustomBlocks($this, $name, $session, $canDelete);
+        return new Input\CustomBlocks($this, $name, $session, $canDelete, $canCopy, $canAdd);
     }
 
     public function createDocuments($name, $documents, $view, $absoluteURL, $mode = '')
@@ -455,7 +460,7 @@ class FormFactory implements FormFactoryInterface
         $languages = array(
             'af_ZA' => 'Afrikaans - Suid-Afrika',
             'nl_NL' => 'Dutch - Nederland',
-            'ca_CA' => 'Català - Catalonia',
+            'ca_ES' => 'Català - Catalonia',
             'en_GB' => 'English - United Kingdom',
             'en_US' => 'English - United States',
             'es_ES' => 'Español - España',
@@ -546,6 +551,7 @@ class FormFactory implements FormFactoryInterface
                 'NGN ₦' => 'Nigerian Naira (₦)',
                 'OMR ر.ع.' => 'Omani Rial (ر.ع.)',
                 'PKR ₨' => 'Pakistani Rupee (₨)',
+                'PEN' => 'Peruvian Sol (S/)',
                 'RON L' => 'Romanian Leu (L)',
                 'RUB ₽' => 'Russian Ruble (₽)',
                 'SAR ﷼‎' => 'Saudi Riyal (﷼‎)',

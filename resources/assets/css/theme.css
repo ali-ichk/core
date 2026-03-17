@@ -396,6 +396,14 @@ input[type="color"]::-moz-color-swatch {
     @apply border-gray-400;
 }
 
+/* Alpine Sortable */
+.sortable-ghost {
+    opacity: .4 !important;
+}
+
+.tox-tinymce {
+    border: 1px solid hsl(220 14% 84%) !important;
+}
 
 /*
  --------------------------------------------------------------------------
@@ -465,6 +473,10 @@ select[multiple] + .error-msg {
 
 textarea + .error-msg {
     @apply top-auto bottom-0 mb-2 ml-2;
+}
+
+.personSelect + .error-msg {
+    @apply top-[30%] ml-20;
 }
 
 .editor-full .tox-tinymce + .error-msg  {

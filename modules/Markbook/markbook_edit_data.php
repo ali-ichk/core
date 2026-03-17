@@ -357,7 +357,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_edit_dat
                             ->addParam('gibbonCourseClassID', $gibbonCourseClassID)
                             ->addParam('gibbonMarkbookColumnID', $gibbonMarkbookColumnID)
                             ->modalWindow(1100, 550)
-                            ->setClass('align-middle submit-button');
+                            ->setClass('align-middle no-confirm');
 
                         $table = $form->addRow()->addTable()->setClass('smallIntBorder w-full colorOddEven noMargin noPadding noBorder');
 

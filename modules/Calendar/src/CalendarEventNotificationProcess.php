@@ -26,13 +26,16 @@ use Gibbon\Services\Format;
 use Gibbon\Contracts\Comms\Mailer;
 use Gibbon\Domain\User\UserGateway;
 use Gibbon\Domain\Staff\StaffGateway;
-use Gibbon\Services\BackgroundProcess;
+use Gibbon\Domain\Students\StudentGateway;
 use Gibbon\Domain\School\YearGroupGateway;
 use Gibbon\Domain\FormGroups\FormGroupGateway;
 use Gibbon\Domain\Calendar\CalendarEventGateway;
 use Gibbon\Domain\Timetable\CourseEnrolmentGateway;
 use Gibbon\Domain\IndividualNeeds\INAssistantGateway;
 use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
+use Gibbon\Domain\Timetable\TimetableDayDateGateway;
+use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
+use Gibbon\Services\BackgroundProcess;
 
 /**
  * CalendarEventNotificationProcess
@@ -44,53 +47,69 @@ class CalendarEventNotificationProcess extends BackgroundProcess
 {
     protected $view;
     protected $mail;
-    
     protected $userGateway;
     protected $staffGateway;
-    protected $yearGroupGateway;
-    protected $formGroupGateway;
-    protected $courseEnrolmentGateway;
-    protected $iNAssistantGateway;
+    protected $studentGateway;
     protected $calendarEventGateway;
     protected $calendarEventPersonGateway;
+    protected $timetableDayDateGateway;
+    protected $attendanceLogGateway;
 
     public function __construct(
         View $view,
         Mailer $mail,
         UserGateway $userGateway,
         StaffGateway $staffGateway,
-        YearGroupGateway $yearGroupGateway,
-        FormGroupGateway $formGroupGateway,
-        CourseEnrolmentGateway $courseEnrolmentGateway,
-        INAssistantGateway $iNAssistantGateway,
+        StudentGateway $studentGateway,
         CalendarEventGateway $calendarEventGateway,
         CalendarEventPersonGateway $calendarEventPersonGateway,
+        TimetableDayDateGateway $timetableDayDateGateway,
+        AttendanceLogPersonGateway $attendanceLogGateway,
     ) {
         $this->view = $view;
         $this->mail = $mail;
         $this->userGateway = $userGateway;
         $this->staffGateway = $staffGateway;
-        $this->yearGroupGateway = $yearGroupGateway;
-        $this->formGroupGateway = $formGroupGateway;
-        $this->courseEnrolmentGateway = $courseEnrolmentGateway;
-        $this->iNAssistantGateway = $iNAssistantGateway;
+        $this->studentGateway = $studentGateway;
         $this->calendarEventGateway = $calendarEventGateway;
         $this->calendarEventPersonGateway = $calendarEventPersonGateway;
+        $this->timetableDayDateGateway = $timetableDayDateGateway;
+        $this->attendanceLogGateway = $attendanceLogGateway;
     }
 
     public function runNotifyStaff($gibbonCalendarEventID, $subject, $notes, $notifyGroups, $allStaff, $notificationList, $gibbonPersonIDSender, $gibbonSchoolYearID, $organisationEmail)
     {
         $staff = [];
         $staffContexts = [];
-        $staffStudentContext = [];
         $formGroups = [];
 
         $event = $this->calendarEventGateway->getByID($gibbonCalendarEventID);
 
         // Get all Attendees 
         $criteria = $this->calendarEventPersonGateway->newQueryCriteria()
-            ->sortBy(['surname', 'preferredName', 'category']);
+            ->sortBy(['yearGroupSequence', 'formGroup', 'surname', 'preferredName', 'category']);
         $students = $this->calendarEventPersonGateway->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
+
+        // Query all attendance logs for future absence records on the event date and time
+        $futureAbsences = $event['allDay'] == 'Y'
+            ? $this->attendanceLogGateway->selectFutureAttendanceLogsByDate($event['dateStart'], $event['dateEnd'])->fetchGroupedUnique()
+            : $this->attendanceLogGateway->selectFutureAttendanceLogsByDateAndTime($event['dateStart'], $event['dateEnd'], $event['timeStart'], $event['timeEnd'])->fetchGroupedUnique();
+        
+        // Get timetable details for student participants, to cross-check for student lists in emails
+        foreach ($students as $index => $student) {
+            if ($student['roleCategory'] != 'Student') continue;
+            if (!empty($student['formGroup'])) $formGroups[] = $student['formGroup'];
+
+            $periods = $this->timetableDayDateGateway->selectTimetablePeriodsByPersonAndDate($gibbonSchoolYearID, $student['gibbonPersonID'], $event['dateStart'], $event['dateEnd'], $event['timeStart'], $event['timeEnd'], true)->fetchAll();
+            $periods = array_map(function ($item) {
+                $item['teacherIDs'] = explode(',',$item['teacherIDs']);
+                return $item;
+            }, $periods);
+
+            $students[$index]['timetable'] = $periods;
+            $students[$index]['attendance'] = $futureAbsences[$student['gibbonPersonID']] ?? [];
+            $students[$index]['staff'] = $this->studentGateway->selectAllRelatedUsersByStudent($gibbonSchoolYearID, $student['gibbonYearGroupID'], $student['gibbonFormGroupID'], $student['gibbonPersonID'], true)->fetchAll();
+        }
 
         // All Staff
         if ($allStaff == 'Y') {
@@ -101,92 +120,55 @@ class CalendarEventNotificationProcess extends BackgroundProcess
                 $staff[] = $result['gibbonPersonID'];
             }    
         } else {
-            if (!empty($notifyGroups)) {
-                foreach ($students as $student) {
-                    $gibbonPersonIDStudent = $student['gibbonPersonID'];
-                    if (!empty($student['formGroup'])) $formGroups[] = $student['formGroup'];
+            foreach ($students as $student) {
+                foreach ($student['staff'] as $person) {
+                    $gibbonPersonIDTeacher = str_pad($person['gibbonPersonID'], 10, '0', STR_PAD_LEFT);
 
                     // Head of Year
-                    if (in_array('HOY', $notifyGroups)) {
-                        $yearGroup = $this->yearGroupGateway->getByID($student['gibbonYearGroupID']);
-                        $gibbonPersonIDHOY = $yearGroup['gibbonPersonIDHOY'] ?? null;
-                        if (!empty($gibbonPersonIDHOY)) {
-                            $staff[] = $gibbonPersonIDHOY;
-                            $staffContexts[$gibbonPersonIDHOY][] = __('Head of Year');
-
-                            // Record Relation
-                            if (!isset($staffStudentContext[$gibbonPersonIDHOY][$gibbonPersonIDStudent]['context']) || !in_array('Head of Year', $staffStudentContext[$gibbonPersonIDHOY][$gibbonPersonIDStudent]['context'])) {
-                                $staffStudentContext[$gibbonPersonIDHOY][$gibbonPersonIDStudent]['context'][] = 'Head of Year';
-                            }
-                        }
+                    if (in_array('HOY', $notifyGroups) && $person['type'] == 'Head of Year') {
+                        $staff[] = $gibbonPersonIDTeacher;
+                        $staffContexts[$gibbonPersonIDTeacher][] = __('Head of Year');
                     }
 
                     // Form Tutors
-                    if (in_array('tutors', $notifyGroups)) {
-                        $formGroup = $this->formGroupGateway->getByID($student['gibbonFormGroupID']);
-                        $tutorIDs = [
-                            $formGroup['gibbonPersonIDTutor'] ?? null,
-                            $formGroup['gibbonPersonIDTutor2'] ?? null,
-                            $formGroup['gibbonPersonIDTutor3'] ?? null,
-                        ];
-
-                        foreach ($tutorIDs as $gibbonPersonIDTutor) {
-                            if (empty($gibbonPersonIDTutor)) continue;
-                            $staff[] = $gibbonPersonIDTutor;
-                            $staffContexts[$gibbonPersonIDTutor][] = __('Form Tutor');
-
-                            // Record Relation
-                            if (!isset($staffStudentContext[$gibbonPersonIDTutor][$gibbonPersonIDStudent]['context']) || !in_array('Form Tutor', $staffStudentContext[$gibbonPersonIDTutor][$gibbonPersonIDStudent]['context'])) {
-                                $staffStudentContext[$gibbonPersonIDTutor][$gibbonPersonIDStudent]['context'][] = 'Form Tutor';
-                            }
-                        }
+                    if (in_array('tutors', $notifyGroups) && $person['type'] == 'Form Tutor') {
+                        $staff[] = $gibbonPersonIDTeacher;
+                        $staffContexts[$gibbonPersonIDTeacher][] = __('Form Tutor');
                     }
 
-                    // Class Teachers
-                    if (in_array('teachers', $notifyGroups)) {
-                        $teachers = $this->courseEnrolmentGateway->selectClassTeachersByStudent($gibbonSchoolYearID, $gibbonPersonIDStudent);
-                        foreach ($teachers as $teacher) {
-                            $gibbonPersonIDTeacher = $teacher['gibbonPersonID'] ?? null;
-
-                            if (empty($gibbonPersonIDTeacher)) continue;
-                            $staff[] = $gibbonPersonIDTeacher;
-                            $staffContexts[$gibbonPersonIDTeacher][] = __('Class Teacher');
-
-                            // Record relation
-                            if (!isset($staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context']) || !in_array('Class Teacher', $staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context'])) {
-                                $staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context'][] = 'Class Teacher';
-                            }
-                        }
+                    // Teachers (all)
+                    if (in_array('teachersAll', $notifyGroups) && $person['type'] == 'Class Teacher') {
+                        $staff[] = $gibbonPersonIDTeacher;
+                        $staffContexts[$gibbonPersonIDTeacher][] = __('Class Teacher');
                     }
 
                     // Educational Assistants
-                    if (in_array('INAssistant', $notifyGroups)) {
-                        $assistants = $this->iNAssistantGateway->selectINAssistantsByStudent($gibbonPersonIDStudent);
-                        foreach ($assistants as $assistant) {
-                            $gibbonPersonIDAssistant = $assistant['gibbonPersonID'] ?? null;
-
-                            if (empty($gibbonPersonIDAssistant)) continue; 
-                            $staff[] = $gibbonPersonIDAssistant;
-                            $staffContexts[$gibbonPersonIDAssistant][] = __('Educational Assistant');
-
-                            // Record Relation
-                            if (!isset($staffStudentContext[$gibbonPersonIDAssistant][$gibbonPersonIDStudent]['context']) || !in_array('Educational Assistant', $staffStudentContext[$gibbonPersonIDAssistant][$gibbonPersonIDStudent]['context'])) {
-                                $staffStudentContext[$gibbonPersonIDAssistant][$gibbonPersonIDStudent]['context'][] = 'Educational Assistant';
-                            }
-                        }
+                    if (in_array('INAssistant', $notifyGroups) && ($person['type'] == 'Educational Assistant' || $person['type'] == 'IN Assistant')) {
+                        $staff[] = $gibbonPersonIDTeacher;
+                        $staffContexts[$gibbonPersonIDTeacher][] = __('Educational Assistant');
                     }
                 }
 
-                // Staff Participants
-                if (in_array('participants', $notifyGroups)) {
-                    $participants = $this->calendarEventPersonGateway->queryAllEventParticipants($criteria, $gibbonCalendarEventID)->toArray();
-                    foreach ($participants as $participant) {
-                        if ($participant['roleCategory'] != 'Staff') continue;
-                        $staff[] = $participant['gibbonPersonID'];
+                // Teachers - Affected
+                if (in_array('teachersAffected', $notifyGroups) && !empty($student['timetable'])) {
+                    foreach ($student['timetable'] as $period) {
+                        foreach($period['teacherIDs'] as $gibbonPersonIDTeacher) {
+                            $staff[] = $gibbonPersonIDTeacher;
+                            $staffContexts[$gibbonPersonIDTeacher][] = __('Class Teacher');
+                        }
                     }
                 }
             }
 
+            // Staff Participants
+            if (in_array('participants', $notifyGroups)) {
+                $participants = $this->calendarEventPersonGateway->queryAllEventParticipants($criteria, $gibbonCalendarEventID)->toArray();
+                foreach ($participants as $participant) {
+                    if ($participant['roleCategory'] != 'Staff') continue;
+                    $staff[] = $participant['gibbonPersonID'];
+                }
+            }
+        
             // Notify Additional People
             if (!empty($notificationList)) {
                 $staff = array_merge($staff, $notificationList);
@@ -196,7 +178,7 @@ class CalendarEventNotificationProcess extends BackgroundProcess
         $staffPersonIDs = isset($staff) ? array_values(array_filter(array_unique($staff))) : [];
 
         // Ensure the sender receives a copy
-        array_push($staffPersonIDs, $gibbonPersonIDSender);
+        $staffPersonIDs[] = $gibbonPersonIDSender;
         $staffContexts[$gibbonPersonIDSender][] = __('Sender');
 
         $staffDetails = $this->userGateway->selectNotificationDetailsByPerson($staffPersonIDs)->fetchAll();
@@ -214,16 +196,46 @@ class CalendarEventNotificationProcess extends BackgroundProcess
             $gibbonPersonIDTeacher = $staffDetail['gibbonPersonID'];
 
             // Get the relevant students of this staff
-            $relevantStudents = 0;
+            $relevantStudents = $affectedStudents = $attendanceStudents = 0;
             foreach ($students as $index => $student) {
-                $gibbonPersonIDStudent = $student['gibbonPersonID'];
-                if (isset($staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context'])) {
-                    // Get all the roles for this student-teacher pair
-                    $contextLabels = implode(', ', $staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context']);
-                    $students[$index]['context'] = $contextLabels;
+                $students[$index]['context'] = '';
+                $students[$index]['affected'] = [];
+                $students[$index]['absence'] = '';
+
+
+                // Add attendance details for future absence
+                if (!empty($student['attendance'])) {
+                    $students[$index]['absence'] = $student['attendance']['type'] ?? '';
+                    $attendanceStudents++;
+                }
+
+                // Add details of affected classes
+                if (!empty($student['timetable']) && is_array($student['timetable'])) {
+                    foreach ($student['timetable'] as $period) {
+                        if (in_array($gibbonPersonIDTeacher, $period['teacherIDs'])) {
+                            $students[$index]['affected'][] = Format::courseClassName($period['courseName'], $period['className']).' - '.$period['periodNameShort'];
+                            $affectedStudents++;
+                        }
+                    }
+                }
+
+                // Check for relevant contexts for this student 
+                $contexts = [];
+                foreach ($student['staff'] as $person) {
+                    $gibbonPersonID = str_pad($person['gibbonPersonID'], 10, '0', STR_PAD_LEFT);
+                    if ($gibbonPersonID == $gibbonPersonIDTeacher) {
+                        if ($person['type'] == 'Class Teacher') {
+                            $affectedStudents++;
+                        } else {
+                            $contexts[] = __($person['type']);
+                        }
+                    }
+                }
+
+                // Get all the contexts for this student-teacher pair
+                if (!empty($contexts)) {
+                    $students[$index]['context'] = implode(', ', array_unique($contexts));
                     $relevantStudents++;
-                } else {
-                    $students[$index]['context'] = '';
                 }
             }
 
@@ -235,8 +247,10 @@ class CalendarEventNotificationProcess extends BackgroundProcess
                 'students'   => $students,
                 'sender'     => $sender,
                 'allStaff'   => $allStaff,
-                'contexts'   => !empty($staffContexts[$gibbonPersonIDTeacher]) ? implode(', ', $staffContexts[$gibbonPersonIDTeacher]) : '',
+                'contexts'   => !empty($staffContexts[$gibbonPersonIDTeacher]) ? implode(', ', array_unique($staffContexts[$gibbonPersonIDTeacher])) : '',
                 'relevant'   => $relevantStudents,
+                'affected'   => $affectedStudents,
+                'attendance' => $attendanceStudents,
                 'formGroups' => count($formGroups),
                 'event'      => $event ?? [],
                 'notes'      => $notes ?? '',

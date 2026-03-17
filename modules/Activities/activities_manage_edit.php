@@ -173,15 +173,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
             $row = $blockTemplate->addRow()->addClass('w-full flex justify-between items-center mt-1 ml-2');
                 $row->addFileUpload('fileUpload')->accepts('.jpg,.jpeg,.gif,.png')
                     ->setAttachment('filePath', $session->get('absoluteURL'), '')
-                    ->setMaxUpload(false)
-                    ->append("<input type='hidden' id='gibbonActivityPhotoID' name='gibbonActivityPhotoID' value=''/>");
+                    ->setMaxUpload(false);
                 $row->addTextField('caption')->setClass('w-4/5 ml-6 mr-6')->placeholder(__('Caption (optional)'));
 
             // Custom Blocks
             $row = $form->addRow();
             $customBlocks = $row->addCustomBlocks('photos', $session, true)
                 ->fromTemplate($blockTemplate)
-                ->settings(['inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true, 'orderName' => 'photoOrder',])
+                ->settings(['inputNameStrategy' => 'object', 'addOnEvent' => 'click', 'sortable' => true, 'orderName' => 'photoOrder', 'uniqueID' => 'gibbonActivityPhotoID' ])
                 ->placeholder(__('Photos will be listed here...'))
                 ->addToolInput($addBlockButton);
 
@@ -241,8 +240,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                     $row->addSelect('gibbonDaysOfWeekID')
                         ->fromQuery($pdo, $sqlWeekdays)
                         ->placeholder()
-                        ->addClass('floatLeft')
-                        ->append('<input type="hidden" id="gibbonActivitySlotID" name="gibbonActivitySlotID" value="">');
+                        ->addClass('floatLeft');
 
                 $row = $slotBlock->addRow();
                     $row->addLabel('timeStart', __('Slot Start Time'));
@@ -284,6 +282,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                     ->settings([
                         'placeholder' => __('Time Slots will appear here...'),
                         'sortable' => true,
+                        'uniqueID' => 'gibbonActivitySlotID',
                     ])
                     ->addToolInput($addBlockButton);
 
@@ -355,8 +354,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                 $(document).ready(function () {
 
                     $('input[id^=fileUpload][name^=photos]').each(function() {
-                        
-                        var filePath = $('input[id^=filePath]', $(this).parent());
+                        var inputName = this.name.replace('fileUpload', 'filePath');
+                        var filePath = $('input[name="'+inputName+'"]');
                         if (filePath != undefined) {
                             var img = document.createElement("img");
                             img.src = "<?php echo $session->get('absoluteURL'); ?>/"+filePath.val();
@@ -383,50 +382,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_mana
                     }
                 }
 
-                var time = 'input[id^="time"]';
-                function setTimepicker(input) {
-                    input.removeClass('hasTimepicker').timepicker({
-                            'scrollDefault': 'now',
-                            'timeFormat': 'H:i',
-                            'minTime': '00:00',
-                            'maxTime': '23:59',
-                            onSelect: function(){$(this).blur();},
-                            onClose: function(){$(this).change();}
-                        });
-                }
-
                 $(document).ready(function(){
                     //This is to ensure that loaded blocks have the correct state.
                     $(radio + ':checked').each(locationSwap);
-
-                    //This is to ensure that loaded blocks have timepickers
-                    $(time).each(function() {
-                        setTimepicker($(this));
-                    });
-
-                    //This is needed to ensure that loaded timeEnds are properly chained to loaded timeStarts
-                    $('input[id^=timeEnd]').each(function() {
-                        var timeStart = $('#' + $(this).prop('id').replace('End', 'Start'));
-                        $(this).timepicker('option', {'minTime': timeStart.val(), 'timeFormat': 'H:i', 'showDuration': true});
-                    });
                 });
 
                 //This supplements triggers for the Internal and External Locations
                 $(document).on('change', radio, locationSwap);
-
-                //This is needed to make chaining Times work with Custom Blocks
-                $(document).on('changeTime', 'input[id^=timeStart]', function() {
-                    var timeEnd = $('#' + $(this).prop('id').replace('Start', 'End'));
-                    if (timeEnd.val() == "" || $(this).val() > timeEnd.val()) {
-                        timeEnd.val($(this).val());
-                    }
-                    timeEnd.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
-                });
-
-                //This is needed to make Time inputs have time pickers.
-                $(document).on('click', '.addBlock', function () {
-                    setTimepicker($(time));
-                });
             </script>
 
             <?php
