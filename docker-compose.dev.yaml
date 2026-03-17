@@ -1,6 +1,4 @@
-version: "3.8"
-
 services:
     app:
         ports:
-            - "8080:80"
+            - "8888:80"

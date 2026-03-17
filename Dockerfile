@@ -1,9 +1,7 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
-# 1. Install System Dependencies (Minimal required for Gibbon)
-# TODO: Pin version in apt get install 
+# 1. Install System Dependencies
 RUN apt-get update && apt-get install -y \
-    git \
     unzip \
     libicu-dev \
     libzip-dev \
@@ -11,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libfreetype6-dev \
     libxml2-dev \
+    libcurl4-openssl-dev \
+    libonig-dev \
     gettext \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,31 +24,39 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     intl \
     xml \
     gettext \
-    bcmath
+    bcmath \
+    curl \
+    mbstring
 
 # Enable Apache mod_rewrite
-RUN a2enmod rewrite
+RUN a2enmod rewrite \
+    && sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
 # 3. Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# 4. Clone Gibbon v31 (Latest Stable)
-RUN git clone --depth 1 --branch v31.0.00 https://github.com/GibbonEdu/core.git . \
-    && rm -rf .git
+# 4. Copy application source from local context
+COPY . .
 
 # 5. Install PHP Dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# 6. Configure PHP for Gibbon (Upload limits, etc.)
+# 6. Configure PHP for Gibbon
 RUN echo "upload_max_filesize = 50M" > /usr/local/etc/php/conf.d/gibbon.ini \
     && echo "post_max_size = 50M" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "max_input_vars = 5000" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/gibbon.ini
+    && echo "max_input_vars = 8000" >> /usr/local/etc/php/conf.d/gibbon.ini \
+    && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/gibbon.ini \
+    && echo "max_file_uploads = 20" >> /usr/local/etc/php/conf.d/gibbon.ini \
+    && echo "allow_url_fopen = On" >> /usr/local/etc/php/conf.d/gibbon.ini \
+    && echo "session.gc_maxlifetime = 1200" >> /usr/local/etc/php/conf.d/gibbon.ini
 
-# 7. Permissions (Crucial for the Web Installer to work)
+# 7. Permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+    && find /var/www/html -type d -exec chmod 755 {} \; \
+    && find /var/www/html -type f -exec chmod 644 {} \;
+
+EXPOSE 80
 
 CMD ["apache2-foreground"]

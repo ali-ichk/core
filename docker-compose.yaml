@@ -1,26 +1,36 @@
-version: "3.8"
-
 services:
     app:
         build: .
         container_name: gibbon_app
         depends_on:
-            - db
-        restart: always
+            db:
+                condition: service_healthy
+        restart: unless-stopped
 
     db:
         image: mysql:8.0
         container_name: gibbon_db
+
+        # Gibbon Docker Environment Variables
         environment:
+            # MySQL database name (default: gibbon)
             - MYSQL_DATABASE=${MYSQL_DATABASE:-gibbon}
+            # MySQL application user credentials
             - MYSQL_USER=${MYSQL_USER:-gibbon}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD:-gibbonpass}
+            # MySQL root password — keep this strong in production
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpass}
         volumes:
             - gibbon_db_data:/var/lib/mysql
         # Native password plugin ensures PHP can connect easily
         command: --default-authentication-plugin=mysql_native_password
-        restart: always
-
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+        restart: unless-stopped
+        
 volumes:
     gibbon_db_data:
