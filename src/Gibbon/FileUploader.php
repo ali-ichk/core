@@ -195,9 +195,7 @@ class FileUploader
             $filename = $filenameChange.mb_strrchr($filename, '.');
         }
 
-        $uploadedPath = $this->upload($filename, $sourcePath);
-
-        return $uploadedPath;
+        return $this->upload($filename, $sourcePath);
     }
     
     /**

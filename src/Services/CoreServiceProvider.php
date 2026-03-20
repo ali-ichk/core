@@ -43,7 +43,6 @@ use Gibbon\Contracts\Filesystem\FileHandler as FileHandlerInterface;
 use Gibbon\Data\PasswordPolicy;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use League\Container\ServiceProvider\BootableServiceProviderInterface;
-use ZipStream\File;
 
 /**
  * DI Container Services for the Core
