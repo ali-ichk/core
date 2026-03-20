@@ -23,7 +23,6 @@ namespace Gibbon\Contracts\Filesystem;
 
 /**
  * File Handler Interface
- * Borrowed in part from Illuminate\Contracts\Session\Session
  *
  * @version	v31
  * @since	v31
