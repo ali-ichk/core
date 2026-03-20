@@ -152,7 +152,7 @@ if ($proceed == false) {
     $container->get(UserStatusLogGateway::class)->insert(['gibbonPersonID' => $gibbonPersonID, 'statusOld' => $status, 'statusNew' => $status, 'reason' => __('Public Registration')]);
 
     // Manage custom field file uploads
-    if (empty($fields)) {
+    if (!empty($fields)) {
         $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('User', ['publicRegistration' => true], $fields, 'gibbonPerson', $gibbonPersonID);
     }
 

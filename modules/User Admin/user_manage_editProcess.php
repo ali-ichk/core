@@ -339,7 +339,7 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
                         }
 
                         // Manage custom field file uploads
-                        if (empty($fields)) {
+                        if (!empty($fields)) {
                             $params = compact('student', 'staff', 'parent', 'other');
                             $params['requiredOverride'] = 'N';
                             $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('User', $params, $fields, 'gibbonPerson', $gibbonPersonID, $row['fields'] ?? null);

@@ -39,7 +39,7 @@ class PersonalDocumentHandler
     protected $documents;
     protected $fields;
 
-    public function __construct(PersonalDocumentGateway $personalDocumentGateway, FileUploader $fileUploader, View $view, SettingGateway $settingGateway, ?FileHandler $fileHandler = null)
+    public function __construct(PersonalDocumentGateway $personalDocumentGateway, FileUploader $fileUploader, View $view, SettingGateway $settingGateway, FileHandler $fileHandler)
     {
         $this->personalDocumentGateway = $personalDocumentGateway;
         $this->fileUploader = $fileUploader;
@@ -118,7 +118,7 @@ class PersonalDocumentHandler
 
                         $data[$field] = !empty($attachment) ? $existingFilePath : null;
 
-                        if (empty($attachment) && !empty($existingFilePath) && !empty($this->fileHandler)) {
+                        if (empty($attachment) && !empty($existingFilePath)) {
                             $this->fileHandler->deleteFile('gibbonPersonalDocument', $documentID, 'filePath');
                         }
                     } 

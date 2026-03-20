@@ -69,8 +69,9 @@ if (is_uploaded_file($file['tmp_name'])) {
         $attachment = $fileUploader->uploadAndResizeImage($file, '', 2048, 85); // This is a temporary upload for TinyMCE that is used during content editing and is not stored in any database record until the form is saved.
 
     } elseif (in_array($fileExtension, $fileTypes)) {
+        // These are not temporary uploads, we will need to think of a possible way to track them.
         $fileUploader->setFileExtensions($fileTypes);
-        $attachment = $fileUploader->uploadFromPost($file); // // This is a temporary upload for TinyMCE that is used during content editing and is not stored in any database record until the form is saved.
+        $attachment = $fileUploader->uploadFromPost($file);
     } else {
         header("HTTP/1.1 400 Invalid File Type");
         exit;
