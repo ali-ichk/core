@@ -37,6 +37,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
 
     // Test data access field for permission
     $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
+    $childIDs = array_column($children, 'gibbonPersonID');
 
     if (empty($children)) {
         echo $page->getBlankSlate();
@@ -76,7 +77,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
 
         if ($gibbonPersonID != '' && count($options) > 0) {
             
-            if (empty($children[$gibbonPersonID])) {
+            if (!in_array($gibbonPersonID, $childIDs, true)) {
                 $page->addError(__('You do not have access to this action.'));
                 return;
             }

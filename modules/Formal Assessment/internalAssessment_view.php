@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\User\UserGateway;
 
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -83,6 +84,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
 			// Test data access field for permission
 			$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
+			$childIDs = array_column($children, 'gibbonPersonID');
 
 			if (empty($children)) {
 				echo $page->getBlankSlate();
@@ -127,7 +129,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
                 	// Confirm access to this student
-					        if (empty($children[$gibbonPersonID])) {
+					        if (!in_array($gibbonPersonID, $childIDs, true)) {
                         $page->addError(__('You do not have access to this action.'));
                         return;
                     }

@@ -45,6 +45,7 @@ $page->write('<p>'.__("This page shows your children's academic results througho
 
 // Test data access field for permission
 $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
+$childIDs = array_column($children, 'gibbonPersonID');
 
 if (empty($children)) {
     echo $page->getBlankSlate();
@@ -89,12 +90,12 @@ if (empty($children)) {
 
     if (!empty($gibbonPersonID) and count($options) > 0) {
         // Confirm access to this student
-        if (empty($children[$gibbonPersonID])) {
+        if (!in_array($gibbonPersonID, $childIDs, true)) {
             $page->addError(__('You do not have access to this action.'));
             return;
         }
 
-        if ($count($options) > 1) {
+        if (count($options) > 1) {
             echo '<h2>';
             echo 'Filter & Options';
             echo '</h2>';

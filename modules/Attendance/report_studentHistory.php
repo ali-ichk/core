@@ -117,6 +117,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
 
             // Test data access field for permission
             $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
+            $childIDs = array_column($children, 'gibbonPersonID');
 
             if (empty($children)) {
                 echo $page->getBlankSlate();
@@ -161,7 +162,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
                 if ($gibbonPersonID != '') {
                     $output = '';
 
-                    if (empty($children[$gibbonPersonID])) {
+                    if (!in_array($gibbonPersonID, $childIDs, true)) {
                         $page->addError(__('You do not have access to this action.'));
                         return;
                     }
