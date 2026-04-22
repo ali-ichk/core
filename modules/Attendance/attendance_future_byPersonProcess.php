@@ -41,6 +41,7 @@ $urlParams = [
     'target'           => $_POST['target'] ?? '',
     'gibbonActivityID' => $_POST['gibbonActivityID'] ?? '',
     'gibbonGroupID'    => $_POST['gibbonGroupID'] ?? '',
+    'gibbonCourseClassID' => $_POST['gibbonCourseClassID'] ?? '',
     'date'             => $_POST['date'] ?? $_POST['dateStart'] ?? '',
     'timeStart'        => $_POST['timeStart'] ?? '',
     'timeEnd'          => $_POST['timeEnd'] ?? '',
@@ -88,9 +89,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
         $comment = $_POST['comment'] ?? '';
         $courseList = $_POST['courses'] ?? '';
 
-        if (in_array($urlParams['target'], ['Activity', 'Messenger'])) {
-            $foreignTable = $urlParams['target'];
-            $foreignTableID = $urlParams['target'] === 'Activity' ? $urlParams['gibbonActivityID'] : $urlParams['gibbonGroupID'];
+        if (in_array($urlParams['target'], ['Activity', 'Messenger', 'Class'])) {
+            $foreignTable = $urlParams['target'] === 'Activity' ? 'gibbonActivity' : ($urlParams['target'] === 'Messenger' ? 'gibbonGroup' : 'gibbonCourseClass');
+            $foreignTableID = $urlParams['target'] === 'Activity' ? $urlParams['gibbonActivityID'] : ($urlParams['target'] === 'Messenger' ? $urlParams['gibbonGroupID'] : $urlParams['gibbonCourseClassID']);
         } else {
             $foreignTable = $_POST['foreignTable'] ?? '';
             $foreignTableID = $_POST['foreignTableID'] ?? '';

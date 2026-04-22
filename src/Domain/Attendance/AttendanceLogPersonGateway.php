@@ -508,6 +508,21 @@ class AttendanceLogPersonGateway extends QueryableGateway
                         AND (gibbonPerson.dateEnd IS NULL OR gibbonPerson.dateEnd>=:date) 
                         ORDER BY gibbonStudentEnrolment.rollOrder, gibbonPerson.surname, gibbonPerson.preferredName";
                     break;
+            case 'Class':
+                $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonCourseClassID' => $targetID];
+                $sql = "SELECT gibbonCourseClassPerson.gibbonPersonID, gibbonPerson.image_240, gibbonPerson.dob, gibbonPerson.preferredName, gibbonPerson.surname, gibbonFormGroup.nameShort AS formGroup
+                        FROM gibbonCourseClassPerson
+                        JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID)
+                        JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
+                        JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID)
+                        JOIN gibbonFormGroup ON (gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID)
+                        WHERE gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID
+                        AND gibbonCourseClass.gibbonCourseClassID=:gibbonCourseClassID
+                        AND gibbonPerson.status='Full'
+                        AND gibbonCourseClassPerson.role='Student'
+                        GROUP BY gibbonCourseClassPerson.gibbonPersonID
+                        ORDER BY gibbonPerson.surname, gibbonPerson.preferredName";
+                    break;
             case 'Select':
                 $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID, 'gibbonPersonIDList' => implode(',', $targetID), 'date' => $currentDate];
                 $sql = "SELECT gibbonPerson.image_240, gibbonPerson.dob, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID, gibbonFormGroup.nameShort AS formGroup 
