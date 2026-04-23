@@ -220,23 +220,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Library/library_manage_cat
     echo $form->getOutput();
 
     // Get Google Books API Key from settings
-    $settingGateway = $container->get(SettingGateway::class);
-    $libraryApi = $settingGateway->getSettingByScope('Library', 'libraryAPIKey', true);
-    $libraryApiKey = $libraryApi['value'];
+    $libraryApiKey = $container->get(SettingGateway::class)->getSettingByScope('Library', 'libraryAPIKey');
 }
 ?>
 
 
 <script type='text/javascript'>
-    var libraryApiKey = '<?php echo $libraryApiKey; ?>';
-
     $(document).ready(function(){
         document.onkeypress = stopRKey;
         
         $(".gbooks").loadGoogleBookData({
             "notFound": "<?php echo __('The specified record cannot be found.'); ?>",
             "dataRequired": "<?php echo __('Please enter an ISBN13 or ISBN10 value before trying to get data from Google Books.'); ?>",
-            "apiKey": libraryApiKey,
+            "apiKey": '<?php echo $libraryApiKey; ?>',
         });
 
         $('#gibbonLibraryTypeID').change(function(){

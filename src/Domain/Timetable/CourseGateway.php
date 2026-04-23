@@ -231,14 +231,6 @@ class CourseGateway extends QueryableGateway
         return $this->db()->selectOne($sql, $data);
     }
 
-    public function selectClassesByCourseID($gibbonCourseID, $gibbonSchoolYearID)
-    {
-        $data = ['gibbonCourseID' => $gibbonCourseID, 'gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $sql = 'SELECT gibbonCourseClassID, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) WHERE gibbonCourse.gibbonCourseID=:gibbonCourseID AND gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY class';
-
-        return $this->db()->select($sql, $data);
-    }
-
     public function selectCoursesAndClassesBySchoolYear($gibbonSchoolYearID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
