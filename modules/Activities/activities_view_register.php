@@ -101,14 +101,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                     }
                     // Parent
                     else if ($roleCategory == 'Parent' and $highestAction == 'View Activities_studentRegisterByParent' and $gibbonPersonID != '') {
-                        $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
-                        $childrenByID = array_column($children, null, 'gibbonPersonID');
+$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
                         if (empty($children)) {
                             echo $page->getBlankSlate();
                         } else {
 
-                            if (empty($childrenByID[$gibbonPersonID])) {
+                            if (empty($children[$gibbonPersonID])) {
                                 $page->addError(__('You do not have access to this action.'));
                                 return;
                             }
