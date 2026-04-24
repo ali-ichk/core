@@ -78,9 +78,3 @@ $assignFormValues = array(
 $I->submitForm('#content form', $assignFormValues, 'Submit');
 $I->seeSuccessMessage();
 
-// Cleanup ------------------------------------------------
-$I->deleteFile('../'.$file);
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}
-

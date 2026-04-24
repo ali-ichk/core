@@ -144,8 +144,3 @@ $I->amOnModulePage('Students', 'medicalForm_manage_delete.php', array('gibbonPer
 $I->click('Delete');
 $I->seeSuccessMessage();
 
-// Cleanup ------------------------------------------------
-$I->deleteFile('../'.$file);
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

@@ -99,11 +99,3 @@ $I->amOnModulePage('Library', 'library_manage_catalog_delete.php', array(
 
 $I->click('Delete');
 $I->seeSuccessMessage();
-
-// Cleanup ------------------------------------------------
-if (!empty($file)) {
-    $I->deleteFile('../'.$file);
-}
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

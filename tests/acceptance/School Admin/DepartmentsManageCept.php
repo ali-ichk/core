@@ -66,9 +66,3 @@ $I->amOnModulePage('School Admin', 'department_manage_delete.php', array('gibbon
 
 $I->click('Delete');
 $I->seeSuccessMessage();
-
-// Cleanup ------------------------------------------------
-$I->deleteFile('../'.$file);
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

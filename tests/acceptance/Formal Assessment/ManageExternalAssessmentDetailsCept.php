@@ -93,9 +93,3 @@ $I->seeSuccessMessage();
 
 // Cleanup ------------------------------------------------
 $I->updateInDatabase('gibbonExternalAssessment', ['allowFileUpload' => 'N'], ['gibbonExternalAssessmentID' => $gibbonExternalAssessmentID]);
-if (!empty($file)) {
-    $I->deleteFile('../'.$file);
-}
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

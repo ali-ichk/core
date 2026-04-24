@@ -130,9 +130,3 @@ $I->amOnModulePage('Staff', 'staff_manage_delete.php', ['gibbonStaffID' => $gibb
 
 $I->click('Delete');
 $I->seeSuccessMessage();
-
-// Cleanup ------------------------------------------------
-$I->deleteFile('../'.$file);
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

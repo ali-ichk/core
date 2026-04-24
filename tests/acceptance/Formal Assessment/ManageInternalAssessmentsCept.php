@@ -121,11 +121,3 @@ $I->amOnModulePage('Formal Assessment', 'internalAssessment_manage_delete.php', 
 
 $I->click('Delete');
 $I->seeSuccessMessage();
-
-// Cleanup ------------------------------------------------
-if (!empty($file)) {
-    $I->deleteFile('../'.$file);
-}
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

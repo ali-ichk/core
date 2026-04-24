@@ -202,12 +202,6 @@ $I->see('Your request was completed successfully.', '.success');
 $file2 = $I->grabFromDatabase('gibbonPerson', 'image_240', ['gibbonPersonID' => $gibbonPersonID]);
 $I->assertNotEmpty($file2);
 
-// Cleanup Files ------------------------------------------------
-
-$I->deleteFile('../'.$file);
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}
 
 // Delete ------------------------------------------------
 $I->amOnModulePage('User Admin', 'user_manage_delete.php', array('gibbonPersonID' => $gibbonPersonID, 'search' => ''));

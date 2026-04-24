@@ -173,9 +173,3 @@ $I->amOnModulePage('School Admin', 'markbookSettings.php');
 $I->submitForm('#content form', $originalMarkbookSettings, 'Submit');
 $I->seeSuccessMessage();
 $I->seeInFormFields('#content form', $originalMarkbookSettings);
-
-// Cleanup uploaded file ----------------------------------------
-$I->deleteFile('../'.$file);
-if (!empty($file2)) {
-    $I->deleteFile('../'.$file2);
-}

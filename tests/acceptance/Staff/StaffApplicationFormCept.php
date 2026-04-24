@@ -67,4 +67,3 @@ $I->assertNotEmpty($filePath);
 $I->deleteFromDatabase('gibbonStaffApplicationFormFile', ['gibbonStaffApplicationFormID' => $gibbonStaffApplicationFormID]);
 $I->deleteFromDatabase('gibbonStaffApplicationForm', ['gibbonStaffApplicationFormID' => $gibbonStaffApplicationFormID]);
 $I->deleteFromDatabase('gibbonStaffJobOpening', ['gibbonStaffJobOpeningID' => $gibbonStaffJobOpeningID]);
-$I->deleteFile('../'.$filePath);

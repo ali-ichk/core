@@ -59,7 +59,3 @@ $I->click('Delete', "//td[contains(text(),'Test Category Edited " . $uniqueID . 
 $I->fillField('confirm', 'Delete');
 $I->click('Yes');
 $I->seeSuccessMessage();
-
-// Cleanup ------------------------------------------------
-$I->deleteFile('../'.$file);
-$I->deleteFile('../'.$file2);
