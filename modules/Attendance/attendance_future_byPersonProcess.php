@@ -90,8 +90,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
         $courseList = $_POST['courses'] ?? '';
 
         if (in_array($urlParams['target'], ['Activity', 'Messenger', 'Class'])) {
-            $foreignTable = $urlParams['target'] === 'Activity' ? 'gibbonActivity' : ($urlParams['target'] === 'Messenger' ? 'gibbonGroup' : 'gibbonCourseClass');
-            $foreignTableID = $urlParams['target'] === 'Activity' ? $urlParams['gibbonActivityID'] : ($urlParams['target'] === 'Messenger' ? $urlParams['gibbonGroupID'] : $urlParams['gibbonCourseClassID']);
+            switch ($urlParams['target']) {
+                case 'Activity':
+                    $foreignTable   = 'gibbonActivity';
+                    $foreignTableID = $urlParams['gibbonActivityID'];
+                    break;
+                case 'Messenger':
+                    $foreignTable   = 'gibbonGroup';
+                    $foreignTableID = $urlParams['gibbonGroupID'];
+                    break;
+                case 'Class':
+                    $foreignTable   = 'gibbonCourseClass';
+                    $foreignTableID = $urlParams['gibbonCourseClassID'];
+                    break;
+            }
         } else {
             $foreignTable = $_POST['foreignTable'] ?? '';
             $foreignTableID = $_POST['foreignTableID'] ?? '';

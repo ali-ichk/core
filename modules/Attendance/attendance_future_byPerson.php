@@ -198,7 +198,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
 
     // Get list of students for selected target
     if (!empty($target)) {
-        $targetID = $target == 'Activity' ? $gibbonActivityID : ($target == 'Messenger' ? $gibbonGroupID : ($target == 'Class' ? $gibbonCourseClassID : $gibbonPersonIDList));
+        switch ($target) {
+            case 'Activity':
+                $targetID = $gibbonActivityID; break;
+            case 'Messenger':
+                $targetID = $gibbonGroupID; break;
+            case 'Class':
+                $targetID = $gibbonCourseClassID; break;
+            default:      
+                $targetID = $gibbonPersonIDList; break;
+        }
+
         $students = $attendanceLogGateway->selectAdHocAttendanceStudents($session->get('gibbonSchoolYearID'), $target, $targetID, $targetDate)->fetchAll();
         $gibbonPersonIDList = empty($gibbonPersonIDList) ? array_column($students, 'gibbonPersonID') : $gibbonPersonIDList;
     }
