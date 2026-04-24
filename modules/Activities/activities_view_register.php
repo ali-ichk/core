@@ -101,7 +101,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                     }
                     // Parent
                     else if ($roleCategory == 'Parent' and $highestAction == 'View Activities_studentRegisterByParent' and $gibbonPersonID != '') {
-$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
+                        $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
                         if (empty($children)) {
                             echo $page->getBlankSlate();
@@ -112,7 +112,7 @@ $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamily
                                 return;
                             }
 
-                            $gibbonYearGroupID = intval($childrenByID[$gibbonPersonID]['gibbonYearGroupID'] ?? 0);
+                            $gibbonYearGroupID = intval($children[$gibbonPersonID]['gibbonYearGroupID'] ?? 0);
                             if ($gibbonYearGroupID != '') {
                                 $continue = true;
                                 $and = " AND gibbonYearGroupIDList LIKE '%$gibbonYearGroupID%'";
