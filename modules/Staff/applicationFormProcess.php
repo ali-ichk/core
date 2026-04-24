@@ -30,7 +30,6 @@ use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\System\EmailTemplateGateway;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\User\UserGateway;
-use Gibbon\Domain\System\EmailTemplateGateway;
 
 require_once '../../gibbon.php';
 
