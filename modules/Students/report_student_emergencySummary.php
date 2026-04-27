@@ -91,11 +91,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/report_student_em
     // CRITERIA
     $criteria = $reportGateway->newQueryCriteria(true)
         ->sortBy(['gibbonPerson.surname', 'gibbonPerson.preferredName'])
-        ->filterBy('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->pageSize(!empty($viewMode) ? 0 : 50)
         ->fromPOST();
 
-    $students = $reportGateway->queryStudentDetails($criteria, $choices);
+    $students = $reportGateway->queryStudentDetails($criteria, $gibbonSchoolYearID, $choices);
 
     // Join a set of family adults per student
     $people = $students->getColumn('gibbonPersonID');

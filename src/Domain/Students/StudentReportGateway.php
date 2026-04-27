@@ -43,7 +43,7 @@ class StudentReportGateway extends QueryableGateway
      * @param QueryCriteria $criteria
      * @return DataSet
      */
-    public function queryStudentDetails(QueryCriteria $criteria, $gibbonPersonID)
+    public function queryStudentDetails(QueryCriteria $criteria, $gibbonSchoolYearID, $gibbonPersonID)
     {
         $gibbonPersonIDList = is_array($gibbonPersonID) ? implode(',', $gibbonPersonID) : $gibbonPersonID;
 
@@ -58,18 +58,11 @@ class StudentReportGateway extends QueryableGateway
                 'gibbonPerson.gibbonPersonID'
             ])
             ->leftJoin('gibbonPersonMedical', 'gibbonPersonMedical.gibbonPersonID=gibbonPerson.gibbonPersonID')
-            ->innerJoin('gibbonStudentEnrolment', 'gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID')
+            ->innerJoin('gibbonStudentEnrolment', 'gibbonStudentEnrolment.gibbonPersonID=gibbonPerson.gibbonPersonID AND gibbonStudentEnrolment.gibbonSchoolYearID=:gibbonSchoolYearID')
             ->innerJoin('gibbonFormGroup', 'gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID')
             ->where('FIND_IN_SET(gibbonPerson.gibbonPersonID, :gibbonPersonIDList)')
+            ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID)
             ->bindValue('gibbonPersonIDList', $gibbonPersonIDList);
-
-        $criteria->addFilterRules([
-            'gibbonSchoolYearID' => function ($query, $gibbonSchoolYearID) {
-                return $query
-                    ->where('gibbonStudentEnrolment.gibbonSchoolYearID = :gibbonSchoolYearID')
-                    ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID);
-            },
-        ]);
 
         return $this->runQuery($query, $criteria);
     }
