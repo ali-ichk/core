@@ -63,6 +63,14 @@ class StudentReportGateway extends QueryableGateway
             ->where('FIND_IN_SET(gibbonPerson.gibbonPersonID, :gibbonPersonIDList)')
             ->bindValue('gibbonPersonIDList', $gibbonPersonIDList);
 
+        $criteria->addFilterRules([
+            'gibbonSchoolYearID' => function ($query, $gibbonSchoolYearID) {
+                return $query
+                    ->where('gibbonStudentEnrolment.gibbonSchoolYearID = :gibbonSchoolYearID')
+                    ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID);
+            },
+        ]);
+
         return $this->runQuery($query, $criteria);
     }
 
