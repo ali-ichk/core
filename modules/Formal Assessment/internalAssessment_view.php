@@ -83,8 +83,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 			$page->breadcrumbs->add(__('View My Childrens\'s Internal Assessments'));
 
 			// Test data access field for permission
-			$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
-			$childIDs = array_column($children, 'gibbonPersonID');
+			$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
 			if (empty($children)) {
 				echo $page->getBlankSlate();
@@ -129,7 +128,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
                 	// Confirm access to this student
-					        if (!in_array($gibbonPersonID, $childIDs, true)) {
+					        if (empty($children[$gibbonPersonID])) {
                         $page->addError(__('You do not have access to this action.'));
                         return;
                     }

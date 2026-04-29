@@ -85,8 +85,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
             $countChild = 0;
             if ($roleCategory == 'Parent' and $highestAction == 'View Activities_studentRegisterByParent') {
                 $gibbonPersonID = $_GET['gibbonPersonID'] ?? '';
-                $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
-                $childIDs = array_column($children, 'gibbonPersonID');
+                $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
                 if (empty($children)) {
                     echo $page->getBlankSlate();
@@ -107,7 +106,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_view
                         $canAccessRegistration = false;
                     }
 
-                    if (!in_array($gibbonPersonID, $childIDs, true)) {
+                    if (empty($children[$gibbonPersonID])) {
                         $page->addError(__('You do not have access to this action.'));
                         return;
                     }

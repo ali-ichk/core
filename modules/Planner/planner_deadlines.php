@@ -111,13 +111,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_deadlines.
 
         // Test data access field for permission
         $studentGateway = $container->get(StudentGateway::class);
-        $children = $studentGateway->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
-        $childIDs = array_column($children, 'gibbonPersonID');
+        $children = $studentGateway->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
         if (empty($children)) {
             echo $page->getBlankSlate();
         } elseif (count($children) == 1) {
-            $gibbonPersonID = $children[0]['gibbonPersonID'] ?? null;
+            $gibbonPersonID = array_key_first($children);
         } else {
             //Get child list    
             $options = [];
@@ -159,7 +158,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_deadlines.
             $gibbonPersonID = $search;
         }
 
-        if (!empty($gibbonPersonID) && !empty($children) && in_array($gibbonPersonID, $childIDs ?? [], true)) { 
+        if (!empty($gibbonPersonID) && !empty($children) && !empty($children[$gibbonPersonID])) { 
             $proceed = true;
             if ($viewBy == 'class') {
                 if ($gibbonCourseClassID == '') {
