@@ -51,8 +51,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     $table->setTitle(__('Uploaded Files'));
     $table->setDescription(__('These files were uploaded via the rich text editor. Run the update to mark unreferenced files as unused.'));
 
-    $table->addHeaderAction('updateNoPointerFiles', __('Update File Status'))
-        ->setURL('/modules/System Admin/updateNoPointerFiles.php')
+    $table->addHeaderAction('searchUploadedFiles', __('Update File Status'))
+        ->setURL('/modules/System Admin/searchUploadedFiles.php')
         ->setIcon('delivery2')
         ->modalWindow(650, 220)
         ->displayLabel();

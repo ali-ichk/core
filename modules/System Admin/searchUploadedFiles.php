@@ -26,7 +26,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
-    $form = Form::create('updateNoPointerFiles', $session->get('absoluteURL').'/modules/System Admin/updateNoPointerFilesProcess.php');
+    $form = Form::create('searchNoPointerFiles', $session->get('absoluteURL').'/modules/System Admin/searchUploadedFilesProcess.php');
     $form->addHiddenValue('address', $_GET['q']);
 
     $row = $form->addRow();
