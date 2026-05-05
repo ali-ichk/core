@@ -39,17 +39,42 @@ class FileGateway extends QueryableGateway
     private static $primaryKey = 'gibbonFileID';
     private static $searchableColumns = ['fileName', 'filePath'];
 
-    public function queryNoPointerFiles(QueryCriteria $criteria)
+    public function queryUploadedFiles(QueryCriteria $criteria)
+    {
+        $query = $this
+            ->newQuery()
+            ->cols([
+                'gibbonFile.gibbonPersonIDOwner AS gibbonPersonID',
+                'gibbonPerson.title',
+                'gibbonPerson.preferredName',
+                'gibbonPerson.surname',
+                'COUNT(gibbonFile.gibbonFileID) AS fileCount',
+                'SUM(gibbonFile.fileSize) AS totalSize',
+            ])
+            ->from('gibbonFile')
+            ->leftJoin('gibbonFilePointer', 'gibbonFile.gibbonFileID = gibbonFilePointer.gibbonFileID')
+            ->innerJoin('gibbonPerson', 'gibbonFile.gibbonPersonIDOwner = gibbonPerson.gibbonPersonID')
+            ->where('gibbonFilePointer.gibbonFilePointerID IS NULL')
+            ->groupBy(['gibbonFile.gibbonPersonIDOwner']);
+
+        return $this->runQuery($query, $criteria);
+    }
+    
+    public function queryUploadedFilesByPerson(QueryCriteria $criteria, string $gibbonPersonID)
     {
         $query = $this
             ->newQuery()
             ->cols([
                 'gibbonFile.gibbonFileID', 'gibbonFile.filePath', 'gibbonFile.fileName', 'gibbonFile.fileExtension',
                 'gibbonFile.fileSize', 'gibbonFile.mimeType', 'gibbonFile.uploadedAt', 'gibbonFile.isUsed',
+                'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname',
             ])
             ->from('gibbonFile')
             ->leftJoin('gibbonFilePointer', 'gibbonFile.gibbonFileID = gibbonFilePointer.gibbonFileID')
-            ->where('gibbonFilePointer.gibbonFilePointerID IS NULL');
+            ->innerJoin('gibbonPerson', 'gibbonFile.gibbonPersonIDOwner = gibbonPerson.gibbonPersonID')
+            ->where('gibbonFilePointer.gibbonFilePointerID IS NULL')
+            ->where('gibbonFile.gibbonPersonIDOwner = :gibbonPersonID')
+            ->bindValue('gibbonPersonID', $gibbonPersonID);
 
         return $this->runQuery($query, $criteria);
     }

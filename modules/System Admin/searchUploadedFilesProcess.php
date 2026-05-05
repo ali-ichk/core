@@ -40,7 +40,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     $stagedFiles = $fileGateway->selectNoPointerFiles()->fetchAll();
 
     if (empty($stagedFiles)) {
-        $URL .= '&return=success0';
+        $URL .= '&return=error5';
         header("Location: {$URL}");
         exit;
     }
@@ -49,7 +49,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     $textColumns = $fileGateway->selectTextColumns()->fetchAll();
 
     if (empty($textColumns)) {
-        $URL .= '&return=warning1';
+        $URL .= '&return=error2';
         header("Location: {$URL}");
         exit;
     }
@@ -70,7 +70,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
         }
 
         if (!$found) {
-            // File is not referenced anywhere — mark as unused
+            // File is not referenced anywhere — flag it as unused
             $updated = $fileGateway->markAsUnused($gibbonFileID);
             $partialFail = $partialFail || !$updated;
         }

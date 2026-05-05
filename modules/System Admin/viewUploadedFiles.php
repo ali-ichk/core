@@ -21,10 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
+use Gibbon\Forms\Form;
 use Gibbon\Domain\System\FileGateway;
-
-// Module includes
-require_once __DIR__ . '/moduleFunctions.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedFiles.php') == false) {
     // Access denied
@@ -33,50 +31,59 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     // Proceed!
     $page->breadcrumbs->add(__('View Uploaded Files'));
 
-    $page->return->addReturns([
-        'warning1' => __('File status check completed with partial errors.'),
-    ]);
+    $return = $_GET['return'] ?? '';
 
+    // Show the confirmation form until the admin has run the status check
+    if (empty($return)) {
+        $form = Form::create('searchUploadedFiles', $session->get('absoluteURL').'/modules/System Admin/searchUploadedFilesProcess.php');
+        $form->addHiddenValue('address', $session->get('address'));
+
+        $row = $form->addRow();
+            $col = $row->addColumn();
+            $col->addContent(__('Update File Status'))->wrap('<strong style="font-size: 18px;">', '</strong><br/><br/>');
+            $col->addContent(__('Please run the updater to search for all uploaded files.').' '.__('Click the button below to continue.'));
+
+        $form->addRow()->addConfirmSubmit();
+
+        echo $form->getOutput();
+        return;
+    }
+
+    // Status check has been run — show the results table
     $fileGateway = $container->get(FileGateway::class);
 
     // CRITERIA
     $criteria = $fileGateway->newQueryCriteria()
-        ->sortBy('uploadedAt', 'DESC')
+        ->sortBy('totalSize', 'DESC')
         ->fromPOST();
 
-    $files = $fileGateway->queryNoPointerFiles($criteria);
+    $fileOwners = $fileGateway->queryUploadedFiles($criteria);
 
     // DATA TABLE
     $table = DataTable::createPaginated('uploadedFiles', $criteria);
-    $table->setTitle(__('Uploaded Files'));
-    $table->setDescription(__('These files were uploaded via the rich text editor. Run the update to mark unreferenced files as unused.'));
+    $table->setTitle(__('Uploaded Files by User'));
+    $table->setDescription(__('Staff who have uploaded files via the editor.'));
 
-    $table->addHeaderAction('searchUploadedFiles', __('Update File Status'))
-        ->setURL('/modules/System Admin/searchUploadedFiles.php')
-        ->setIcon('delivery2')
-        ->modalWindow(650, 220)
-        ->displayLabel();
-
-    $table->modifyRows(function ($file, $row) {
-        if ($file['isUsed'] == 'N') $row->addClass('error');
-        return $row;
-    });
-
-    $table->addColumn('fileName', __('File Name'));
-    $table->addColumn('fileExtension', __('Type'))->width('5%');
-    $table->addColumn('fileSize', __('Size'))
-        ->width('8%')
-        ->format(function ($file) {
-            return Format::fileSize($file['fileSize']);
-        });
-    $table->addColumn('uploadedAt', __('Uploaded'))
-        ->format(Format::using('dateTime', 'uploadedAt'));
-    $table->addColumn('isUsed', __('Status'))
-        ->format(function ($file) {
-            return ($file['isUsed'] == 'N')
-                ? '<span class="tag dull">'.__('Unused').'</span>'
-                : '<span class="tag success">'.__('In Use').'</span>';
+    $table->addColumn('name', __('Person'))
+        ->sortable(['gibbonPerson.surname', 'gibbonPerson.preferredName'])
+        ->format(function ($row) {
+            return Format::nameLinked($row['gibbonPersonID'], '', $row['preferredName'], $row['surname'], 'Staff', false, true);
         });
 
-    echo $table->render($files);
+    $table->addColumn('fileCount', __('Files'));
+
+    $table->addColumn('totalSize', __('Total Size'))
+        ->format(function ($row) {
+            return Format::fileSize($row['totalSize']);
+        });
+
+    $table->addActionColumn()
+        ->addParam('gibbonPersonID')
+        ->format(function ($values, $actions) {
+            $actions->addAction('manage', __('Manage Files'))
+                ->setIcon('folder_open')
+                ->setURL('/modules/System Admin/manageUploadedFilesByUser.php');
+        });
+
+    echo $table->render($fileOwners);
 }
