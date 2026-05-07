@@ -37,13 +37,10 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     if (empty($return)) {
         $form = Form::create('searchUploadedFiles', $session->get('absoluteURL').'/modules/System Admin/searchUploadedFilesProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
+        $form->setTitle(__('Search Uploaded Files'));
+        $form->setDescription(__('Please click the button below to run the updater to search for all uploaded files.'));
 
-        $row = $form->addRow();
-            $col = $row->addColumn();
-            $col->addContent(__('Update File Status'))->wrap('<strong style="font-size: 18px;">', '</strong><br/><br/>');
-            $col->addContent(__('Please run the updater to search for all uploaded files.').' '.__('Click the button below to continue.'));
-
-        $form->addRow()->addConfirmSubmit();
+        $form->addRow()->addConfirmSubmit('UPDATE');
 
         echo $form->getOutput();
         return;

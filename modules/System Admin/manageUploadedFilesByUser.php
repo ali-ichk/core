@@ -20,8 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Services\Format;
-use Gibbon\Tables\DataTable;
 use Gibbon\Forms\Prefab\BulkActionForm;
+use Gibbon\FileUploader;
 use Gibbon\Domain\System\FileGateway;
 use Gibbon\Domain\User\UserGateway;
 
@@ -52,9 +52,14 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
         ->add($personName);
 
     $fileGateway = $container->get(FileGateway::class);
+    $fileUploader = $container->get(FileUploader::class);
+    $imageTypes = array_map(function ($extension) {
+        return ltrim(strtolower(trim((string) $extension)), '.');
+    }, $fileUploader->getFileExtensions('Graphics/Design'));
 
     // CRITERIA
     $criteria = $fileGateway->newQueryCriteria()
+        ->pageSize(50)
         ->sortBy('uploadedAt', 'DESC')
         ->fromPOST();
 
@@ -79,7 +84,22 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
         return $row;
     });
 
-    $table->addColumn('fileName', __('File Name'));
+    $table->addColumn('preview', __('Preview'))
+        ->width('28%')
+        ->format(function ($file) use ($imageTypes) {
+            $extension = ltrim(strtolower(trim((string) ($file['fileExtension'] ?? ''))), '.');
+
+            if (empty($file['filePath'])) {
+                return '';
+            }
+
+            if (!empty($extension) && !in_array($extension, $imageTypes, true)) {
+                return Format::link('./'.$file['filePath'], __('File'), ['target' => '_blank', 'rel' => 'noopener noreferrer', 'style' => 'font-weight: bold']);
+            }
+
+            return Format::link('./'.$file['filePath'], Format::photo($file['filePath'], 'md'), ['target' => '_blank', 'rel' => 'noopener noreferrer']);
+        });
+
     $table->addColumn('fileExtension', __('Type'));
 
     $table->addColumn('fileSize', __('Size'))
@@ -87,19 +107,18 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
             return Format::fileSize($file['fileSize']);
         });
 
-    $table->addColumn('uploadedAt', __('Uploaded On'))
+    $table->addColumn('uploadedAt', __('Upload Date'))
         ->format(Format::using('dateTime', 'uploadedAt'));
 
     $table->addColumn('isUsed', __('Status'))
         ->format(function ($file) {
             return ($file['isUsed'] == 'N')
-                ? '<span class="tag dull">'.__('Unused').'</span>'
-                : '<span class="tag success">'.__('In Use').'</span>';
+                ? Format::tag(__('Unused'), 'dull')
+                : Format::tag(__('In Use'), 'success');
         });
 
     $table->addCheckboxColumn('gibbonFileID')
         ->format(function ($file) {
-            // Only render the checkbox for unused files; return empty string to hide it for in-use files
             return ($file['isUsed'] == 'Y') ? '&nbsp;' : '';
         });
 
