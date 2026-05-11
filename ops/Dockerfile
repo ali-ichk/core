@@ -1,4 +1,6 @@
-FROM php:8.3-apache
+# PHP_VERSION can be overridden at build time via --build-arg or docker-compose.yaml
+ARG PHP_VERSION=8.3
+FROM php:${PHP_VERSION}-apache
 
 # 1. Install System Dependencies
 RUN apt-get update && apt-get install -y \
@@ -38,19 +40,16 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # 4. Copy application source from local context
+# Build context is the project root (see ops/docker-compose.yaml context: ..)
 COPY . .
 
 # 5. Install PHP Dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # 6. Configure PHP for Gibbon
-RUN echo "upload_max_filesize = 50M" > /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "post_max_size = 50M" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "max_input_vars = 8000" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "max_file_uploads = 20" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "allow_url_fopen = On" >> /usr/local/etc/php/conf.d/gibbon.ini \
-    && echo "session.gc_maxlifetime = 1200" >> /usr/local/etc/php/conf.d/gibbon.ini
+# Path is relative to build context (project root), so ops/php/gibbon.ini
+# In dev, this file is volume-mounted so changes take effect without a rebuild.
+COPY ops/php/gibbon.ini /usr/local/etc/php/conf.d/gibbon.ini
 
 # 7. Permissions
 RUN chown -R www-data:www-data /var/www/html \

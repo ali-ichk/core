@@ -1,0 +1,12 @@
+services:
+    app:
+        ports:
+            - "8888:80"
+        volumes:
+            ## Mount project root so live edits are immediately reflected without rebuilding the image. This overrides the COPY in the Dockerfile for local development.
+            - .:/var/www/html
+            ## Mount PHP config so values can be changed without an image rebuild.
+            - ./ops/php/gibbon.ini:/usr/local/etc/php/conf.d/gibbon.ini:ro
+        ## In dev, the volume mount hides vendor baked into the image. This command installs dependencies at startup if vendor/ is missing.
+        command: >
+            bash -c "[ ! -d vendor ] && composer install; apache2-foreground"

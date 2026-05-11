@@ -40,3 +40,6 @@ var/*
 node_modules
 
 .phpactor.json
+
+# Docker environment — never commit real credentials
+.env

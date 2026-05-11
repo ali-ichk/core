@@ -1,5 +1,6 @@
 # Never bake local credentials or environment config into the image
 config.php
+.env
 
 # Git history
 .git
@@ -18,6 +19,9 @@ vendor/
 Dockerfile
 docker-compose*.yaml
 .dockerignore
+ops/docker-compose*.yaml
+up.sh
+.env.example
 
 # IDE and OS files
 .DS_Store
