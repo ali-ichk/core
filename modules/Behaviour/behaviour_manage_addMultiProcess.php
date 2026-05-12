@@ -85,6 +85,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
         $notificationSender = $container->get(NotificationSender::class);
 
         foreach ($gibbonPersonIDMulti as $gibbonPersonID) {
+
+            if (empty($gibbonPersonID)) {
+                $URL .= '&return=error1';
+                header("Location: {$URL}");
+            }
+            
             // Write to database
             $data = [
                 'gibbonPersonID' => $gibbonPersonID,

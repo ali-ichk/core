@@ -76,6 +76,7 @@ v31.0.00
         User Admin: fix the bug to display user's personal address if turned on
 
     Bug Fixes
+        Behaviour: fixed the issue of student not getting included in a multiple behaviour record
         System: fixed handling of array values in localeFriendlySort method in DatabaseFormFactory
         System: renamed ca_CA locale to ca_ES and updated locale files
         Messenger: fixed the issue of incorrect name being displayed for mailing list users in Report Data 
