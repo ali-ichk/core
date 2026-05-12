@@ -16,8 +16,14 @@ fi
 
 ## Ensure the local environment file exists
 if [ ! -f ".env" ]; then
-    echo "Error: .env was not found. Create it first with: cp .env.example .env"
-    exit 1
+    if [ ! -f "ops/.env-example" ]; then
+        echo "Error: .env was not found and ops/.env-example is missing."
+        exit 1
+    fi
+
+    cp ops/.env-example .env
+    echo "Created .env from ops/.env-example"
+    echo "Review .env to customize local settings if needed."
 fi
 
 ## Ensure Docker is installed and the daemon is running
@@ -38,7 +44,7 @@ case "${1:-up}" in
         echo "Starting Gibbon dev environment..."
         docker compose $COMPOSE_FILES up -d --build
         echo ""
-        echo "Gibbon is running at: http://localhost:8888"
+        echo "Gibbon is running at: http://localhost:8080"
         echo "To follow logs:       ./up.sh logs"
         echo "To stop:              ./up.sh down"
         ;;

@@ -1,7 +1,7 @@
 services:
     app:
         ports:
-            - "8888:80"
+            - "8080:80"
         volumes:
             ## Mount project root so live edits are immediately reflected without rebuilding the image. This overrides the COPY in the Dockerfile for local development.
             - .:/var/www/html

@@ -20,8 +20,8 @@ Dockerfile
 docker-compose*.yaml
 .dockerignore
 ops/docker-compose*.yaml
+ops/.env-example
 up.sh
-.env.example
 
 # IDE and OS files
 .DS_Store
