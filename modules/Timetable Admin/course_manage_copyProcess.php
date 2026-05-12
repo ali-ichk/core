@@ -22,7 +22,7 @@ use Gibbon\Data\Validator;
 use Gibbon\Domain\Timetable\CourseGateway;
 use Gibbon\Domain\Timetable\CourseClassGateway;
 
-require_once dirname(__DIR__, 2).'/gibbon.php';
+require_once '../../gibbon.php';
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 
