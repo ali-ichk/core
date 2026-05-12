@@ -411,6 +411,7 @@ class ReportingAccessGateway extends QueryableGateway
             ->where('gibbonCourseClassPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID')
             ->where("(gibbonCourseClassPerson.role='Student' OR (gibbonCourseClassPerson.role='Student - Left' AND gibbonReportingValue.gibbonReportingValueID IS NOT NULL AND (gibbonReportingValue.value IS NOT NULL OR gibbonReportingValue.comment <> '') ))")
             ->where("gibbonCourseClassPerson.reportable='Y'")
+            ->where("gibbonCourseClass.reportable='Y'")
             ->where('gibbonStudentEnrolment.gibbonPersonID=:gibbonPersonIDStudent')
             ->bindValue('gibbonPersonIDStudent', $gibbonPersonIDStudent)
             ->where('gibbonReportingCriteria.gibbonReportingCycleID=:gibbonReportingCycleID')

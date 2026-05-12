@@ -82,6 +82,7 @@ v31.0.00
         Messenger: fixed the issue of incorrect name being displayed for mailing list users in Report Data 
         Messenger: fixed overflowing images and iframes on Message Wall
         Planner: fixed "present in room" attendance counts in Lesson Plan to exclude Present - Offsite
+        Reports: fixed non-reportable classes being counted when checking report progress
         Staff: fixed staff coverage showing on timetable when not accepted yet or declined
         Staff: fixed the issue of including staff email while submitting a job application form
         School Admin: fixed inactive grade scales not selectable in Manage External Assessment
