@@ -262,7 +262,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_courseCl
                     echo '</td>';
                     echo '<td>';
 
-                    $resultTutor = $container->get(CourseClassPersonGateway::class)->selectActiveTeachersByClass($row['gibbonCourseClassID']);
+                    $resultTutor = $container->get(CourseClassPersonGateway::class)->selectTeachersByClass($row['gibbonCourseClassID']);
 
                     if ($resultTutor->rowCount() > 0) {
                         while ($rowTutor = $resultTutor->fetch()) {
