@@ -85,6 +85,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
         $notificationSender = $container->get(NotificationSender::class);
 
         foreach ($gibbonPersonIDMulti as $gibbonPersonID) {
+
+            if (empty($gibbonPersonID)) {
+                $URL .= '&return=error1';
+                header("Location: {$URL}");
+            }
+            
             // Write to database
             $data = [
                 'gibbonPersonID' => $gibbonPersonID,
@@ -103,6 +109,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
 
             if (empty($gibbonBehaviourID)) {
                 $partialFail = true;
+            } else {
+                // Record custom field file uploads
+                if (!empty($fields) ) {
+                    $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID);
+                }
             }
 
             // ALERTS: possible change to Behaviour alert status, recalculate alerts

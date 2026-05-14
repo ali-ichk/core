@@ -94,7 +94,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                 ->required();
 
             if (!empty($gibbonPersonID)) {
-                $multiSelect->destination()->fromArray([$students['students'][$gibbonPersonID]]);
+                $multiSelect->destination()->fromArray([$gibbonPersonID => $students['students'][$gibbonPersonID]]);
                 unset($students['students'][$gibbonPersonID]);
             }
 

@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use Gibbon\Data\Validator;
 use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 
@@ -90,6 +91,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_edi
                                     }
                                 } elseif ($resourceType == 'File') {
                                     $fileUploader = new Gibbon\FileUploader($pdo, $session);
+                                    $fileMetaData = null;
 
                                     // Handle the attached file, if there is one
                                     if (!empty($_FILES['file'.$i]['tmp_name'])) {
@@ -103,6 +105,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_edi
                                             header("Location: {$URL}");
                                             exit();
                                         } else {
+                                            $fileMetaData = $fileUploader->getFileMetaData($attachment);
+
                                             try {
                                                 $data = array('gibbonDepartmentID' => $gibbonDepartmentID, 'resourceType' => $resourceType, 'resourceName' => $resourceName, 'attachment' => $attachment);
                                                 $sql = 'INSERT INTO gibbonDepartmentResource SET gibbonDepartmentID=:gibbonDepartmentID, type=:resourceType, name=:resourceName, url=:attachment';
@@ -110,6 +114,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Departments/department_edi
                                                 $result->execute($data);
                                             } catch (PDOException $e) {
                                                 $partialFail = true;
+                                            }
+
+                                            $gibbonDepartmentResourceID = $connection2->lastInsertID();
+
+                                            // Record file tracking
+                                            if (!empty($fileMetaData) && !empty($gibbonDepartmentResourceID)) {
+                                                $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonDepartmentResource', $gibbonDepartmentResourceID, 'url');
+
+                                                if (empty($gibbonFileID)) {
+                                                    $partialFail = true;
+                                                }
                                             }
                                         }
                                     }

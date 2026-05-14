@@ -28,6 +28,8 @@ use Gibbon\Domain\Activities\ActivityStaffGateway;
 use Gibbon\Domain\Activities\ActivityStudentGateway;
 use Gibbon\Domain\Activities\ActivityAttendanceGateway;
 use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
+use Gibbon\Domain\Calendar\CalendarEventGateway;
+use Gibbon\Domain\System\SettingGateway;
 
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -101,6 +103,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_atte
     $today = date('Y-m-d');
     $activity = $activityResult->fetch();
     $activity['participants'] = $studentResult->rowCount();
+    $activityDetails = $container->get(ActivityGateway::class)->getActivityDetailsByID($gibbonActivityID);
 
     // Get the week days that match time slots for this activity
     $activityWeekDays = getActivityWeekdays($connection2, $gibbonActivityID);
@@ -196,6 +199,28 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_atte
 
         $icon = '<img class="mt-1 inline" title="%1$s" src="./themes/'.$session->get('gibbonThemeName').'/img/%2$s"/>';
 
+        // Calendar event conflicts
+        $calendarEvents = [];
+        $calendarEventGateway = $container->get(CalendarEventGateway::class);
+
+        foreach ($students as $student) {
+            $events = $calendarEventGateway->selectVisibleEventsByPerson($student['gibbonPersonID'], 'Student', date('Y-m-d', $activityTimespan['start']), date('Y-m-d', $activityTimespan['end']))->fetchAll();
+
+            foreach ($events as $event) {
+
+                foreach ($activitySessions as $sessionDate => $sessionTimestamp) {
+                    if (!($sessionDate >= $event['dateStart']  && $sessionDate <= $event['dateEnd'])) {
+                        continue;
+                    }
+
+                    if ($event['allDay'] == 'Y' || ($activityDetails['timeStart'] >= $event['timeStart'] && $activityDetails['timeStart'] < $event['timeEnd']) || ($event['timeStart'] >= $activityDetails['timeStart'] && $event['timeStart'] < $activityDetails['timeEnd'])) {
+                        $calendarEvents[$sessionDate][$student['gibbonPersonID']][] = $event;
+                    }
+                }
+                
+            }
+        }
+
         // Display the date and action buttons for each session
         $i = 0;
         foreach ($activitySessions as $sessionDate => $sessionTimestamp) {
@@ -264,6 +289,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Activities/activities_atte
                 $link->append(Format::tag(__($log['type']), 'message ml-2 text-xxs absolute whitespace-nowrap inline-block'));
             } elseif ($log['scope'] == 'Onsite - Late' || $log['scope'] == 'Offsite - Late') {
                 $link->append(Format::tag(__($log['type']), 'warning ml-2 text-xxs absolute whitespace-nowrap inline-block'));
+            }
+
+            $event = $calendarEvents[$currentDate][$student['gibbonPersonID']][0] ?? null;
+            if (!empty($event)) {
+                $link->append(Format::tag(__('Event'), 'success ml-2 text-xxs absolute whitespace-nowrap inline-block', $event['eventName']));
             }
 
             $i = 0;

@@ -46,21 +46,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_edit.p
     $URL .= '&return=error0';
     header("Location: {$URL}");
 } else {
-    //Get action with highest precendence
+    //Get action with highest precedence
     $highestAction = getHighestGroupedAction($guid, $_POST['address'], $connection2);
     if ($highestAction == false or ($highestAction != 'Individual Needs Records_viewContribute' and $highestAction != 'Individual Needs Records_viewEdit')) {
         $URL .= '&return=error0';
         header("Location: {$URL}");
     } else {
         //Check access to specified student
-        try {
-            $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
-
-        } catch (PDOException $e) {
-            $URL .= '&return=error2';
-            header("Location: {$URL}");
-            exit();
-        }
+        $result = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
 
         if (empty($result)) {
             $URL .= '&return=error1';
@@ -102,26 +95,38 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_edit.p
                 $customRequireFail = false;
                 $fields = $container->get(CustomFieldHandler::class)->getFieldDataFromPOST('Individual Needs', [], $customRequireFail);
 
-                try {
-                    $result = $container->get(INGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID]);
-                    
-                } catch (PDOException $e) {
-                    $partialFail = true;
+                $result = $container->get(INGateway::class)->selectBy(['gibbonPersonID' => $gibbonPersonID]);
+
+                // Fetch old record for file comparison
+                $recordCount = $result->rowCount();
+                $oldINRecord = null;
+                if (!empty($result)) {
+                    $oldINRecord = $result->fetch();
                 }
-                if ($result->rowCount() > 1 || $customRequireFail) {
+
+                if ($recordCount > 1 || $customRequireFail) {
                     $partialFail = true;
                 } else {
                     try {
-                        $data = array('strategies' => $strategies, 'targets' => $targets, 'notes' => $notes, 'fields' => $fields, 'gibbonPersonID' => $gibbonPersonID);
-                        if ($result->rowCount() == 1) {
+                        $data = ['strategies' => $strategies, 'targets' => $targets, 'notes' => $notes, 'fields' => $fields, 'gibbonPersonID' => $gibbonPersonID];
+                        if ($recordCount == 1) {
+                            $gibbonINID = $oldINRecord['gibbonINID'];
                             $sql = 'UPDATE gibbonIN SET strategies=:strategies, targets=:targets, notes=:notes, fields=:fields WHERE gibbonPersonID=:gibbonPersonID';
+                            $result = $connection2->prepare($sql);
+                            $result->execute($data);
                         } else {
                             $sql = 'INSERT INTO gibbonIN SET gibbonPersonID=:gibbonPersonID, strategies=:strategies, targets=:targets, notes=:notes, fields=:fields';
+                            $result = $connection2->prepare($sql);
+                            $result->execute($data);
+                            $gibbonINID = $connection2->lastInsertID();
                         }
-                        $result = $connection2->prepare($sql);
-                        $result->execute($data);
                     } catch (PDOException $e) {
                         $partialFail = true;
+                    }
+
+                    // Manage custom field file uploads
+                    if (!empty($fields)) {
+                        $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Individual Needs', [], $fields, 'gibbonIN', $gibbonINID, $oldINRecord['fields'] ?? null);
                     }
                 }
 
