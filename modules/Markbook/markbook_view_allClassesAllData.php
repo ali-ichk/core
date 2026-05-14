@@ -728,16 +728,14 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
                     $dataEntry = array('gibbonMarkbookColumnID' => $column->gibbonMarkbookColumnID, 'gibbonPersonIDStudent' => $rowStudents['gibbonPersonID']);
                     $sqlEntry = 'SELECT * FROM gibbonMarkbookEntry WHERE gibbonMarkbookColumnID=:gibbonMarkbookColumnID AND gibbonPersonIDStudent=:gibbonPersonIDStudent LIMIT 1';
                     $rowEntry = $pdo->selectOne($sqlEntry, $dataEntry);
-                    $rowWork = [];
 
+                    $rowWork = [];
                     if ($column->displaySubmission()) {
-                        $dataWork = array('gibbonPlannerEntryID' => $column->getData('gibbonPlannerEntryID'), 'gibbonPersonID' => $rowStudents['gibbonPersonID']);
-                        $sqlWork = 'SELECT * FROM gibbonPlannerEntryHomework WHERE gibbonPlannerEntryID=:gibbonPlannerEntryID AND gibbonPersonID=:gibbonPersonID ORDER BY count DESC';
-                        $rowWork = $pdo->selectOne($sqlWork, $dataWork);
+                        $rowWork = $container->get(PlannerEntryHomeworkGateway::class)->selectHomeworkByStudent($column->getData('gibbonPlannerEntryID'), $rowStudents['gibbonPersonID'])->fetch();
                     }
 
                     $newEnrollment = false;
-                    
+
                     // Check if class enrolment date exists and is after the Go Live date for this column
                     if (!empty($rowStudents['dateEnrolled']) && !empty($column->getData('completeDate')) && $rowStudents['dateEnrolled'] > $column->getData('completeDate')) {
                         $newEnrollment = true;
@@ -904,12 +902,7 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
 
                     if ($column->displaySubmission()) {
                         echo "<td class='smallColumn'>";                       
-                            $resultWork = $container->get(PlannerEntryHomeworkGateway::class)->selectHomeworkByStudent($column->getData('gibbonPlannerEntryID'), $rowStudents['gibbonPersonID']);
 
-                        if ($resultWork->rowCount() > 0) {
-                            $rowWork = $resultWork->fetch();
-                        echo "<td class='smallColumn'>";
-                        
                         if (!empty($rowWork)) {
                             if ($rowWork['status'] == 'Exemption') {
                                 $linkText = __('Exe');
@@ -952,10 +945,20 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
                             }
                         }
                         echo '</td>';
-
                     }
-                	echo '</tr></table>';
+
+                    echo '</tr></table>';
+                    echo '</td>';
                 }
+
+                    
+                    
+                
+            
+
+                    
+                    
+                
 
                 // These are the columns that show up at the end of the markbook, they must match their headers above the main loop
                 // Calculate and output weighted average marks
@@ -1027,11 +1030,9 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
                     }
                 }
 
-
-
                 echo '</tr>';
             }
-        }
+        
 
         // Class Average
         if ($markbook->getSetting('enableColumnWeighting') == 'Y' && $columnFilter != 'unmarked') {

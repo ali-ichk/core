@@ -113,8 +113,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/report_studentH
                 $gibbonPersonID = $_GET['gibbonPersonID'] ?? '';
             }
             // Test data access field for permission
-            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchAll();
-            
+            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($gibbonSchoolYearID, $session->get('gibbonPersonID'))->fetchGroupedUnique();
+
             if (empty($children)) {
                 echo $page->getBlankSlate();
             } else {

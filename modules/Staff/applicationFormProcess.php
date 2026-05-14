@@ -19,16 +19,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Data\Validator;
-use Gibbon\Services\Format;
 use Gibbon\Comms\EmailTemplate;
-use Gibbon\Contracts\Comms\Mailer;
 use Gibbon\Comms\NotificationEvent;
+use Gibbon\Contracts\Comms\Mailer;
+use Gibbon\Contracts\Filesystem\FileHandler;
+use Gibbon\Services\Format;
+use Gibbon\Data\Validator;
 use Gibbon\Forms\CustomFieldHandler;
-use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Domain\System\EmailTemplateGateway;
-use Gibbon\Forms\Builder\FormBuilderInterface;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\User\UserGateway;
 
 require_once '../../gibbon.php';
 
@@ -110,7 +111,16 @@ if ($proceed == false) {
     $referenceEmail1 = $_POST['referenceEmail1'] ?? '';
     $referenceEmail2 = $_POST['referenceEmail2'] ?? '';
     $agreement = isset($_POST['agreement']) ? ($_POST['agreement'] == 'on' ? 'Y' : 'N') : null;
+    
+    if (!empty($gibbonPersonID)) {
+        $staffDetails = $container->get(UserGateway::class)->getSafeUserData($gibbonPersonID);
 
+        if (!empty($staffDetails)) {
+            $officialName = $staffDetails['officialName'];
+            $email = $staffDetails['email'];
+            $gender = $staffDetails['gender'];
+        }
+    }
 
     //VALIDATE INPUTS
     if (count($gibbonStaffJobOpeningIDs) < 1 or ($gibbonPersonID == null and ($surname == '' or $firstName == '' or $preferredName == '' or $officialName == '' or $gender == '' or $dob == '' or $languageFirst == '' or $email == '' or $homeAddress == '' or $homeAddressDistrict == '' or $homeAddressCountry == '' or $phone1 == '')) or (isset($_POST['referenceEmail1']) and $referenceEmail1 == '') or (isset($_POST['referenceEmail2']) and $referenceEmail2 == '') or (isset($_POST['agreement']) and $agreement != 'Y')) {
@@ -145,8 +155,8 @@ if ($proceed == false) {
                 for ($i = 0; $i < $fileCount; ++$i) {
                     if (empty($_FILES["file$i"]['tmp_name'])) continue;
 
-                    $file = (isset($_FILES["file$i"]))? $_FILES["file$i"] : null;
-                    $fileName = (isset($_POST["fileName$i"]))? $_POST["fileName$i"] : null;
+                    $file = (isset($_FILES["file$i"])) ? $_FILES["file$i"] : null;
+                    $fileName = (isset($_POST["fileName$i"])) ? $_POST["fileName$i"] : null;
 
                     // Upload the file, return the /uploads relative path
                     $attachment = $fileUploader->uploadFromPost($file, 'StaffApplicationDocument');
@@ -202,15 +212,36 @@ if ($proceed == false) {
                         $params = ['staff' => true, 'applicationForm' => true];
                         $container->get(PersonalDocumentHandler::class)->updateDocumentsFromPOST('gibbonStaffApplicationForm', $AI, $params, $partialFail);
 
+                        // Manage custom field file uploads for User context
+                        if (!empty($fields)) {
+                            $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('User', ['staff' => 1, 'applicationForm' => 1], $fields, 'gibbonStaffApplicationForm', $AI);
+                        }
+
+                        // Manage custom field file uploads for Staff context
+                        if (!empty($staffFields)) {
+                            $staffFilesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Staff', ['applicationForm' => 1, 'prefix' => 'customStaff'], $staffFields, 'gibbonStaffApplicationForm', $AI);
+                        }
+
                         // Attach required documents
                         if ($requiredDocuments != false && !empty($uploadedDocuments) && is_array($uploadedDocuments)) {
                             foreach ($uploadedDocuments as $fileName => $attachment) {
-                                //Write files to database, one for each attachment
+                                // Write files to database, one for each attachment
+                                $fileMetaData = $fileUploader->getFileMetaData($attachment);
 
-                                    $dataFile = array('gibbonStaffApplicationFormID' => $AI, 'name' => $fileName, 'path' => $attachment);
-                                    $sqlFile = 'INSERT INTO gibbonStaffApplicationFormFile SET gibbonStaffApplicationFormID=:gibbonStaffApplicationFormID, name=:name, path=:path';
-                                    $resultFile = $connection2->prepare($sqlFile);
-                                    $resultFile->execute($dataFile);
+                                $dataFile = array('gibbonStaffApplicationFormID' => $AI, 'name' => $fileName, 'path' => $attachment);
+                                $sqlFile = 'INSERT INTO gibbonStaffApplicationFormFile SET gibbonStaffApplicationFormID=:gibbonStaffApplicationFormID, name=:name, path=:path';
+                                $resultFile = $connection2->prepare($sqlFile);
+                                $resultFile->execute($dataFile);
+                                    
+                                // Record file tracking
+                                if (!empty($fileMetaData)) {
+                                    $gibbonStaffApplicationFormFileID = $connection2->lastInsertID();
+                                    $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonStaffApplicationFormFile', $gibbonStaffApplicationFormFileID, 'path');
+
+                                    if (empty($gibbonFileID)) {
+                                        $partialFail = true;
+                                    }
+                                }
                             }
                         }
 
