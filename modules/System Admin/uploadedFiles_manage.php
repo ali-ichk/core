@@ -25,7 +25,7 @@ use Gibbon\FileUploader;
 use Gibbon\Domain\System\FileGateway;
 use Gibbon\Domain\User\UserGateway;
 
-if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedFiles.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_view.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
@@ -48,7 +48,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     $personName = Format::name($person['title'], $person['preferredName'], $person['surname'], 'Staff', false, true);
 
     $page->breadcrumbs
-        ->add(__('View Uploaded Files'), 'viewUploadedFiles.php')
+        ->add(__('View Uploaded Files'), 'uploadedFiles_view.php')
         ->add($personName);
 
     $fileGateway = $container->get(FileGateway::class);
@@ -66,7 +66,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
     $files = $fileGateway->queryUploadedFilesByPerson($criteria, $gibbonPersonID);
 
     // BULK ACTION FORM
-    $form = BulkActionForm::create('bulkAction', $session->get('absoluteURL').'/modules/System Admin/manageUploadedFilesByUserProcessBulk.php');
+    $form = BulkActionForm::create('bulkAction', $session->get('absoluteURL').'/modules/System Admin/uploadedFiles_manageProcessBulk.php');
     $form->addHiddenValue('gibbonPersonID', $gibbonPersonID);
 
     $bulkActions = ['Delete' => __('Delete')];

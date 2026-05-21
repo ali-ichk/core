@@ -21,12 +21,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 
-if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedFiles.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_view.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
     // Proceed!
-    $form = Form::create('searchNoPointerFiles', $session->get('absoluteURL').'/modules/System Admin/searchUploadedFilesProcess.php');
+    $form = Form::create('uploadedFilesSearch', $session->get('absoluteURL').'/modules/System Admin/uploadedFiles_searchProcess.php');
     $form->addHiddenValue('address', $_GET['q']);
 
     $row = $form->addRow();

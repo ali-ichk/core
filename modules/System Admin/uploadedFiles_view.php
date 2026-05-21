@@ -24,7 +24,7 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Forms\Form;
 use Gibbon\Domain\System\FileGateway;
 
-if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedFiles.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_view.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
@@ -35,7 +35,7 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
 
     // Show the confirmation form until the admin has run the status check
     if (empty($return)) {
-        $form = Form::create('searchUploadedFiles', $session->get('absoluteURL').'/modules/System Admin/searchUploadedFilesProcess.php');
+        $form = Form::create('uploadedFilesSearch', $session->get('absoluteURL').'/modules/System Admin/uploadedFiles_searchProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->setTitle(__('Search Uploaded Files'));
         $form->setDescription(__('Please click the button below to run the updater to search for all uploaded files.'));
@@ -78,8 +78,8 @@ if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedF
         ->addParam('gibbonPersonID')
         ->format(function ($values, $actions) {
             $actions->addAction('manage', __('Manage Files'))
-                ->setIcon('folder_open')
-                ->setURL('/modules/System Admin/manageUploadedFilesByUser.php');
+                ->setIcon('folder')
+                ->setURL('/modules/System Admin/uploadedFiles_manage.php');
         });
 
     echo $table->render($fileOwners);

@@ -30,9 +30,9 @@ $action         = $_POST['action'] ?? '';
 $gibbonPersonID = $_POST['gibbonPersonID'] ?? '';
 $gibbonFileIDs  = $_POST['gibbonFileID'] ?? [];
 
-$URL = $session->get('absoluteURL').'/index.php?q=/modules/System Admin/manageUploadedFilesByUser.php&gibbonPersonID='.$gibbonPersonID;
+$URL = $session->get('absoluteURL').'/index.php?q=/modules/System Admin/uploadedFiles_manage.php&gibbonPersonID='.$gibbonPersonID;
 
-if (isActionAccessible($guid, $connection2, '/modules/System Admin/viewUploadedFiles.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_view.php') == false) {
     $URL .= '&return=error0';
     header("Location: {$URL}");
     exit;
