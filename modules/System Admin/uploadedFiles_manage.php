@@ -25,7 +25,7 @@ use Gibbon\FileUploader;
 use Gibbon\Domain\System\FileGateway;
 use Gibbon\Domain\User\UserGateway;
 
-if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_view.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_manage.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {

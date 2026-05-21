@@ -28,7 +28,7 @@ $_POST = $container->get(Validator::class)->sanitize($_POST);
 
 $URL = $session->get('absoluteURL').'/index.php?q=/modules/'.getModuleName($_POST['address']).'/uploadedFiles_view.php';
 
-if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_view.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/System Admin/uploadedFiles_search.php') == false) {
     $URL .= '&return=error0';
     header("Location: {$URL}");
     exit;
