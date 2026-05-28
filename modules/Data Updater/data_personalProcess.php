@@ -263,6 +263,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_personal
                         //Write to database
                         $existing = $_POST['existing'] ?? 'N';
 
+                        // Fetch old record for file comparison if updating
+                        $oldPersonUpdateRecord = null;
+                        if ($existing != 'N') {
+                            try {
+                                $dataOld = ['gibbonPersonUpdateID' => $existing];
+                                $sqlOld = 'SELECT fields FROM gibbonPersonUpdate WHERE gibbonPersonUpdateID=:gibbonPersonUpdateID';
+                                $resultOld = $connection2->prepare($sqlOld);
+                                $resultOld->execute($dataOld);
+                                $oldPersonUpdateRecord = $resultOld->fetch();
+                            } catch (PDOException $e) {
+                                $oldPersonUpdateRecord = null;
+                            }
+                        }
+
                         // Auto-accept updates where no data had changed
                         $data['status'] = $dataChanged ? 'Pending' : 'Complete';
                         $data['gibbonSchoolYearID'] = $session->get('gibbonSchoolYearID');
@@ -291,6 +305,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Data Updater/data_personal
                         }
 
                         // Update matching addresses
+
+                        // Manage custom field file uploads
+                        if (!empty($fields)) {
+                            $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('User', ['dataUpdater' => true], $fields, 'gibbonPersonUpdate', $gibbonPersonUpdateID, $oldPersonUpdateRecord['fields'] ?? null);
+                        }
+
+                        //Update matching addresses
                         if ($matchAddressCount > 0) {
                             for ($i = 0; $i < $matchAddressCount; ++$i) {
                                 if (!empty($_POST[$i.'-matchAddress'])) {

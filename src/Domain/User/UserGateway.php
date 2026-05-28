@@ -213,7 +213,7 @@ class UserGateway extends QueryableGateway implements ScrubbableGateway
 
         return $this->db()->update($sql, $data);
     }
-
+    
     public function selectActiveUsersBySchoolYear($gibbonSchoolYearID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];

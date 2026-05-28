@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
 use Gibbon\Domain\School\SchoolYearTermGateway;
+use Gibbon\Domain\Planner\PlannerEntryHomeworkGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 
 $page->breadcrumbs->add(__('View Markbook'));
@@ -43,7 +44,7 @@ $entryCount = 0;
 $page->write('<p>'.__("This page shows your children's academic results throughout your school career. Only subjects with published results are shown.").'</p>');
 
 // Test data access field for permission
-$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
+$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
 if (empty($children)) {
     echo $page->getBlankSlate();
@@ -93,7 +94,7 @@ if (empty($children)) {
             return;
         }
 
-        if ($count($options) > 1) {
+        if (count($options) > 1) {
             echo '<h2>';
             echo 'Filter & Options';
             echo '</h2>';
@@ -431,13 +432,10 @@ if (empty($children)) {
                                 echo '<td>';
                                 $rowSub = $resultSub->fetch();
 
-
-                                    $dataWork = array('gibbonPlannerEntryID' => $rowEntry['gibbonPlannerEntryID'], 'gibbonPersonID' => $gibbonPersonID);
-                                    $sqlWork = 'SELECT * FROM gibbonPlannerEntryHomework WHERE gibbonPlannerEntryID=:gibbonPlannerEntryID AND gibbonPersonID=:gibbonPersonID ORDER BY count DESC';
-                                    $resultWork = $connection2->prepare($sqlWork);
-                                    $resultWork->execute($dataWork);
-                                if ($resultWork->rowCount() > 0) {
-                                    $rowWork = $resultWork->fetch();
+                                    $resultWork = $container->get(PlannerEntryHomeworkGateway::class)->selectHomeworkByStudent($rowEntry['gibbonPlannerEntryID'], $gibbonPersonID);
+                                        
+                                    if ($resultWork->rowCount() > 0) {
+                                        $rowWork = $resultWork->fetch();
 
                                     if ($rowWork['status'] == 'Exemption') {
                                         $linkText = __('Exemption');

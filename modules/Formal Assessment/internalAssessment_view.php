@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\User\UserGateway;
 
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
@@ -70,12 +71,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 				echo '</h3>';
 
 				// Check for access
-				$dataCheck = array('gibbonPersonID' => $gibbonPersonID);
-				$sqlCheck = "SELECT DISTINCT gibbonPerson.* FROM gibbonPerson LEFT JOIN gibbonStudentEnrolment ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID) WHERE gibbonPerson.gibbonPersonID=:gibbonPersonID AND status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."')";
-				$resultCheck = $connection2->prepare($sqlCheck);
-				$resultCheck->execute($dataCheck);
+				$resultCheck = $container->get(UserGateway::class)->getUserDetails($gibbonPersonID, $session->get('gibbonSchoolYearID'));
 
-				if ($resultCheck->rowCount() != 1) {
+				if (empty($resultCheck)) {
 					$page->addError(__('The selected record does not exist, or you do not have access to it.'));
 				} else {
 					echo getInternalAssessmentRecord($guid, $connection2, $gibbonPersonID);
@@ -85,7 +83,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 			$page->breadcrumbs->add(__('View My Childrens\'s Internal Assessments'));
 
 			// Test data access field for permission
-			$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
+			$children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
 			if (empty($children)) {
 				echo $page->getBlankSlate();
@@ -93,9 +91,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 				// Get child list
 				$options = [];
 
-                foreach($children as $child) {
-                    $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
-                }
+        foreach($children as $child) {
+            $options[$child['gibbonPersonID']] = Format::name('', $child['preferredName'], $child['surname'], 'Student', true);
+        }
 
 				$gibbonPersonID = (isset($_GET['search'])) ? $_GET['search'] : null;
 
@@ -122,7 +120,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 						$row->addSearchSubmit($session);
 
 					echo $form->getOutput();
-                }
+        }
 
 				$settingGateway = $container->get(SettingGateway::class);
                 $showParentAttainmentWarning = $settingGateway->getSettingByScope('Markbook', 'showParentAttainmentWarning');
@@ -130,12 +128,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
 
                 if ($gibbonPersonID != '' and count($options) > 0) {
                 	// Confirm access to this student
-					if (empty($children[$gibbonPersonID])) {
+					        if (empty($children[$gibbonPersonID])) {
                         $page->addError(__('You do not have access to this action.'));
                         return;
                     }
 					
-					echo getInternalAssessmentRecord($guid, $connection2, $gibbonPersonID, 'parent');
+					        echo getInternalAssessmentRecord($guid, $connection2, $gibbonPersonID, 'parent');
                 }
             }
         } else { // My Internal Assessments

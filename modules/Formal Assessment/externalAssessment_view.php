@@ -23,16 +23,15 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Domain\User\FamilyChildGateway;
 
-//Module includes
+// Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/externalAssessment_view.php') == false) {
-    //Acess denied
+    // Access denied
     $page->addError(__('Your request failed because you do not have access to this action.'));
 } else {
-    //Get action with highest precendence
+    //Get action with highest precedence
     $highestAction = getHighestGroupedAction($guid, $_GET['q'], $connection2);
     if ($highestAction == false) {
         $page->addError(__('The highest grouped action cannot be determined.'));
@@ -40,9 +39,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/external
         if ($highestAction == 'View External Assessments_myChildrens') { // MY CHILDREN
             $page->breadcrumbs->add(__('View My Childrens\'s External Assessments'));
 
-            // Test data access field for permission
-            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
-
+            $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchGroupedUnique();
+            
             if (empty($children)) {
                 echo $page->getBlankSlate();
             } else {

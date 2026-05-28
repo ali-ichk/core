@@ -103,6 +103,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                 exit();
             }
 
+            // Record custom field file uploads
+            if (!empty($fields)) {
+                $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID);
+            }
+
             $copyToNotes = $_POST['copyToNotes'] ?? null;
             $followUp = $_POST['followUp'] ?? '';
           

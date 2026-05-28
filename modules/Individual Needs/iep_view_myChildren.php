@@ -36,7 +36,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/iep_view_
     echo '</p>';
 
     // Test data access field for permission
-    $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchAll();
+    $children = $container->get(StudentGateway::class)->selectActiveStudentsByFamilyAdult($session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))->fetchGroupedUnique();
 
     if (empty($children)) {
         echo $page->getBlankSlate();

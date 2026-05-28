@@ -135,6 +135,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
                             header("Location: {$URL}");
                             exit();
                         }
+
+                        // Manage custom field file uploads and deletions
+                        if (!empty($fields)) {
+                            $filesRecorded = $container->get(CustomFieldHandler::class)->manageCustomFieldFileUploads('Behaviour', [], $fields, 'gibbonBehaviour', $gibbonBehaviourID, $behaviourRecord['fields']);
+                        }
                     }
 
                     // ALERTS: possible change to Behaviour alert status, recalculate alerts
