@@ -99,22 +99,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_suppor
     $form->toggleVisibilityByClass('rowFile')->onSelect('type')->when('File');
     $form->toggleVisibilityByClass('rowLink')->onSelect('type')->when('Link');
 
-    // Current file info
-    if ($supportPlan['type'] == 'File') {
-        $row = $form->addRow()->addClass('rowFile');
-            $row->addLabel('currentFile', __('Current File'));
-            $row->addTextField('currentFile')->setValue(basename($supportPlan['filePath']))->readonly();
-    }
+    // File upload
+    $currentFilePath = ($supportPlan['type'] == 'File') ? $supportPlan['filePath'] : '';
 
-    // File upload (new file)
     $row = $form->addRow()->addClass('rowFile');
-        $row->addLabel('file', __('Replace PDF File'));
-        $row->addFileUpload('file')->accepts('.pdf');
+        $row->addLabel('file', __('Upload File'));
+        $row->addFileUpload('file')->accepts('.pdf')->setAttachment('attachment', $session->get('absoluteURL'), $currentFilePath)->required();
 
     // Link
     $row = $form->addRow()->addClass('rowLink');
-        $row->addLabel('filePath', __('Link URL'));
-        $row->addURL('filePath')->maxLength(255)->setValue($supportPlan['type'] == 'Link' ? $supportPlan['filePath'] : '');
+        $row->addLabel('filePath', __('Upload Link'));
+        $row->addURL('filePath')->maxLength(255)->setValue($supportPlan['type'] == 'Link' ? $supportPlan['filePath'] : '')->required();
 
     $row = $form->addRow();
         $row->addHeading('Access', __('Access'));

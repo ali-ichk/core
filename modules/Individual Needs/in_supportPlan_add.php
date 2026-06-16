@@ -87,13 +87,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_suppor
 
     // File upload
     $row = $form->addRow()->addClass('rowFile');
-        $row->addLabel('file', __('PDF File'));
-        $row->addFileUpload('file')->accepts('.pdf');
+        $row->addLabel('file', __('Upload File'));
+        $row->addFileUpload('file')->accepts('.pdf')->required();
 
     // Link
     $row = $form->addRow()->addClass('rowLink');
-        $row->addLabel('filePath', __('Link URL'));
-        $row->addURL('filePath')->maxLength(255);
+        $row->addLabel('filePath', __('Upload Link'));
+        $row->addURL('filePath')->maxLength(255)->required();
 
     $row = $form->addRow();
         $row->addHeading('Access', __('Access'));
