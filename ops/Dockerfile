@@ -39,22 +39,22 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# 4. Copy application source from local context
-# Build context is the project root (see ops/docker-compose.yaml context: ..)
-COPY . .
+# Steps 4–7 are intentionally commented out for the dev environment.
 
-# 5. Install PHP Dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# # 4. Copy application source from local context
+# COPY . .
 
-# 6. Configure PHP for Gibbon
-# Path is relative to build context (project root), so ops/php/gibbon.ini
-# In dev, this file is volume-mounted so changes take effect without a rebuild.
-COPY ops/php/gibbon.ini /usr/local/etc/php/conf.d/gibbon.ini
+# # 5. Install PHP Dependencies
+# RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# 7. Permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && find /var/www/html -type d -exec chmod 755 {} \; \
-    && find /var/www/html -type f -exec chmod 644 {} \;
+# # 6. Configure PHP for Gibbon
+# # Path is relative to build context (project root), so ops/php/gibbon.ini
+# COPY ops/php/gibbon.ini /usr/local/etc/php/conf.d/gibbon.ini
+
+# # 7. Permissions
+# RUN chown -R www-data:www-data /var/www/html \
+#     && find /var/www/html -not -path "*/vendor/*" -type d -exec chmod 755 {} + \
+#     && find /var/www/html -not -path "*/vendor/*" -type f -exec chmod 644 {} +
 
 EXPOSE 80
 

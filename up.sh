@@ -37,23 +37,21 @@ if ! docker info >/dev/null 2>&1; then
     exit 1
 fi
 
-COMPOSE_FILES="--project-directory . -f ops/docker-compose.yaml -f ops/docker-compose.dev.yaml"
+DOCKER_COMPOSE="docker compose --project-directory ."
 
 case "${1:-up}" in
     up)
         echo "Starting Gibbon dev environment..."
-        docker compose $COMPOSE_FILES up -d --build
+        ${DOCKER_COMPOSE} build app db
+        ${DOCKER_COMPOSE} up -d
+        echo "Installing Composer dependencies (this may take a minute on first run)..."
+        ${DOCKER_COMPOSE} exec -T app composer install
         echo ""
         echo "Gibbon is running at: http://localhost:8080"
         echo "To follow logs:       ./up.sh logs"
-        echo "To stop:              ./up.sh down"
-        ;;
-    down)
-        echo "Stopping Gibbon dev environment and removing volumes..."
-        docker compose $COMPOSE_FILES down -v
         ;;
     logs)
-        docker compose $COMPOSE_FILES logs -f
+        docker compose logs -f
         ;;
     *)
         echo "Usage: $0 [up|down|logs]"
