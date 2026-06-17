@@ -1958,7 +1958,11 @@ class MessageTargets
                             if ($parents=="Y") {
                             try { //Get the familyIDs for each student logged
                             $dataFamily=array();
-                            $sqlFamily="SELECT DISTINCT gibbonFamilyID FROM gibbonFamilyChild WHERE gibbonPersonID IN (".implode(",",$selectedStudents).")" ;
+                            // Sanitize student IDs
+                            $safeStudentIDs = array_map('intval', $selectedStudents);
+                            $inClause = implode(',', $safeStudentIDs);
+                            
+                            $sqlFamily="SELECT DISTINCT gibbonFamilyID FROM gibbonFamilyChild WHERE gibbonPersonID IN ($inClause)" ;
                             $resultFamily=$connection2->prepare($sqlFamily);
                             $resultFamily->execute($dataFamily);
                             $resultFamilies = $resultFamily->fetchAll();
