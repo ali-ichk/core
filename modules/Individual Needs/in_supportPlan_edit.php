@@ -103,12 +103,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_suppor
     $currentFilePath = ($supportPlan['type'] == 'File') ? $supportPlan['filePath'] : '';
 
     $row = $form->addRow()->addClass('rowFile');
-        $row->addLabel('file', __('Upload File'));
+        $row->addLabel('file', __('File'));
         $row->addFileUpload('file')->accepts('.pdf')->setAttachment('attachment', $session->get('absoluteURL'), $currentFilePath)->required();
 
     // Link
     $row = $form->addRow()->addClass('rowLink');
-        $row->addLabel('filePath', __('Upload Link'));
+        $row->addLabel('filePath', __('Link'));
         $row->addURL('filePath')->maxLength(255)->setValue($supportPlan['type'] == 'Link' ? $supportPlan['filePath'] : '')->required();
 
     $row = $form->addRow();
