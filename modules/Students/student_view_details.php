@@ -2188,7 +2188,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/student_view_deta
                                     ->addParam('gibbonPersonID', $gibbonPersonID)
                                     ->displayLabel();
                                 if (isActionAccessible($guid, $connection2, '/modules/Individual Needs/in_supportPlan_manage.php') == true) {
-                                    $form->addHeaderAction('manage', __('Manage Student Support Plans'))
+                                    $form->addHeaderAction('manage', __('Student Support Plans'))
                                         ->setIcon('planner')
                                         ->setURL('/modules/Individual Needs/in_supportPlan_manage.php')
                                         ->addParam('gibbonPersonID', $gibbonPersonID)
