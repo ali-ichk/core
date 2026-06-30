@@ -1958,35 +1958,13 @@ class MessageTargets
                         if ($sms=="Y" AND $countryCode!="") {
                             if ($parents=="Y") {
                             try { //Get the familyIDs for each student logged
-                                $validStudentIDs = [];
-                                foreach ($selectedStudents as $studentID) {
-                                    if (is_numeric($studentID)) {
-                                        $validStudentIDs[] = $studentID;
-                                    }
-                                }
-
-                                if (!empty($validStudentIDs)) {
-                                    $dataFamily = [];
-                                    $placeholders = [];
-                                    
-                                    $count = 0;
-                                    foreach ($validStudentIDs as $studentID) {
-                                        $paramName = 'student' . $count;
-                                        $dataFamily[$paramName] = $studentID;
-                                        $placeholders[] = ':' . $paramName;
-                                        $count++;
-                                    }
-
-                                    $inClause = implode(',', $placeholders);
-                            
-                                    $sqlFamily="SELECT DISTINCT gibbonFamilyID FROM gibbonFamilyChild WHERE gibbonPersonID IN ($inClause)" ;
-                                    $resultFamily=$connection2->prepare($sqlFamily);
-                                    $resultFamily->execute($dataFamily);
-                                    $resultFamilies = $resultFamily->fetchAll();
-                                } else {
-                                    $resultFamilies = [];
-                                }
-                            } catch(\PDOException $e) { }
+                                $dataFamily=array("gibbonPersonIDs"=>implode(",", $selectedStudents));
+                                $sqlFamily="SELECT DISTINCT gibbonFamilyID FROM gibbonFamilyChild WHERE FIND_IN_SET(gibbonPersonID, :gibbonPersonIDs)" ;
+                                $resultFamily=$connection2->prepare($sqlFamily);
+                                $resultFamily->execute($dataFamily);
+                                $resultFamilies = $resultFamily->fetchAll();
+                            }
+                            catch(\PDOException $e) { }
 
                             foreach ($resultFamilies as $rowFamily) { //Get the people for each familyID
                                 try {
