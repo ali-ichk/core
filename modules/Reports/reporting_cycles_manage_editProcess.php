@@ -40,6 +40,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_cycles_m
 } else {
     // Proceed!
     $reportingCycleGateway = $container->get(ReportingCycleGateway::class);
+    $currentReportingCycle = $reportingCycleGateway->getByID($gibbonReportingCycleID);
 
     $data = [
         'gibbonSchoolYearID'    => $gibbonSchoolYearID,
@@ -51,21 +52,32 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_cycles_m
         'cycleNumber'           => $_POST['cycleNumber'] ?? '1',
         'cycleTotal'            => $_POST['cycleTotal'] ?? '1',
         'notes'                 => $_POST['notes'] ?? '',
-        'milestones'            => $_POST['milestones'] ?? [],
+        'milestones'            => $currentReportingCycle['milestones'] ?? null,
     ];
 
     $data['dateStart'] = Format::dateConvert($data['dateStart']);
     $data['dateEnd'] = Format::dateConvert($data['dateEnd']);
 
-    // Sort and save milestones as a JSON blob
-    if (!empty($data['milestones'])) {
-        $data['milestones'] = array_map(function ($item) {
-            $item['milestoneDate'] = Format::dateConvert($item['milestoneDate']);
-            return $item;
-        }, $data['milestones']);
-        $data['milestones'] = array_combine(array_keys($_POST['order'] ?? []), array_values($data['milestones']));
-        ksort($data['milestones']);
-        $data['milestones'] = json_encode($data['milestones']);
+    // Sort and save milestones as a JSON blob when milestones are submitted
+    if (array_key_exists('milestones', $_POST) && is_array($_POST['milestones'])) {
+        $milestones = $_POST['milestones'];
+
+        if (!empty($milestones)) {
+            $milestones = array_map(function ($item) {
+                $item['milestoneDate'] = Format::dateConvert($item['milestoneDate']);
+                return $item;
+            }, $milestones);
+
+            $orderKeys = array_keys($_POST['order'] ?? []);
+            if (!empty($orderKeys) && count($orderKeys) === count($milestones)) {
+                $milestones = array_combine($orderKeys, array_values($milestones));
+                ksort($milestones);
+            }
+
+            $data['milestones'] = json_encode($milestones);
+        } else {
+            $data['milestones'] = null;
+        }
     }
 
     // Validate the required values are present
