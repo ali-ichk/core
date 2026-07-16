@@ -446,19 +446,22 @@ function camelToWords($name)
  * Performs a HTTP GET request on the uploads folder 
  *
  * @param string $absoluteURL
- * @return string
+ * @return bool true when uploads do not appear publicly accessible
  */
 function checkUploadsFolderStatus($absoluteURL) : bool
 {
+    global $session;
+
     $statusCode = '';
     $responseBody = '';
     try {
         $client = new Client();
         $response = $client->request('GET', $absoluteURL.'/uploads', [
             'headers' => ['Referer' => $absoluteURL.'/index.php'],
+            'http_errors' => false,
         ]);
-        $statusCode = $response->getStatusCode();
-        $responseBody = $response->getBody();
+        $statusCode = (string) $response->getStatusCode();
+        $responseBody = (string) $response->getBody();
     } catch (GuzzleHttp\Exception\ClientException $e) {
         $responseBody = $e->getMessage();
     } catch (\GuzzleHttp\Exception\GuzzleException $e) {
@@ -467,6 +470,30 @@ function checkUploadsFolderStatus($absoluteURL) : bool
 
     if (stripos($responseBody, 'Index of') !== false || stripos($responseBody, 'Parent Directory') !== false) {
         return false;
+    }
+
+    // Anonymous file probe: a direct 200 means uploads are still statically public
+    // (e.g. mod_rewrite disabled/ignored). Gateway-secured installs should return 4xx.
+    $canaryName = '.gibbon_upload_access_check';
+    $absolutePath = $session->get('absolutePath') ?? '';
+    if ($absolutePath !== '') {
+        $canaryPath = $absolutePath.'/uploads/'.$canaryName;
+        if (!is_file($canaryPath)) {
+            @file_put_contents($canaryPath, 'gibbon-upload-access-check');
+        }
+
+        if (is_file($canaryPath)) {
+            try {
+                $fileResponse = (new Client())->request('GET', $absoluteURL.'/uploads/'.$canaryName, [
+                    'headers' => ['Referer' => $absoluteURL.'/index.php'],
+                    'http_errors' => false,
+                ]);
+                if ((int) $fileResponse->getStatusCode() === 200) {
+                    return false;
+                }
+            } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            }
+        }
     }
 
     if (substr($statusCode, 0, 1) == '4') {
