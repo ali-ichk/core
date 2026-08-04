@@ -33,7 +33,8 @@ use Gibbon\Domain\User\UserGateway;
 
 require_once '../../gibbon.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST);
+$validator = $container->get(Validator::class);
+$_POST = $validator->sanitize($_POST);
 
 //Check to see if system settings are set from databases
 if (!$session->has('systemSettingsSet')) {
@@ -78,10 +79,10 @@ if ($proceed == false) {
     $gibbonStaffJobOpeningIDs = $_POST['gibbonStaffJobOpeningID'] ?? '';
     $questions = $_POST['questions'] ?? '';
     $gibbonPersonID = !empty($_POST['gibbonPersonID']) ? $_POST['gibbonPersonID'] : null;
-    $surname = $_POST['surname'] ?? '';
-    $firstName = $_POST['firstName'] ?? '';
-    $preferredName = $_POST['preferredName'] ?? '';
-    $officialName = $_POST['officialName'] ?? '';
+    $surname = $validator->sanitizePersonName($_POST['surname'] ?? '');
+    $firstName = $validator->sanitizePersonName($_POST['firstName'] ?? '');
+    $preferredName = $validator->sanitizePersonName($_POST['preferredName'] ?? '');
+    $officialName = $validator->sanitizePersonName($_POST['officialName'] ?? '');
     $nameInCharacters = $_POST['nameInCharacters'] ?? '';
     $gender = $_POST['gender'] ?? 'Unspecified';
     $dob = !empty($_POST['dob']) ? Format::dateConvert($_POST['dob']) : null;
