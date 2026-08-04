@@ -460,8 +460,8 @@ function checkUploadsFolderStatus($absoluteURL) : bool
             'headers' => ['Referer' => $absoluteURL.'/index.php'],
             'http_errors' => false,
         ]);
-        $statusCode = (string) $response->getStatusCode();
-        $responseBody = (string) $response->getBody();
+        $statusCode = $response->getStatusCode();
+        $responseBody = $response->getBody();
     } catch (GuzzleHttp\Exception\ClientException $e) {
         $responseBody = $e->getMessage();
     } catch (\GuzzleHttp\Exception\GuzzleException $e) {
@@ -472,8 +472,7 @@ function checkUploadsFolderStatus($absoluteURL) : bool
         return false;
     }
 
-    // Anonymous file probe: a direct 200 means uploads are still statically public
-    // (e.g. mod_rewrite disabled/ignored). Gateway-secured installs should return 4xx.
+    // Check if uploads folder is publicly accessible
     $canaryName = '.gibbon_upload_access_check';
     $absolutePath = $session->get('absolutePath') ?? '';
     if ($absolutePath !== '') {
