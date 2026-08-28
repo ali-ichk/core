@@ -72,6 +72,7 @@ v31.0.00
         System Admin: added new Marks By Term importer for Markbook Column
         System Admin: added new importer to import Internal Assessment Columns
         Timetable: added class and location details to non-timetabled lessons in the Timetable
+        Tiemtable: added a permission to enable certain users to edit a class location/facility
         Tracking: fixed the post variable validation
         User Admin: linked user names to Student and Staff profiles in Manage Users
         User Admin: fixed the bug to display user's personal address if turned on
