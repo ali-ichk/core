@@ -32,7 +32,7 @@ $I->click('Edit', '#courseEnrolmentByPerson');
 $I->seeInCurrentUrl('courseEnrolment_manage_byPerson_edit.php');
 $I->dontSeeErrors();
 
-$I->selectFromDropdown('Members', 1);
+$I->selectFromDropdown('MembersSource', 1);
 $I->click('Submit');
 $I->see('Your request was completed successfully.', '.success');
 
