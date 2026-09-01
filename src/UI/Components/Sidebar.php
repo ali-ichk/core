@@ -679,7 +679,7 @@ class Sidebar implements OutputableInterface, ContainerAwareInterface
                     echo '</h2>';
 
                     //Add year Switcher
-                    $form = Form::createBlank('yearSwitcher', $this->session->get('absoluteURL').'/yearSwitcherProcess.php', 'post')->enableQuickSubmit();
+                    $form = Form::createBlank('yearSwitcher', $this->session->get('absoluteURL').'/yearSwitcherProcess.php', 'post')->enableQuickSubmit()->setAttribute('hx-trigger', 'change from:.auto-submit');
                     $form->setFactory(DatabaseFormFactory::create($pdo));
                     $form->setAutocomplete(false);
                     $form->setClass('max-w-full');
@@ -704,18 +704,13 @@ class Sidebar implements OutputableInterface, ContainerAwareInterface
                             ->setDisabled(empty($previousYear));
                         $row->addSelectSchoolYear('gibbonSchoolYearID', $status)
                             ->placeholder(null)
-                            ->addClass('flex-grow')
+                            ->addClass('flex-grow auto-submit')
                             ->groupAlign('middle')
                             ->selected($gibbonSchoolYearID);
                         $row->addButton('', $nextYear ? "document.querySelector('#yearSwitcher [name=gibbonSchoolYearID]').value='{$nextYear['gibbonSchoolYearID']}';document.getElementById('yearSwitcher').requestSubmit()" : '')
                             ->setIcon('basic', 'chevron-right')
                             ->groupAlign('right')
                             ->setDisabled(empty($nextYear));
-
-                    $row = $form->addRow()->addClass('flex justify-end mt-1');
-                        $row->addSubmit(__('Switch'), 'yearSwitch')
-                            ->setType('quickSubmit')
-                            ->setClass('flex');
 
                     echo $form->getOutput();
 
