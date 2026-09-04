@@ -43,8 +43,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Messenger/mailingListRecip
 
     $mailingListList = $_POST['gibbonMessengerMailingListIDList'] ?? '';
     $data = [
-        'surname'                           => $validator->sanitizePersonName($_POST['surname'] ?? ''),
-        'preferredName'                     => $validator->sanitizePersonName($_POST['preferredName'] ?? ''),
+        'surname'                           => $validator->sanitizeName($_POST['surname'] ?? ''),
+        'preferredName'                     => $validator->sanitizeName($_POST['preferredName'] ?? ''),
         'email'                             => filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL),
         'organisation'                      => $_POST['organisation'] ?? '',
         'gibbonMessengerMailingListIDList'  => is_array($mailingListList) ? implode(',', $mailingListList) : '',
