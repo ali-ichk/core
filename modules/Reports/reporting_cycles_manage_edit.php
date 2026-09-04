@@ -109,7 +109,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_cycles_m
 
     // Add existing milestones
     $milestones = json_decode($values['milestones'], true);
-    $milestones = is_array($milestones) ? $milestones : [];
     foreach ($milestones as $index => $milestone) {
         $milestone['milestoneDate'] = $milestone['milestoneDate'];
         $customBlocks->addBlock($index, $milestone);

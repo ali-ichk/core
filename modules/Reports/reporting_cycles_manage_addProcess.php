@@ -47,18 +47,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_cycles_m
         'cycleNumber'           => $_POST['cycleNumber'] ?? '1',
         'cycleTotal'            => $_POST['cycleTotal'] ?? '1',
         'notes'                 => $_POST['notes'] ?? '',
-        'milestones'            => null,
+        'milestones'            => $_POST['milestones'] ?? [],
     ];
 
     $data['dateStart'] = Format::dateConvert($data['dateStart']);
     $data['dateEnd'] = Format::dateConvert($data['dateEnd']);
 
-    // Sort and save milestones as a JSON blob
-    if (!empty($_POST['milestones']) && is_array($_POST['milestones'])) {
+    // Sort and save milestones as JSON array data
+    if (!empty($data['milestones']) && is_array($data['milestones'])) {
         $milestones = array_map(function ($item) {
             $item['milestoneDate'] = Format::dateConvert($item['milestoneDate']);
             return $item;
-        }, $_POST['milestones']);
+        }, $data['milestones']);
 
         $orderKeys = array_keys($_POST['order'] ?? []);
         if (!empty($orderKeys) && count($orderKeys) === count($milestones)) {
@@ -67,6 +67,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_cycles_m
         }
 
         $data['milestones'] = json_encode($milestones);
+    } else {
+        $data['milestones'] = json_encode([]);
     }
 
     // Validate the required values are present

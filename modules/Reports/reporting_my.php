@@ -124,7 +124,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reporting_my.php')
         echo $page->fetchFromTemplate('ui/reportingCycleHeader.twig.html', [
             'gibbonPersonID' => $gibbonPersonID,
             'reportingCycle' => $reportingCycle,
-            'milestones' => !empty($reportingCycle['milestones']) ? json_decode($reportingCycle['milestones'], true) : [],
+            'milestones' => json_decode($reportingCycle['milestones'], true),
             'proofsTotal' => $proofsTotal,
             'progressColour' => 'bg-green-300',
             'progressBorder' => 'border-green-600',
