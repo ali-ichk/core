@@ -26,7 +26,7 @@ use Gibbon\Forms\PersonalDocumentHandler;
 use Gibbon\Data\Validator;
 use Gibbon\Contracts\Filesystem\FileHandler;
 
-require_once '../../gibbon.php';
+require_once __DIR__ . '/../../gibbon.php';
 
 $validator = $container->get(Validator::class);
 $_POST = $validator->sanitize($_POST, ['questions' => 'HTML']);

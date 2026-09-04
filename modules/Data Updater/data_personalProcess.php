@@ -28,7 +28,7 @@ use Gibbon\Data\Validator;
 use Gibbon\Domain\User\RoleGateway;
 use Gibbon\Domain\System\SettingGateway;
 
-require_once '../../gibbon.php';
+require_once __DIR__ . '/../../gibbon.php';
 
 $validator = $container->get(Validator::class);
 $_POST = $validator->sanitize($_POST);

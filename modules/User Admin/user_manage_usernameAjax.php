@@ -23,7 +23,7 @@ use Gibbon\Data\UsernameGenerator;
 use Gibbon\Data\Validator;
 
 //Gibbon system-wide include
-include '../../gibbon.php';
+require_once __DIR__ . '/../../gibbon.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add.php') == false) {
     die( __('Your request failed because you do not have access to this action.') );

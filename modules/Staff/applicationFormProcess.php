@@ -31,7 +31,7 @@ use Gibbon\Domain\System\EmailTemplateGateway;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\User\UserGateway;
 
-require_once '../../gibbon.php';
+require_once __DIR__ . '/../../gibbon.php';
 
 $validator = $container->get(Validator::class);
 $_POST = $validator->sanitize($_POST);
