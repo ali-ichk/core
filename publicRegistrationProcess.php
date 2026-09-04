@@ -62,9 +62,9 @@ if ($proceed == false) {
     }
 
     //Proceed!
-    $surname = trim($_POST['surname']);
-    $firstName = trim($_POST['firstName']);
-    $preferredName = trim($firstName);
+    $surname = $validator->sanitizeName($_POST['surname'] ?? '');
+    $firstName = $validator->sanitizeName($_POST['firstName'] ?? '');
+    $preferredName = $firstName;
     $officialName = $firstName.' '.$surname;
     $gender = $_POST['gender'] ?? '';
     $dob = !empty($_POST['dob']) ? Format::dateConvert($_POST['dob']) : null;
