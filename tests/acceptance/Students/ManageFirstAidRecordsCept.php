@@ -47,5 +47,5 @@ $I->seeSuccessMessage();
 // Delete ------------------------------------------------
 $I->amOnModulePage('Students', 'firstAidRecord_delete.php', array('gibbonFirstAidID' => $gibbonFirstAidID));
 $I->fillField('confirm', 'Delete');
-$I->click('Yes');
+$I->submitForm('#content form', [], 'Delete');
 $I->seeSuccessMessage();
