@@ -68,7 +68,7 @@ class PlannerEntryGateway extends QueryableGateway
                 ->where('(gibbonPlannerEntry.timeStart != "" AND gibbonPlannerEntry.timeStart IS NOT NULL)');
 
                 if ($viewingAs == 'Parent') {
-                    $query->where('(gibbonCourseClassPerson.role = "Parent" AND viewableParents = "Y")');
+                    $query->where('viewableParents = "Y"');
                 } elseif ($viewingAs == 'Student') {
                     $query->where('(gibbonCourseClassPerson.role = "Student" AND viewableStudents = "Y")');
                 }
@@ -126,7 +126,7 @@ class PlannerEntryGateway extends QueryableGateway
                 ->where('gibbonTTDayRowClassException.gibbonTTDayRowClassExceptionID IS NULL');
 
             if ($viewingAs == 'Parent') {
-                $query->where('(gibbonCourseClassPerson.role = "Parent" AND viewableParents = "Y")');
+                $query->where('viewableParents = "Y"');
             } elseif ($viewingAs == 'Student') {
                 $query->where('(gibbonCourseClassPerson.role = "Student" AND viewableStudents = "Y")');
             } elseif ($viewingAs == 'Teacher') {
