@@ -42,6 +42,7 @@ v31.0.00
         System: added a new fileHandler class to track and monitor file uploads
         System: added next year and previous year buttons to the Year Switcher
         System: added gibbon log when a password reset email fails to send
+        System: added a new attribute and helper method to the Date class to add a "Today" button to a date object
         Activities: display overlapping calendar events next to student names on Activity Attendance page
         Admissions: added a progress bar for admissions milestones to Manage Applications
         Admissions: added a warning to Accept Application when milestones have not been completed
@@ -52,6 +53,7 @@ v31.0.00
         Behaviour: change behaviour type to a setting
         Calendar: switched default sorting of Manage Events to newest first
         Calendar: remove future absence when deleting participant or editing the date
+        Data Updater: added a new notification event to notify if any flagged personal field has been updated
         Formal Assessment: added the feature for teachers to view unpublished internal assessments
         Library: updated automatic shelf lists so that lists are queried dynamically in Browse Library
         Library: added the option to edit the category and sub-category for an automatic shelf
@@ -75,11 +77,12 @@ v31.0.00
         System Admin: added new Marks By Term importer for Markbook Column
         System Admin: added new importer to import Internal Assessment Columns
         Timetable: added class and location details to non-timetabled lessons in the Timetable
-        Tiemtable: added a permission to enable certain users to edit a class location/facility
+        Timetable: added a permission to enable certain users to edit a class location/facility
         Tracking: fixed the post variable validation
         User Admin: linked user names to Student and Staff profiles in Manage Users
         User Admin: fixed the bug to display user's personal address if turned on
         User Admin: fix the bug to display user's personal address if turned on
+        User Admin: added an option to flag changes for personal fields
 
     Bug Fixes
         Behaviour: fixed the issue of student not getting included in a multiple behaviour record

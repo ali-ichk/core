@@ -25,14 +25,14 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Services\Format;
 use Gibbon\Domain\Students\FirstAidGateway;
 
-//Module includes
+// Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
 if (isActionAccessible($guid, $connection2, '/modules/Students/firstAidRecord.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    //Get action with highest precendence
+    // Get action with highest precedence
     $highestAction = getHighestGroupedAction($guid, $_GET['q'], $connection2);
     if ($highestAction == false) {
         $page->addError(__('The highest grouped action cannot be determined.'));
@@ -135,12 +135,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Students/firstAidRecord.ph
     $table->addActionColumn()
         ->addParam('gibbonPersonID', $gibbonPersonID)
         ->addParam('gibbonFormGroupID', $gibbonFormGroupID)
+        ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->addParam('gibbonYearGroupID', $gibbonYearGroupID)
         ->addParam('gibbonFirstAidID')
         ->format(function ($person, $actions) use ($highestAction) {
             if ($highestAction == 'First Aid Record_editAll') {
                 $actions->addAction('edit', __('Edit'))
                     ->setURL('/modules/Students/firstAidRecord_edit.php');
+
+                $actions->addAction('delete', __('Delete'))
+                    ->setURL('/modules/Students/firstAidRecord_delete.php');
             } elseif ($highestAction == 'First Aid Record_viewOnlyAddNotes') {
                 $actions->addAction('view', __('View'))
                     ->setURL('/modules/Students/firstAidRecord_edit.php');
