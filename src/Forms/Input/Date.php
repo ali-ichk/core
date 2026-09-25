@@ -40,6 +40,7 @@ class Date extends TextField
     protected $max;
     protected $from;
     protected $to;
+    protected $todayButton = false;
 
     /**
      * Overload the base loadFrom method to handle converting date formats.
@@ -120,6 +121,17 @@ class Date extends TextField
     }
 
     /**
+     * Add a button that sets this field to today's date.
+     *
+     * @return self
+     */
+    public function addTodayButton()
+    {
+        $this->todayButton = true;
+        return $this;
+    }
+
+    /**
      * Provide the ID of another date input to connect the input values in a date range.
      * Chaining a value TO another date range will set the upper limit to that date's value.
      * @param   string  $value
@@ -156,6 +168,8 @@ class Date extends TextField
         return Component::render(Date::class, $this->getAttributeArray() + [
             'outerClass' => $this->getOuterClass(),
             'groupClass' => $this->getGroupClass(),
+            'todayButton' => $this->todayButton,
+            'readonly' => $this->getReadonly(),
         ]);
     }
 }
