@@ -446,4 +446,6 @@ INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, 
 INSERT INTO `gibbonPermission` (`gibbonRoleID`, `gibbonActionID`) VALUES (001, (SELECT gibbonActionID FROM gibbonAction WHERE name='View Timetable by Facility_editLocation' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Timetable')));end
 UPDATE `gibbonReportingCycle` SET `milestones`='[]' WHERE TRIM(`milestones`) IN ('Array', '\"Array\"') OR `milestones` IS NULL;end
 INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`) VALUES ('Flagged Field Data Updates', 'Data Updater', 'Personal Data Updates', 'Core', 'All', 'Y');end
+UPDATE `gibbonAction` SET `URLList`='firstAidRecord.php, firstAidRecord_add.php, firstAidRecord_edit.php, firstAidRecord_delete.php' WHERE name='First Aid Record_editAll' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Students');end
+
 ";
