@@ -58,20 +58,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
 
         $form->addHiddenValue('q', "/modules/Behaviour/behaviour_pattern.php");
 
-        $types = [];
-        if ($settingGateway->getSettingByScope('Behaviour', 'enableNegativeBehaviour') == 'Y') {
-            $types['Negative'] = __('Negative');
-        }
-        if ($settingGateway->getSettingByScope('Behaviour', 'enablePositiveBehaviour') == 'Y') {
-            $types['Positive'] = __('Positive');
-        }
-        if ($settingGateway->getSettingByScope('Behaviour', 'enableObservationBehaviour') == 'Y') {
-            $types['Observation'] = __('Observation');
-        }
-
         $row = $form->addRow();
             $row->addLabel('type', __('Type'));
-            $row->addSelect('type')->fromArray($types)->placeholder()->selected($type);
+            $row->addSelectBehaviourType('type')->placeholder()->selected($type);
 
             if ($enableDescriptors == 'Y') {
                 $negativeDescriptors = $settingGateway->getSettingByScope('Behaviour', 'negativeDescriptors');

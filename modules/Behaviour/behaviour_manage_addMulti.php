@@ -107,19 +107,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Behaviour/behaviour_manage
         $row->addDate('date')->setValue(date($session->get('i18n')['dateFormatPHP']))->required();
 
     // Type
-    $types = [];
-    if ($settingGateway->getSettingByScope('Behaviour', 'enableNegativeBehaviour') == 'Y') {
-        $types['Negative'] = __('Negative');
-    }
-    if ($settingGateway->getSettingByScope('Behaviour', 'enablePositiveBehaviour') == 'Y') {
-        $types['Positive'] = __('Positive');
-    }
-    if ($settingGateway->getSettingByScope('Behaviour', 'enableObservationBehaviour') == 'Y') {
-        $types['Observation'] = __('Observation');
-    }
     $row = $form->addRow();
         $row->addLabel('type', __('Type'));
-        $row->addSelect('type')->fromArray($types)->selected($type)->required();
+        $row->addSelectBehaviourType('type')->selected($type)->required();
 
     // Descriptor
     if ($enableDescriptors == 'Y') {
