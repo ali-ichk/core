@@ -24,7 +24,6 @@ use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
 use Gibbon\Data\PasswordPolicy;
 use Gibbon\Contracts\Comms\Mailer;
-use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\System\LogGateway;
 use Gibbon\Domain\User\PersonResetGateway;
 use Gibbon\Domain\User\RoleGateway;
@@ -68,16 +67,12 @@ if ($step == 1) {
         exit();
     }
 
-    $person = count($matches) == 1
-        ? $userGateway->getByID($matches[0]['gibbonPersonID'], ['gibbonPersonID', 'email', 'username', 'preferredName', 'surname', 'canLogin', 'gibbonRoleIDPrimary', 'status'])
-        : [];
-    $role = !empty($person['gibbonRoleIDPrimary']) ? $roleGateway->getRoleByID($person['gibbonRoleIDPrimary']) : [];
+    $person = count($matches) == 1 ? $matches[0] : [];
 
     $canSend = count($matches) == 1
         && !empty($person['email'])
-        && ($person['status'] ?? '') == 'Full'
         && ($person['canLogin'] ?? '') == 'Y'
-        && (empty($role['canLoginRole']) || $role['canLoginRole'] == 'Y');
+        && (empty($person['canLoginRole']) || $person['canLoginRole'] == 'Y');
 
     if (!$canSend) {
         header("Location: {$URL->withReturn('success0')}");
@@ -97,6 +92,7 @@ if ($step == 1) {
             break;
         }
     }
+    
     if ($recentReset) {
         header("Location: {$URL->withReturn('success0')}");
         exit;
@@ -106,7 +102,7 @@ if ($step == 1) {
     $addressCount = 0;
 
     if ($ip !== '') {
-        $criteria = (new QueryCriteria())
+        $criteria = $logGateway->newQueryCriteria()
             ->filterBy('ip', $ip)
             ->filterBy('title', 'User - Forgot Password Request Initiated')
             ->filterBy('startDate', date('Y-m-d H:i:s', strtotime('-60 minutes')))
@@ -175,8 +171,9 @@ if ($step == 1) {
                 exit;
             } else {
                 $logGateway->addLog($session->get('gibbonSchoolYearID'), 'User Admin', null, 'User - Forgot Password Request Email Failed', $details, $_SERVER['REMOTE_ADDR']);
+                $resetGateway->deleteWhere(['gibbonPersonID' => $gibbonPersonID]);
 
-                header("Location: {$URL->withReturn('success0')}");
+                header("Location: {$URL->withReturn('error3')}");
                 exit;
             }
 } else { //This is the confirmation/reset phase
